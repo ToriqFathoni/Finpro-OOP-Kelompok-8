@@ -17,12 +17,10 @@ public class InputHandler {
         if (player.isDodging()) return;
 
         // 1. CEK SERANGAN
-        if (Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isKeyPressed(Input.Keys.J)) {
+        if (Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
             player.attack();
-            // Kita biarkan kode lanjut ke bawah agar input WASD tetap dibaca
         }
 
-        // 2. CEK GERAKAN 8 ARAH
         float moveX = 0;
         float moveY = 0;
 

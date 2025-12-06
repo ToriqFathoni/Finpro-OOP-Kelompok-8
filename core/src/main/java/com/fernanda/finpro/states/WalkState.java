@@ -10,34 +10,9 @@ public class WalkState implements PlayerState {
 
     public WalkState() {
         Texture texture = GameAssetManager.getInstance().getTexture(GameAssetManager.SOLDIER_WALK);
-
-        // --- KONFIGURASI FRAME ---
-        // Sesuai gambar Anda, ada 6 frame jalan dalam 1 baris
-        int frameCols = 6;
+        int frameCols = 8;
         int frameRows = 1;
 
-        // --- DIAGNOSA OTOMATIS (CEK UKURAN GAMBAR) ---
-        // Kode ini akan memberi tahu Anda jika asetnya bermasalah matematika
-        if (texture.getWidth() % frameCols != 0) {
-            System.err.println("===============================================================");
-            System.err.println(" [WARNING FATAL] MASALAH JITTER TERDETEKSI PADA ASET!");
-            System.err.println("---------------------------------------------------------------");
-            System.err.println(" File       : Soldier-Walk.png");
-            System.err.println(" Lebar Asli : " + texture.getWidth() + " pixel");
-            System.err.println(" Jumlah Col : " + frameCols);
-            System.err.println(" Kalkulasi  : " + texture.getWidth() + " / " + frameCols + " = "
-                + (texture.getWidth() / (float)frameCols));
-            System.err.println("");
-            System.err.println(" MASALAH: Lebar gambar TIDAK HABIS dibagi " + frameCols + ".");
-            System.err.println("          Komputer membuang koma, menyebabkan pergeseran pixel.");
-            System.err.println(" SOLUSI : Resize kanvas gambar di Photoshop/Editor agar lebarnya kelipatan 6.");
-            System.err.println("          (Contoh lebar yang benar: 192, 288, 384, 600, dll)");
-            System.err.println("===============================================================");
-        }
-
-        // --- LOGIKA SPLIT ---
-        // texture.getWidth() / frameCols akan membulatkan ke bawah jika hasil koma.
-        // Inilah penyebab gambar bergeser jika aset tidak pas.
         int perFrameWidth = texture.getWidth() / frameCols;
         int perFrameHeight = texture.getHeight() / frameRows;
 
