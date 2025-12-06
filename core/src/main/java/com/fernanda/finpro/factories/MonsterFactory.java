@@ -14,8 +14,8 @@ public class MonsterFactory {
     }
 
     // --- CONFIG AREA SPAWN ---
-    private static final float FOREST_RADIUS = 3000f;
-    private static final float MIN_SPAWN_DIST = 400f;
+    private static final float FOREST_RADIUS = 3500f;
+    private static final float MIN_SPAWN_DIST = 2000f;
 
     /**
      * Method utama pembuatan monster.
