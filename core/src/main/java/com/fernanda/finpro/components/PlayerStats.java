@@ -32,6 +32,14 @@ public class PlayerStats {
         listeners.add(listener);
     }
 
+    public void reset() {
+        this.currentHealth = maxHealth;
+        this.currentStamina = maxStamina;
+        this.isDead = false;
+        notifyHealthChanged();
+        notifyStaminaChanged();
+    }
+
     public void update(float dt) {
         if (isDead) return;
 

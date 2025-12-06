@@ -54,6 +54,8 @@ public class Main extends ApplicationAdapter {
     private float nextSpawnDelay = 0;
     private int maxOrcCount; // Jumlah target orc maksimum di peta
 
+    private boolean isGameOver = false;
+
     @Override
     public void create() {
         batch = new SpriteBatch();
@@ -96,56 +98,66 @@ public class Main extends ApplicationAdapter {
     public void render() {
         float dt = Gdx.graphics.getDeltaTime();
 
-        // 1. UPDATE PLAYER
-        player.update(dt);
-        handleInvisibleWall();
+        if (!isGameOver) {
+            // Check Game Over
+            if (player.stats.getCurrentHealth() <= 0) {
+                isGameOver = true;
+            }
 
-        // 2. SPAWN SYSTEM & CLEANUP (Bertahap)
+            // 1. UPDATE PLAYER
+            player.update(dt);
+            handleInvisibleWall();
+
+            // 2. SPAWN SYSTEM & CLEANUP (Bertahap)
 
         // Hapus monster mati dari list (penting untuk efisiensi)
         for (int i = monsters.size() - 1; i >= 0; i--) {
-            if (monsters.get(i).isDead()) {
+            if (monsters.get(i).canBeRemoved()) {
                 monsters.remove(i);
             }
-        }
+        }            // Spawn jika populasi kurang dari target maksimum
+            if (monsters.size() < maxOrcCount) {
+                spawnTimer += dt;
+                if (spawnTimer >= nextSpawnDelay) {
+                    // Panggil factory untuk spawn orc baru di lokasi acak hutan
+                    monsters.add(MonsterFactory.createOrcInForest());
 
-        // Spawn jika populasi kurang dari target maksimum
-        if (monsters.size() < maxOrcCount) {
-            spawnTimer += dt;
-            if (spawnTimer >= nextSpawnDelay) {
-                // Panggil factory untuk spawn orc baru di lokasi acak hutan
-                monsters.add(MonsterFactory.createOrcInForest());
-
-                spawnTimer = 0;
-                // Random waktu spawn berikutnya (cepat: 0.2 detik - 1.5 detik)
-                nextSpawnDelay = MathUtils.random(0.2f, 1.5f);
-            }
-        }
-
-        // 3. UPDATE MONSTERS & COLLISION
-        for (Monster m : monsters) {
-            // m.update() berisi logika boundary monster
-            m.update(dt);
-            m.aiBehavior(dt, player);
-
-            if (m.isDead()) continue;
-
-            // A. Player -> Monster
-            if (player.isHitboxActive()) {
-                if (player.getAttackHitbox().overlaps(m.getBodyHitbox())) {
-                    m.takeDamage(10);
-                    Vector2 knockback = new Vector2(m.position).sub(player.position).nor().scl(10);
-                    m.position.add(knockback);
+                    spawnTimer = 0;
+                    // Random waktu spawn berikutnya (cepat: 0.2 detik - 1.5 detik)
+                    nextSpawnDelay = MathUtils.random(0.2f, 1.5f);
                 }
             }
 
-            // B. Monster -> Player
-            Rectangle mAtkRect = m.getAttackHitbox();
-            if (mAtkRect.width > 0) {
-                Rectangle playerBody = new Rectangle(player.position.x, player.position.y, player.getWidth(), player.getHeight());
-                if (mAtkRect.overlaps(playerBody)) {
-                    player.takeDamage(m.getDamage());
+            // 3. UPDATE MONSTERS & COLLISION
+            for (Monster m : monsters) {
+                // m.update() berisi logika boundary monster
+                m.update(dt);
+                m.aiBehavior(dt, player);
+
+                if (m.isDead()) continue;
+
+                // A. Player -> Monster
+                if (player.isHitboxActive()) {
+                    if (player.getAttackHitbox().overlaps(m.getBodyHitbox())) {
+                        m.takeDamage(10);
+                        Vector2 knockback = new Vector2(m.position).sub(player.position).nor().scl(10);
+                        m.position.add(knockback);
+                    }
                 }
+
+                // B. Monster -> Player
+                Rectangle mAtkRect = m.getAttackHitbox();
+                if (mAtkRect.width > 0) {
+                    Rectangle playerBody = new Rectangle(player.position.x, player.position.y, player.getWidth(), player.getHeight());
+                    if (mAtkRect.overlaps(playerBody)) {
+                        player.takeDamage(m.getDamage());
+                    }
+                }
+            }
+        } else {
+            // Game Over Logic
+            if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+                restartGame();
             }
         }
 
@@ -169,9 +181,44 @@ public class Main extends ApplicationAdapter {
         worldRenderer.setColor(0.6f, 0.2f, 0.2f, 1f); worldRenderer.circle(0, 0, RADIUS_FIRE);
         worldRenderer.end();
 
-        // Render Player Sprite
+        // --- RENDER GRID (Agar pergerakan terlihat) ---
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        
+        worldRenderer.begin(ShapeRenderer.ShapeType.Line);
+        worldRenderer.setColor(1f, 1f, 1f, 0.15f); // Putih transparan
+
+        float gridSize = 100f;
+        
+        // Hitung batas kamera agar tidak menggambar grid di seluruh dunia (Optimasi)
+        float startX = camera.position.x - camera.viewportWidth / 2;
+        float endX = camera.position.x + camera.viewportWidth / 2;
+        float startY = camera.position.y - camera.viewportHeight / 2;
+        float endY = camera.position.y + camera.viewportHeight / 2;
+
+        // Snap ke grid terdekat
+        startX = (float)Math.floor(startX / gridSize) * gridSize;
+        startY = (float)Math.floor(startY / gridSize) * gridSize;
+
+        // Gambar Garis Vertikal
+        for (float x = startX; x <= endX; x += gridSize) {
+            worldRenderer.line(x, startY, x, endY);
+        }
+
+        // Gambar Garis Horizontal
+        for (float y = startY; y <= endY; y += gridSize) {
+            worldRenderer.line(startX, y, endX, y);
+        }
+        
+        worldRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+        // Render Player & Monster Sprites
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+        for (Monster m : monsters) {
+            m.render(batch);
+        }
         player.render(batch);
         batch.end();
 
@@ -198,6 +245,13 @@ public class Main extends ApplicationAdapter {
 
         gameHud.render();
 
+        if (isGameOver) {
+            batch.begin();
+            font.setColor(Color.RED);
+            font.draw(batch, "GAME OVER - Press R to Restart", player.position.x - 100, player.position.y + 100);
+            batch.end();
+        }
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) Gdx.app.exit();
     }
 
@@ -213,6 +267,14 @@ public class Main extends ApplicationAdapter {
             player.position.x = tempVector.x - halfWidth;
             player.position.y = tempVector.y - halfHeight;
         }
+    }
+
+    private void restartGame() {
+        player.position.set(2800, 0);
+        player.stats.reset();
+        monsters.clear();
+        spawnTimer = 0;
+        isGameOver = false;
     }
 
     @Override

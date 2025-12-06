@@ -34,6 +34,7 @@ public abstract class Monster {
     protected float immunityTimer;
     protected boolean isDead;
     protected boolean facingRight;
+    protected float deathDuration = 1.0f; // Default durasi animasi mati
 
     protected State currentState;
 
@@ -105,9 +106,11 @@ public abstract class Monster {
     public Rectangle getBodyHitbox() { return bodyRect; }
     public Rectangle getAttackHitbox() { return attackRect; }
     public boolean isDead() { return isDead; }
+    public boolean canBeRemoved() { return isDead && stateTimer > deathDuration; }
     public int getDamage() { return attackDamage; }
 
     // Abstract
     public abstract void aiBehavior(float dt, Player player);
+    public abstract void render(com.badlogic.gdx.graphics.g2d.SpriteBatch batch);
     public abstract void renderDebug(ShapeRenderer shapeRenderer);
 }
