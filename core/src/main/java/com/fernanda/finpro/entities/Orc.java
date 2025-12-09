@@ -267,7 +267,12 @@ public class Orc extends Monster {
             sr.circle(position.x + WIDTH/2, position.y + HEIGHT + 10, 5);
         }
     }
-    public com.fernanda.finpro. components.ItemType rollDrop() {
-        return com.fernanda.finpro.components.ItemType.ORC_SKULL;
+    public com.fernanda.finpro.components.ItemType rollDrop() {
+        // 50% chance RAW_MEAT, 50% chance ORC_SKULL (for testing)
+        if (com.badlogic.gdx.math.MathUtils.randomBoolean()) {
+            return com.fernanda.finpro.components.ItemType.RAW_MEAT;
+        } else {
+            return com.fernanda.finpro.components.ItemType.ORC_SKULL;
+        }
     }
 }
