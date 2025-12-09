@@ -1,9 +1,12 @@
 package com.fernanda.finpro.factories;
 
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.fernanda.finpro.entities.Monster;
 import com.fernanda.finpro.entities.Orc;
+import com.fernanda.finpro.singleton.GameAssetManager;
 
 public class MonsterFactory {
 
@@ -14,8 +17,8 @@ public class MonsterFactory {
     }
 
     // --- CONFIG AREA SPAWN ---
-    private static final float FOREST_RADIUS = 3500f;
-    private static final float MIN_SPAWN_DIST = 2000f;
+    private static final float MAP_WIDTH = 7040f;
+    private static final float MAP_HEIGHT = 7040f;
 
     /**
      * Method utama pembuatan monster.
@@ -36,18 +39,37 @@ public class MonsterFactory {
      * Mengatur posisi acak dalam lingkaran, lalu memanggil createMonster.
      */
     public static Monster createOrcInForest() {
-        Vector2 pos = getRandomPositionInCircle(MIN_SPAWN_DIST, FOREST_RADIUS);
+        Vector2 pos = getRandomPositionInMap();
         return createMonster(Type.ORC, pos.x, pos.y);
     }
 
     // --- HELPER MATH ---
-    private static Vector2 getRandomPositionInCircle(float minRadius, float maxRadius) {
-        float angle = MathUtils.random(0f, 360f);
-        float distance = MathUtils.random(minRadius, maxRadius);
+    private static Vector2 getRandomPositionInMap() {
+        TiledMap map = GameAssetManager.getInstance().getMap();
+        TiledMapTileLayer areaLuarLayer = (TiledMapTileLayer) map.getLayers().get("area_luar");
 
-        float x = distance * MathUtils.cosDeg(angle);
-        float y = distance * MathUtils.sinDeg(angle);
+        float x, y;
+        int attempts = 0;
+        
+        do {
+            x = MathUtils.random(100f, MAP_WIDTH - 100f);
+            y = MathUtils.random(100f, MAP_HEIGHT - 100f);
+            
+            int tileX = (int) (x / 32);
+            int tileY = (int) (y / 32);
+            
+            // Check if tile exists in "area_luar"
+            if (areaLuarLayer != null) {
+                TiledMapTileLayer.Cell cell = areaLuarLayer.getCell(tileX, tileY);
+                if (cell != null) {
+                    return new Vector2(x, y);
+                }
+            }
+            
+            attempts++;
+        } while (attempts < 50); // Try 50 times to find a valid spot
 
-        return new Vector2(x, y);
+        // Fallback if no valid spot found (should be rare if map is mostly area_luar)
+        return new Vector2(3500, 3500); 
     }
 }

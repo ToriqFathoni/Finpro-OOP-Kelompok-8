@@ -88,18 +88,11 @@ public abstract class Monster {
     }
 
     protected void enforceZoneBoundaries() {
-        float distFromCenter = position.len();
-
-        // Jika masuk terlalu dalam (misal masuk ke Ice)
-        if (distFromCenter < zoneMinRadius) {
-            position.setLength(zoneMinRadius + 5f); // Dorong keluar
-            velocity.set(0,0);
-        }
-        // Jika keluar terlalu jauh (keluar peta)
-        else if (distFromCenter > zoneMaxRadius) {
-            position.setLength(zoneMaxRadius - 5f); // Dorong masuk
-            velocity.set(0,0);
-        }
+        // Clamp to Map Bounds (0 to 7040)
+        if (position.x < 0) position.x = 0;
+        if (position.x > 7040 - bodyRect.width) position.x = 7040 - bodyRect.width;
+        if (position.y < 0) position.y = 0;
+        if (position.y > 7040 - bodyRect.height) position.y = 7040 - bodyRect.height;
     }
 
     // Getters

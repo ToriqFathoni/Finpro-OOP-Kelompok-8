@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.fernanda.finpro.components.ItemType;
 import com.fernanda.finpro.singleton.GameAssetManager;
 
 public class Orc extends Monster {
@@ -59,7 +60,7 @@ public class Orc extends Monster {
         hurtAnim = createAnimation(GameAssetManager.ORC_HURT, 4, 0.1f, Animation.PlayMode.NORMAL);
         deathAnim = createAnimation(GameAssetManager.ORC_DEATH, 4, 0.1f, Animation.PlayMode.NORMAL);
 
-        this.deathDuration = 0.4f;
+        this.deathDuration = 1.5f; // Body lingers for a while
     }
 
     // Method helper canggih dari kode asli Anda (dipertahankan)
@@ -87,11 +88,7 @@ public class Orc extends Monster {
 
         TextureRegion[] frames = new TextureRegion[framesToUse];
         for (int i = 0; i < framesToUse; i++) {
-            TextureRegion region = tmp[0][i];
-            if (region.getRegionWidth() > 2) {
-                region.setRegionWidth(region.getRegionWidth() - 2);
-            }
-            frames[i] = region;
+            frames[i] = tmp[0][i];
         }
 
         Animation<TextureRegion> anim = new Animation<>(frameDuration, frames);
@@ -112,8 +109,6 @@ public class Orc extends Monster {
 
         float distToPlayer = Vector2.dst(orcCenterX, orcCenterY, playerCenterX, playerCenterY);
 
-        boolean playerInHabitat = player.position.len() >= HABITAT_MIN && player.position.len() <= HABITAT_MAX;
-
         switch (currentState) {
             case HURT:
                 if (stateTimer > 0.4f) currentState = State.CHASE;
@@ -121,7 +116,7 @@ public class Orc extends Monster {
 
             case WANDER:
                 handleWander(dt);
-                if (distToPlayer < detectionRadius && playerInHabitat) {
+                if (distToPlayer < detectionRadius) {
                     currentState = State.CHASE;
                 }
                 break;
@@ -129,14 +124,12 @@ public class Orc extends Monster {
             case CHASE:
                 moveTowards(player.position);
 
-                if (!playerInHabitat) {
-                    currentState = State.WANDER;
-                }
-                else if (distToPlayer <= attackRadius) {
+                if (distToPlayer <= attackRadius) {
                     currentState = State.PREPARE_ATTACK;
                     stateTimer = 0;
                     velocity.set(0, 0);
                 } else if (distToPlayer > detectionRadius * 1.5f) {
+                    // Stop chasing if player is too far
                     currentState = State.WANDER;
                 }
                 break;
@@ -267,12 +260,12 @@ public class Orc extends Monster {
             sr.circle(position.x + WIDTH/2, position.y + HEIGHT + 10, 5);
         }
     }
-    public com.fernanda.finpro.components.ItemType rollDrop() {
+    public ItemType rollDrop() {
         // 50% chance RAW_MEAT, 50% chance ORC_SKULL (for testing)
-        if (com.badlogic.gdx.math.MathUtils.randomBoolean()) {
-            return com.fernanda.finpro.components.ItemType.RAW_MEAT;
+        if (MathUtils.randomBoolean()) {
+            return ItemType.RAW_MEAT;
         } else {
-            return com.fernanda.finpro.components.ItemType.ORC_SKULL;
+            return ItemType.ORC_SKULL;
         }
     }
 }

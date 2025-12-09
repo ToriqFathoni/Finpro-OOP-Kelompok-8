@@ -6,28 +6,29 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx. graphics.g2d.BitmapFont;
-import com.badlogic. gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math. Rectangle;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fernanda.finpro.components.ItemType;
-import com.fernanda.finpro.entities.Decoration;
-import com.fernanda.finpro.entities. GroundItem;
-import com.fernanda. finpro.entities.Monster;
-import com.fernanda. finpro.entities. Orc;
-import com.fernanda.finpro.entities. Player;
+import com.fernanda.finpro.entities.GroundItem;
+import com.fernanda.finpro.entities.Monster;
+import com.fernanda.finpro.entities.Orc;
+import com.fernanda.finpro.entities.Player;
 import com.fernanda.finpro.factories.MonsterFactory;
 import com.fernanda.finpro.objects.Campfire;
 import com.fernanda.finpro.objects.SignBoard;
 import com.fernanda.finpro.singleton.GameAssetManager;
 import com.fernanda.finpro.ui.GameHud;
-import com.fernanda.finpro. ui. InventoryUI;
+import com.fernanda.finpro.ui.InventoryUI;
 import com.fernanda.finpro.ui.CookingMenu;
-import com.fernanda.finpro.world.WorldManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,11 +43,12 @@ public class Main extends ApplicationAdapter {
     GameHud gameHud;
     InventoryUI inventoryUI;
     CookingMenu cookingMenu;
-    WorldManager worldManager;
+    
+    TiledMap map;
+    OrthogonalTiledMapRenderer mapRenderer;
+    
     List<Monster> monsters;
     List<GroundItem> groundItems;
-    List<Decoration> decorations;
-    List<Decoration> groundTiles;
     List<Renderable> renderQueue;
 
     // Hardcore Cooking & Tutorial System
@@ -89,7 +91,15 @@ public class Main extends ApplicationAdapter {
         GameAssetManager.getInstance().loadImages();
         GameAssetManager. getInstance().finishLoading();
 
-        player = new Player(2800, 0);
+        // Load Map
+        map = GameAssetManager.getInstance().getMap();
+        mapRenderer = new OrthogonalTiledMapRenderer(map, 1.0f);
+
+        // Spawn Player near "Rumah Danau" (Top-Left of Map)
+        // House is approx at (640-832, 0-192) in Tiled coords (Top-Left origin)
+        // In LibGDX (Bottom-Left origin), Y = 7040 - 192 = 6848.
+        // Spawning slightly below the house.
+        player = new Player(730, 6700);
 
         camera = new OrthographicCamera();
         viewport = new FitViewport(VIEWPORT_WIDTH, VIEWPORT_HEIGHT, camera);
@@ -102,72 +112,21 @@ public class Main extends ApplicationAdapter {
         gameHud.onHealthChanged(player.stats.getCurrentHealth(), player.stats.maxHealth);
         gameHud.onStaminaChanged(player.stats. getCurrentStamina(), player.stats.maxStamina);
 
-        worldManager = new WorldManager();
-
         monsters = new ArrayList<>();
         groundItems = new ArrayList<>();
-        decorations = new ArrayList<>();
-        groundTiles = new ArrayList<>();
         renderQueue = new ArrayList<>();
-
-        // Generate Ground
-        generateGround();
-
-        // Generate Fences
-        generateFences();
-        // Generate Decorations
-        
-        // 1. Tree 1 Clusters (Big Trees) & Tree 2 (Side Trees)
-        int numClusters = 30;
-        for (int i = 0; i < numClusters; i++) {
-            Vector2 clusterCenter = generateRandomPositionInGreenZone();
-            
-            // Spawn Tree 1 (Big) in cluster
-            int treesInCluster = MathUtils.random(3, 7);
-            for (int j = 0; j < treesInCluster; j++) {
-                 float offsetX = MathUtils.random(-120, 120);
-                 float offsetY = MathUtils.random(-120, 120);
-                 float x = clusterCenter.x + offsetX;
-                 float y = clusterCenter.y + offsetY;
-                 
-                 if (isPositionValid(x, y, 100f)) {
-                    decorations.add(new Decoration(GameAssetManager.TREE_1, x, y, 4.0f));
-                 }
-            }
-
-            // Spawn Tree 2 (Medium) near cluster
-            int tree2Count = MathUtils.random(2, 4);
-            for (int j = 0; j < tree2Count; j++) {
-                 float offsetX = MathUtils.random(-200, 200);
-                 float offsetY = MathUtils.random(-200, 200);
-                 float x = clusterCenter.x + offsetX;
-                 float y = clusterCenter.y + offsetY;
-
-                 if (isPositionValid(x, y, 80f)) {
-                    decorations.add(new Decoration(GameAssetManager.TREE_2, x, y, 3.0f));
-                 }
-            }
-        }
-
-        // 2. Tree 3 (Grass/Small) Scattered
-        for (int i = 0; i < 150; i++) {
-            Vector2 pos = generateRandomPositionInGreenZone();
-            if (isPositionValid(pos.x, pos.y, 50f)) {
-                decorations.add(new Decoration(GameAssetManager.TREE_3, pos.x, pos.y, 2.0f));
-            }
-        }
 
         // Initialize Hardcore Cooking & Tutorial System
         // Move Campfire right next to Player spawn for easy testing!
-        campfire = new Campfire(2900, 50);  // Player spawns at (2800, 0)
+        campfire = new Campfire(780, 6650);  // Near Player spawn at (730, 6700)
         signBoards = new ArrayList<>();
         
         // SignBoard 1: Near Player Start (Tutorial)
-        signBoards.add(new SignBoard(2750, 80, 
+        signBoards.add(new SignBoard(700, 6650, 
             "SURVIVAL TIP: Kill Monsters -> Gather Ingredients -> Cook at Fire!"));
         
         // SignBoard 2: Near Campfire (Recipe Hint)
-        signBoards.add(new SignBoard(2850, 120, 
+        signBoards.add(new SignBoard(850, 6650, 
             "CHEF'S NOTE: The Legendary Burger requires Meat, Herbs, and Slime Gel!"));
 
         maxOrcCount = MathUtils.random(40, 80);
@@ -217,8 +176,11 @@ public class Main extends ApplicationAdapter {
             // Update game (ONLY if not paused)
             if (!gamePaused) {
                 player.update(dt);
-                handleInvisibleWall();
-                handleDecorationCollision();
+                handleMapCollision();
+                
+                // Keep player within map bounds
+                player.position.x = MathUtils.clamp(player.position.x, 0, 7040 - player.getWidth());
+                player.position.y = MathUtils.clamp(player.position.y, 0, 7040 - player.getHeight());
 
                 // Update SignBoards (Campfire doesn't need update anymore)
                 for (SignBoard sign : signBoards) {
@@ -267,6 +229,9 @@ public class Main extends ApplicationAdapter {
                 for (Monster m : monsters) {
                     m.update(dt);
                     m. aiBehavior(dt, player);
+                    
+                    // Apply Map Collision to Monster
+                    handleEntityCollision(m.getBodyHitbox(), m.position, m.getBodyHitbox().width, m.getBodyHitbox().height);
 
                     if (m.isDead()) continue;
 
@@ -326,64 +291,21 @@ public class Main extends ApplicationAdapter {
         camera.update();
 
         // RENDERING
-        Gdx.gl.glClearColor(0.05f, 0.05f, 0.2f, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         viewport.apply();
-        worldRenderer.setProjectionMatrix(camera.combined);
-        worldRenderer. begin(ShapeRenderer.ShapeType.Filled);
-        worldRenderer.setColor(0.1f, 0.4f, 0.1f, 1f); worldRenderer.circle(0, 0, RADIUS_FOREST);
-        worldRenderer.setColor(0.4f, 0.5f, 0.8f, 1f); worldRenderer.circle(0, 0, RADIUS_ICE);
-        worldRenderer.setColor(0.6f, 0.2f, 0.2f, 1f); worldRenderer.circle(0, 0, RADIUS_FIRE);
-        worldRenderer.end();
-
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-
-        worldRenderer.begin(ShapeRenderer. ShapeType.Line);
-        worldRenderer.setColor(1f, 1f, 1f, 0.15f);
-
-        float gridSize = 100f;
-        float startX = camera.position.x - camera.viewportWidth / 2;
-        float endX = camera.position.x + camera.viewportWidth / 2;
-        float startY = camera.position.y - camera.viewportHeight / 2;
-        float endY = camera.position. y + camera.viewportHeight / 2;
-
-        startX = (float)Math.floor(startX / gridSize) * gridSize;
-        startY = (float)Math.floor(startY / gridSize) * gridSize;
-
-        for (float x = startX; x <= endX; x += gridSize) {
-            worldRenderer.line(x, startY, x, endY);
-        }
-        for (float y = startY; y <= endY; y += gridSize) {
-            worldRenderer.line(startX, y, endX, y);
-        }
-
-        worldRenderer.end();
-        Gdx.gl.glDisable(GL20.GL_BLEND);
+        
+        // Render Map
+        mapRenderer.setView(camera);
+        mapRenderer.render();
 
         // Render Sprites
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         
-        // 0. Draw Ground Tiles (Background)
-        for (Decoration tile : groundTiles) {
-            // Simple culling
-            if (tile.position.x >= camera.position.x - camera.viewportWidth && 
-                tile.position.x <= camera.position.x + camera.viewportWidth &&
-                tile.position.y >= camera.position.y - camera.viewportHeight &&
-                tile.position.y <= camera.position.y + camera.viewportHeight) {
-                tile.render(batch);
-            }
-        }
-
         // Prepare Render Queue
         renderQueue.clear();
-
-        // Add Decorations
-        for (Decoration d : decorations) {
-            renderQueue.add(new Renderable(d.position.y, () -> d.render(batch)));
-        }
 
         // Add Monsters
         for (Monster m : monsters) {
@@ -472,156 +394,67 @@ public class Main extends ApplicationAdapter {
         if (Gdx.input.isKeyJustPressed(Input.Keys. ESCAPE)) Gdx.app.exit();
     }
 
-    private void generateGround() {
-        float scale = 4.0f;
-        float tileSize = 16f * scale; // 64
-        int gridSize = (int) ((RADIUS_FOREST * 2) / tileSize) + 2;
-        int[][] tileMap = new int[gridSize][gridSize]; // 0=Grass1, 2=Grass3
-        
-        // 1. Initialize with Grass 1 (0) - Java does this by default
-        
-        // 2. Generate Grass Patches (Rectangles with Grass 3)
-        int numPatches = 15; 
-        for (int i = 0; i < numPatches; i++) {
-            int w = MathUtils.random(4, 8);
-            int h = MathUtils.random(4, 8);
-            int cx = MathUtils.random(5, gridSize - w - 5);
-            int cy = MathUtils.random(5, gridSize - h - 5);
-            
-            for (int x = cx; x < cx + w; x++) {
-                for (int y = cy; y < cy + h; y++) {
-                    tileMap[x][y] = 2; // Grass 3
-                }
-            }
-        }
-        
-        // 3. Create Decorations (Ground & Fences)
-        float startX = -RADIUS_FOREST;
-        float startY = -RADIUS_FOREST;
-        
-        for (int x = 0; x < gridSize; x++) {
-            for (int y = 0; y < gridSize; y++) {
-                float worldX = startX + x * tileSize;
-                float worldY = startY + y * tileSize;
-                
-                // Check if in forest zone
-                float dist = Vector2.len(worldX, worldY);
-                if (dist > RADIUS_ICE - 50 && dist < RADIUS_FOREST + 50) {
-                    String asset;
-                    if (tileMap[x][y] == 2) asset = GameAssetManager.GRASS_3;
-                    else asset = GameAssetManager.GRASS_1;
-                    
-                    groundTiles.add(new Decoration(asset, worldX, worldY, scale, false));
-
-                    // Add Fences around Grass 3
-                    if (tileMap[x][y] == 2) {
-                        // Check Top
-                        if (y + 1 < gridSize && tileMap[x][y+1] != 2) {
-                            Decoration fence = new Decoration(GameAssetManager.FENCE_1, worldX, worldY + tileSize/2, scale, true);
-                            decorations.add(fence);
-                        }
-                        // Check Bottom
-                        if (y - 1 >= 0 && tileMap[x][y-1] != 2) {
-                            Decoration fence = new Decoration(GameAssetManager.FENCE_1, worldX, worldY - tileSize/2, scale, true);
-                            decorations.add(fence);
-                        }
-                        // Check Left
-                        if (x - 1 >= 0 && tileMap[x-1][y] != 2) {
-                            Decoration fence = new Decoration(GameAssetManager.FENCE_1, worldX - tileSize/2, worldY, scale, true);
-                            fence.setRotation(90);
-                            decorations.add(fence);
-                        }
-                        // Check Right
-                        if (x + 1 < gridSize && tileMap[x+1][y] != 2) {
-                            Decoration fence = new Decoration(GameAssetManager.FENCE_1, worldX + tileSize/2, worldY, scale, true);
-                            fence.setRotation(90);
-                            decorations.add(fence);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void generateFences() {
-        // Create some fence lines near the road or random spots
-        for (int i = 0; i < 5; i++) {
-            Vector2 startPos = generateRandomPositionInGreenZone();
-            int length = MathUtils.random(5, 10);
-            boolean horizontal = MathUtils.randomBoolean();
-            
-            for (int j = 0; j < length; j++) {
-                float x = startPos.x + (horizontal ? j * 60 : 0);
-                float y = startPos.y + (horizontal ? 0 : j * 40);
-                
-                if (isPositionValid(x, y, 50f)) {
-                    decorations.add(new Decoration(GameAssetManager.FENCE_1, x, y, 2.0f));
-                }
-            }
-        }
-    }
-
-    private void handleInvisibleWall() {
-        float halfWidth = player.getWidth() / 2f;
-        float halfHeight = player.getHeight() / 2f;
-        float centerX = player.position.x + halfWidth;
-        float centerY = player.position.y + halfHeight;
-
-        tempVector.set(centerX, centerY);
-        if (tempVector.len() > RADIUS_FOREST) {
-            tempVector.setLength(RADIUS_FOREST);
-            player.position.x = tempVector.x - halfWidth;
-            player.position.y = tempVector.y - halfHeight;
-        }
-    }
-
-    private void handleDecorationCollision() {
+    private void handleMapCollision() {
+        // Player Collision
         Rectangle playerRect = player.getHitbox();
-        for (Decoration d : decorations) {
-            if (!d.hasCollision()) continue;
+        handleEntityCollision(playerRect, player.position, player.getWidth(), player.getHeight());
+    }
 
-            Rectangle treeRect = d.getCollisionBox();
-            if (playerRect.overlaps(treeRect)) {
-                // Calculate push direction (from tree center to player center)
-                float treeCenterX = treeRect.x + treeRect.width / 2;
-                float treeCenterY = treeRect.y + treeRect.height / 2;
-                float playerCenterX = playerRect.x + playerRect.width / 2;
-                float playerCenterY = playerRect.y + playerRect.height / 2;
+    private void handleEntityCollision(Rectangle hitbox, Vector2 position, float width, float height) {
+        // Check corners
+        checkCollision(hitbox.x, hitbox.y, position, width, height);
+        checkCollision(hitbox.x + hitbox.width, hitbox.y, position, width, height);
+        checkCollision(hitbox.x, hitbox.y + hitbox.height, position, width, height);
+        checkCollision(hitbox.x + hitbox.width, hitbox.y + hitbox.height, position, width, height);
+    }
 
-                Vector2 pushDir = new Vector2(playerCenterX - treeCenterX, playerCenterY - treeCenterY).nor();
-                
-                // Push player out
-                float pushSpeed = 2.0f; 
-                player.position.add(pushDir.scl(pushSpeed));
-            }
+    private void checkCollision(float x, float y, Vector2 position, float width, float height) {
+        if (isCellBlocked(x, y)) {
+            // Find center of the tile
+            int tileX = (int) (x / 32);
+            int tileY = (int) (y / 32);
+            float tileCenterX = tileX * 32 + 16;
+            float tileCenterY = tileY * 32 + 16;
+            
+            Vector2 pushDir = new Vector2(position.x + width/2 - tileCenterX, 
+                                          position.y + height/2 - tileCenterY).nor();
+            
+            position.add(pushDir.scl(2.0f));
         }
     }
 
-    private boolean isPositionValid(float x, float y, float minDistance) {
-        for (Decoration d : decorations) {
-            if (Vector2.dst(x, y, d.position.x, d.position.y) < minDistance) {
-                return false;
+    private boolean isCellBlocked(float x, float y) {
+        int tileX = (int) (x / 32);
+        int tileY = (int) (y / 32);
+
+        if (tileX < 0 || tileX >= 220 || tileY < 0 || tileY >= 220) return true; // Block out of bounds
+
+        // Layers to check for collision
+        String[] collisionLayers = {
+            "danau", "tree_danau", "pagar_danau", "rumah_danau", 
+            "pagar_rumah_danau", "rock_rumah_danau", "nisan_rumah_danau"
+        };
+
+        for (String layerName : collisionLayers) {
+            TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get(layerName);
+            if (layer != null) {
+                TiledMapTileLayer.Cell cell = layer.getCell(tileX, tileY);
+                if (cell != null && cell.getTile() != null) {
+                    return true;
+                }
             }
         }
-        return true;
+        return false;
     }
 
     private void restartGame() {
-        player.reset(2800, 0);
+        player.reset(3500, 3500);
         monsters.clear();
         groundItems. clear();
         spawnTimer = 0;
         isGameOver = false;
         isInventoryOpen = false;
         gamePaused = false;
-    }
-
-    private Vector2 generateRandomPositionInGreenZone() {
-        float angle = MathUtils.random(0f, 360f);
-        float distance = MathUtils.random(RADIUS_ICE + 100, RADIUS_FOREST - 200); 
-        float x = distance * MathUtils.cosDeg(angle);
-        float y = distance * MathUtils.sinDeg(angle);
-        return new Vector2(x, y);
     }
 
     @Override
@@ -636,6 +469,7 @@ public class Main extends ApplicationAdapter {
         for (SignBoard sign : signBoards) {
             sign.dispose();
         }
+        mapRenderer.dispose();
         GameAssetManager.getInstance().dispose();
     }
 
