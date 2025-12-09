@@ -63,8 +63,21 @@ public class GroundItem {
 
     public void renderDebug(ShapeRenderer sr) {
         if (!active) return;
-        sr.setColor(Color.GREEN);
-        sr.rect(hitbox.x, hitbox.y, hitbox. width, hitbox.height);
+        
+        // Color-coded items for visual distinction
+        switch (type) {
+            case RAW_MEAT:
+                sr.setColor(Color.YELLOW);
+                break;
+            case ORC_SKULL:
+                sr.setColor(Color.LIGHT_GRAY);
+                break;
+            default:
+                sr.setColor(Color.WHITE);
+                break;
+        }
+        
+        sr.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
     }
 
     public ItemType getType() { return type; }

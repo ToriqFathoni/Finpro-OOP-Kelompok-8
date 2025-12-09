@@ -28,6 +28,10 @@ public class Inventory {
         return false;
     }
 
+    public boolean hasItem(ItemType type, int amount) {
+        return getItemCount(type) >= amount;
+    }
+
     public String getDisplayString() {
         if (items.isEmpty()) {
             return "[ EMPTY ]";
