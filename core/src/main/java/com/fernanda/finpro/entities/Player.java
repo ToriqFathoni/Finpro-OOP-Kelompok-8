@@ -2,12 +2,13 @@ package com.fernanda.finpro.entities;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Rectangle;
+import com.badlogic. gdx.graphics.g2d.TextureRegion;
+import com.badlogic. gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.fernanda.finpro.components.Inventory;
 import com.fernanda.finpro.components.PlayerStats;
-import com.fernanda.finpro.input.InputHandler;
-import com.fernanda.finpro.states.*;
+import com.fernanda. finpro.input.InputHandler;
+import com.fernanda. finpro.states.*;
 
 public class Player {
     // --- FISIKA & POSISI ---
@@ -15,8 +16,9 @@ public class Player {
     public Vector2 velocity;
     public boolean facingRight = true;
 
-    // --- COMPONENT (Stats HP/Stamina) ---
+    // --- COMPONENTS ---
     public PlayerStats stats;
+    public Inventory inventory; // NEW
 
     // --- CONFIG BADAN (LOGIKA) ---
     private static final int LOGICAL_WIDTH = 14;
@@ -43,13 +45,12 @@ public class Player {
 
     // --- DODGE CONFIG ---
     private DodgeState dodgeState;
-    private float dodgeTimer = 0f;          // Timer durasi berlangsungnya dash
-    private float dodgeCooldownTimer = 0f;  // Timer jeda antar dash
+    private float dodgeTimer = 0f;
+    private float dodgeCooldownTimer = 0f;
 
     private final float DODGE_DURATION = 0.2f;
     private final float DODGE_SPEED = 300f;
     private final float DODGE_COST = 20f;
-
     private final float DODGE_WAIT_TIME = 0.3f;
 
     // Timer invincibility setelah kena hit
@@ -69,9 +70,6 @@ public class Player {
     private InputHandler inputHandler;
     private float stateTime;
 
-    // =========================================================
-    // CONSTRUCTOR
-    // =========================================================
     public Player(float startX, float startY) {
         this.position = new Vector2(startX, startY);
         this.velocity = new Vector2(0, 0);
@@ -87,13 +85,11 @@ public class Player {
         this.currentState = idleState;
         this.stateTime = 0f;
 
-        // Inisialisasi Stats
+        // Inisialisasi Components
         this.stats = new PlayerStats(50f, 100f, 1.0f, 15f);
+        this.inventory = new Inventory(); // NEW
     }
 
-    // =========================================================
-    // GAME LOOP (UPDATE)
-    // =========================================================
     public void update(float dt) {
         stats.update(dt);
 
@@ -122,16 +118,15 @@ public class Player {
                 velocity.set(0, 0);
                 changeState(idleState);
                 dodgeCooldownTimer = DODGE_WAIT_TIME;
-                System.out.println("Dodge Selesai. Masuk Cooldown: " + DODGE_WAIT_TIME + " detik.");
+                System.out.println("Dodge Selesai.  Masuk Cooldown:  " + DODGE_WAIT_TIME + " detik.");
             }
         }
 
         position.mulAdd(velocity, dt);
 
-        // --- UPDATE FLIP MANUAL ---
         if (velocity.x > 0) {
             facingRight = true;
-        } else if (velocity.x < 0) {
+        } else if (velocity. x < 0) {
             facingRight = false;
         }
 
@@ -165,33 +160,26 @@ public class Player {
         currentState.update(dt);
     }
 
-    // =========================================================
-    // LOGIKA ACTION (ATTACK & DODGE)
-    // =========================================================
-
     public void dodge() {
         if (currentState == dodgeState || currentState == attackState) return;
 
-        // DEBUG: Cek kenapa tidak bisa dodge
         if (dodgeCooldownTimer > 0) {
-            // Print sisa waktu ke konsol
-            System.out.println("Gagal Dodge! Sedang Cooldown. Sisa: " + String.format("%.2f", dodgeCooldownTimer));
+            System.out.println("Gagal Dodge!  Sedang Cooldown.  Sisa: " + String.format("%.2f", dodgeCooldownTimer));
             return;
         }
 
         if (stats.useStamina(DODGE_COST)) {
-            System.out.println("Dodge Dimulai!"); // Debug print
+            System.out.println("Dodge Dimulai!");
             changeState(dodgeState);
             dodgeTimer = DODGE_DURATION;
 
-            // Tentukan arah dodge
             if (velocity.len2() > 0) {
                 dodgeDirection.set(velocity).nor();
             } else {
-                dodgeDirection.set(facingRight ? 1 : -1, 0);
+                dodgeDirection. set(facingRight ? 1 : -1, 0);
             }
         } else {
-            System.out.println("Stamina tidak cukup!");
+            System.out. println("Stamina tidak cukup!");
         }
     }
 
@@ -212,23 +200,16 @@ public class Player {
         attackTimer = ATTACK_COOLDOWN;
     }
 
-    // =========================================================
-    // FUNGSI LAIN (Collision, Render, Helpers)
-    // =========================================================
-
     public void takeDamage(float amount) {
-        // Cek Dodge
         if (currentState == dodgeState) {
-            System.out.println("DODGED! (Damage diabaikan karena rolling)");
+            System. out.println("DODGED!  (Damage diabaikan karena rolling)");
             return;
         }
 
-        // Cek timer kebal
         if (invincibilityTimer > 0) {
             return;
         }
 
-        // Proses Damage
         stats.takeDamage(amount);
 
         if (stats.getCurrentHealth() <= 0) {
@@ -242,10 +223,8 @@ public class Player {
             System.out.println("Player Luka -> Masuk HurtState");
         }
 
-        // Reset Timer, nyalain mode kebal buat 1 detik ke depan
         invincibilityTimer = INVINCIBILITY_DURATION;
-
-        System.out.println("Player terkena hit! Kebal aktif selama " + INVINCIBILITY_DURATION + "s");
+        System.out.println("Player terkena hit!  Kebal aktif selama " + INVINCIBILITY_DURATION + "s");
     }
 
     public Rectangle getAttackHitbox() {
@@ -256,6 +235,10 @@ public class Player {
 
         attackRect.set(x, y, ATTACK_WIDTH, ATTACK_HEIGHT);
         return attackRect;
+    }
+
+    public Rectangle getHitbox() {
+        return new Rectangle(position.x, position. y, LOGICAL_WIDTH, LOGICAL_HEIGHT);
     }
 
     public boolean isHitboxActive() {
@@ -272,7 +255,6 @@ public class Player {
         stateTime = 0;
     }
 
-    // Getters
     public float getWidth() { return LOGICAL_WIDTH; }
     public float getHeight() { return LOGICAL_HEIGHT; }
 
@@ -280,20 +262,17 @@ public class Player {
         TextureRegion currentFrame = currentState.getCurrentFrame(stateTime);
 
         if (currentFrame != null) {
-            // Visual Effect saat Dodge
             if (currentState == dodgeState) {
-                batch.setColor(0.5f, 0.5f, 1f, 0.7f);
+                batch. setColor(0.5f, 0.5f, 1f, 0.7f);
             } else {
                 batch.setColor(Color.WHITE);
             }
 
-            // 1. Logika Flip
             boolean isFlipX = currentFrame.isFlipX();
-            if ((!facingRight && !isFlipX) || (facingRight && isFlipX)) {
-                currentFrame.flip(true, false);
+            if ((! facingRight && ! isFlipX) || (facingRight && isFlipX)) {
+                currentFrame. flip(true, false);
             }
 
-            // 2. Logika Centering (Half-Pixel Fix)
             float textureWidth = currentFrame.getRegionWidth();
             float textureHeight = currentFrame.getRegionHeight();
 
@@ -306,31 +285,29 @@ public class Player {
             int fixedCenterX = (int) rawCenterX;
             int fixedCenterY = (int) rawCenterY;
 
-            // 3. Posisi Akhir
             float drawX = position.x + fixedCenterX + DRAW_OFFSET_X;
-            float drawY = position.y + fixedCenterY + DRAW_OFFSET_Y;
+            float drawY = position. y + fixedCenterY + DRAW_OFFSET_Y;
 
-            // 4. Gambar
             batch.draw(currentFrame, (int)drawX, (int)drawY);
-
-            // Reset warna batch
             batch.setColor(Color.WHITE);
         }
     }
+
     public void reset(float startX, float startY) {
         this.position.set(startX, startY);
         this.velocity.set(0, 0);
         this.facingRight = true;
 
         this.stats.reset();
+        this.inventory.clear(); // NEW
 
         this.invincibilityTimer = 0f;
         this.attackTimer = 0f;
-        this.dodgeCooldownTimer = 0f;
+        this. dodgeCooldownTimer = 0f;
 
         changeState(idleState);
 
-        System.out.println("Player Reset: HP Penuh, State kembali ke Idle.");
+        System.out.println("Player Reset:  HP Penuh, State kembali ke Idle.");
     }
 
     public boolean isDeathAnimationFinished() {

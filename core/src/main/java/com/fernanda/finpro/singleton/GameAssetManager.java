@@ -20,6 +20,8 @@ public class GameAssetManager {
     public static final String ORC_ATTACK = "Orc-Attack01.png";
     public static final String ORC_HURT = "Orc-Hurt.png";
     public static final String ORC_DEATH = "Orc-Death.png";
+    public static final String ORC_SKULL = "orcskull.png";
+
 
     private GameAssetManager() {
         manager = new AssetManager();
@@ -44,6 +46,9 @@ public class GameAssetManager {
         manager.load(ORC_ATTACK, Texture.class);
         manager.load(ORC_HURT, Texture.class);
         manager.load(ORC_DEATH, Texture.class);
+        manager.load(ORC_SKULL, Texture.class);
+
+
     }
 
     public void finishLoading() {
