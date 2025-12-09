@@ -21,8 +21,9 @@ public class Player {
     public Inventory inventory; // NEW
 
     // --- CONFIG BADAN (LOGIKA) ---
-    private static final int LOGICAL_WIDTH = 14;
-    private static final int LOGICAL_HEIGHT = 20;
+    // Diperkecil agar collision lebih forgiving (bisa masuk celah sempit)
+    private static final int LOGICAL_WIDTH = 10;
+    private static final int LOGICAL_HEIGHT = 10;
 
     // --- CONFIG VISUAL (GAMBAR) ---
     private static final float DRAW_OFFSET_X = 0f;
