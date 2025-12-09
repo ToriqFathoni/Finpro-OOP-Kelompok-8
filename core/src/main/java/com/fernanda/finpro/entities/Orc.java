@@ -30,9 +30,9 @@ public class Orc extends Monster {
     private static final float HABITAT_MAX = 3500f; // Batas Laut
 
     // Attack Timing (Detik)
-    private static final float WINDUP_TIME = 0.4f;
+    private static final float WINDUP_TIME = 0.1f;
     private static final float ACTIVE_TIME = 0.6f; // Disesuaikan dengan durasi animasi (6 frame * 0.1s)
-    private static final float RECOVERY_TIME = 1.0f;
+    private static final float RECOVERY_TIME = 0.5f;
 
     // Hitbox baru muncul di detik ke-0.3 (Frame ke-3) agar pas dengan ayunan tangan
     private static final float HIT_START_TIME = 0.3f;
@@ -267,7 +267,12 @@ public class Orc extends Monster {
             sr.circle(position.x + WIDTH/2, position.y + HEIGHT + 10, 5);
         }
     }
-    public com.fernanda.finpro. components.ItemType rollDrop() {
-        return com.fernanda.finpro.components.ItemType.ORC_SKULL;
+    public com.fernanda.finpro.components.ItemType rollDrop() {
+        // 50% chance RAW_MEAT, 50% chance ORC_SKULL (for testing)
+        if (com.badlogic.gdx.math.MathUtils.randomBoolean()) {
+            return com.fernanda.finpro.components.ItemType.RAW_MEAT;
+        } else {
+            return com.fernanda.finpro.components.ItemType.ORC_SKULL;
+        }
     }
 }
