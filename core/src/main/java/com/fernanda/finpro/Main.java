@@ -23,9 +23,12 @@ import com.fernanda.finpro.entities.Monster;
 import com.fernanda.finpro.entities.Orc;
 import com.fernanda.finpro.entities.Player;
 import com.fernanda.finpro.factories.MonsterFactory;
+import com.fernanda.finpro.objects.Campfire;
+import com.fernanda.finpro.objects.SignBoard;
 import com.fernanda.finpro.singleton.GameAssetManager;
 import com.fernanda.finpro.ui.GameHud;
 import com.fernanda.finpro.ui.InventoryUI;
+import com.fernanda.finpro.ui.CookingMenu;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +42,7 @@ public class Main extends ApplicationAdapter {
     Viewport viewport;
     GameHud gameHud;
     InventoryUI inventoryUI;
+    CookingMenu cookingMenu;
     
     TiledMap map;
     OrthogonalTiledMapRenderer mapRenderer;
@@ -47,8 +51,13 @@ public class Main extends ApplicationAdapter {
     List<GroundItem> groundItems;
     List<Renderable> renderQueue;
 
+    // Hardcore Cooking & Tutorial System
+    Campfire campfire;
+    List<SignBoard> signBoards;
+
     private boolean isInventoryOpen = false;
     private boolean gamePaused = false;
+    private boolean isCookingMenuOpen = false;
 
     private static final float VIEWPORT_WIDTH = 960f;
     private static final float VIEWPORT_HEIGHT = 540f;
@@ -97,6 +106,7 @@ public class Main extends ApplicationAdapter {
 
         gameHud = new GameHud();
         inventoryUI = new InventoryUI();
+        cookingMenu = new CookingMenu();
 
         player.stats.addListener(gameHud);
         gameHud.onHealthChanged(player.stats.getCurrentHealth(), player.stats.maxHealth);
@@ -105,6 +115,19 @@ public class Main extends ApplicationAdapter {
         monsters = new ArrayList<>();
         groundItems = new ArrayList<>();
         renderQueue = new ArrayList<>();
+
+        // Initialize Hardcore Cooking & Tutorial System
+        // Move Campfire right next to Player spawn for easy testing!
+        campfire = new Campfire(780, 6650);  // Near Player spawn at (730, 6700)
+        signBoards = new ArrayList<>();
+        
+        // SignBoard 1: Near Player Start (Tutorial)
+        signBoards.add(new SignBoard(700, 6650, 
+            "SURVIVAL TIP: Kill Monsters -> Gather Ingredients -> Cook at Fire!"));
+        
+        // SignBoard 2: Near Campfire (Recipe Hint)
+        signBoards.add(new SignBoard(850, 6650, 
+            "CHEF'S NOTE: The Legendary Burger requires Meat, Herbs, and Slime Gel!"));
 
         maxOrcCount = MathUtils.random(40, 80);
         System.out.println("Target Populasi Orc: " + maxOrcCount);
@@ -125,9 +148,29 @@ public class Main extends ApplicationAdapter {
         if (!isGameOver) {
             // Toggle Inventory
             if (Gdx.input.isKeyJustPressed(Input.Keys.TAB)) {
-                isInventoryOpen = !isInventoryOpen;
-                gamePaused = isInventoryOpen;
-                System.out.println("Inventory:  " + (isInventoryOpen ?  "OPEN (PAUSED)" : "CLOSED"));
+                if (!isCookingMenuOpen) { // Only toggle inventory if cooking menu is closed
+                    isInventoryOpen = !isInventoryOpen;
+                    gamePaused = isInventoryOpen;
+                    System.out.println("Inventory:  " + (isInventoryOpen ?  "OPEN (PAUSED)" : "CLOSED"));
+                }
+            }
+
+            // Toggle Cooking Menu (when near campfire)
+            if (Gdx.input.isKeyJustPressed(Input.Keys.C)) {
+                if (!isInventoryOpen && campfire.isPlayerNearby(player)) {
+                    isCookingMenuOpen = !isCookingMenuOpen;
+                    cookingMenu.setVisible(isCookingMenuOpen);
+                    gamePaused = isCookingMenuOpen;
+                }
+            }
+
+            // Update Cooking Menu
+            if (isCookingMenuOpen) {
+                cookingMenu.update(player.inventory);
+                if (!cookingMenu.isVisible()) {
+                    isCookingMenuOpen = false;
+                    gamePaused = false;
+                }
             }
 
             // Update game (ONLY if not paused)
@@ -138,6 +181,11 @@ public class Main extends ApplicationAdapter {
                 // Keep player within map bounds
                 player.position.x = MathUtils.clamp(player.position.x, 0, 7040 - player.getWidth());
                 player.position.y = MathUtils.clamp(player.position.y, 0, 7040 - player.getHeight());
+
+                // Update SignBoards (Campfire doesn't need update anymore)
+                for (SignBoard sign : signBoards) {
+                    sign.update(player);
+                }
 
                 // Item Pickup
                 Iterator<GroundItem> itemIterator = groundItems.iterator();
@@ -280,6 +328,13 @@ public class Main extends ApplicationAdapter {
             r.renderTask.run();
         }
 
+        player.render(batch);
+        
+        // Render SignBoard text (must be in batch)
+        for (SignBoard sign : signBoards) {
+            sign.renderText(batch);
+        }
+        
         batch.end();
 
         // Debug
@@ -288,6 +343,14 @@ public class Main extends ApplicationAdapter {
         debugRenderer.begin(ShapeRenderer.ShapeType.Line);
         for (Monster m : monsters) {
             m.renderDebug(debugRenderer);
+        }
+        debugRenderer.end();
+
+        // Render Campfire and SignBoards (Filled shapes)
+        debugRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        campfire.render(debugRenderer);
+        for (SignBoard sign : signBoards) {
+            sign.render(debugRenderer);
         }
         debugRenderer.end();
 
@@ -307,6 +370,17 @@ public class Main extends ApplicationAdapter {
 
         if (isInventoryOpen) {
             inventoryUI.render(player.inventory);
+        }
+
+        // Render Cooking Menu (LAST - in UI/Screen Space)
+        if (isCookingMenuOpen) {
+            // Switch to UI/Screen coordinates (not world coordinates)
+            com.badlogic.gdx.math.Matrix4 uiMatrix = new com.badlogic.gdx.math.Matrix4();
+            uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.setProjectionMatrix(uiMatrix);
+            debugRenderer.setProjectionMatrix(uiMatrix);
+            
+            cookingMenu.render(batch, debugRenderer, player.inventory);
         }
 
         if (isGameOver) {
@@ -390,7 +464,11 @@ public class Main extends ApplicationAdapter {
         debugRenderer.dispose();
         gameHud.dispose();
         inventoryUI.dispose();
+        cookingMenu.dispose();
         font.dispose();
+        for (SignBoard sign : signBoards) {
+            sign.dispose();
+        }
         mapRenderer.dispose();
         GameAssetManager.getInstance().dispose();
     }

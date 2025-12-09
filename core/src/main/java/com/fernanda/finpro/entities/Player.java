@@ -32,7 +32,7 @@ public class Player {
     // --- CONFIG HITBOX SERANGAN ---
     private static final float ATTACK_WIDTH = 25f;
     private static final float ATTACK_HEIGHT = 25f;
-    private static final float ATTACK_OFFSET_Y = 5f;
+    private static final float ATTACK_OFFSET_Y = 0f;
 
     // Timing Hitbox Serangan
     private static final float DAMAGE_START_TIME = 0.2f;
@@ -42,7 +42,7 @@ public class Player {
 
     // --- COOLDOWN & TIMERS ---
     private float attackTimer = 0f;
-    private final float ATTACK_COOLDOWN = 0.5f;
+    private final float ATTACK_COOLDOWN = 1f;
 
     // --- DODGE CONFIG ---
     private DodgeState dodgeState;
