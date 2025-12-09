@@ -267,4 +267,7 @@ public class Orc extends Monster {
             sr.circle(position.x + WIDTH/2, position.y + HEIGHT + 10, 5);
         }
     }
+    public com.fernanda.finpro. components.ItemType rollDrop() {
+        return com.fernanda.finpro.components.ItemType.ORC_SKULL;
+    }
 }
