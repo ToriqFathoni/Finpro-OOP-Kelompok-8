@@ -50,8 +50,11 @@ public class Player {
     private final float DODGE_SPEED = 300f;
     private final float DODGE_COST = 20f;
 
-    // PERUBAHAN: Ubah nilai ini untuk tes (misal 1.0f atau 2.0f)
-    private final float DODGE_WAIT_TIME = 0.3f; // Jeda PASTI setelah dodge selesai
+    private final float DODGE_WAIT_TIME = 0.3f;
+
+    // Timer invincibility setelah kena hit
+    private float invincibilityTimer = 0f;
+    private final float INVINCIBILITY_DURATION = 1.0f;
 
     private Vector2 dodgeDirection = new Vector2();
 
@@ -60,6 +63,8 @@ public class Player {
     private PlayerState idleState;
     private PlayerState walkState;
     private AttackState attackState;
+    private HurtState hurtState;
+    private DeathState deathState;
 
     private InputHandler inputHandler;
     private float stateTime;
@@ -76,6 +81,8 @@ public class Player {
         this.walkState = new WalkState();
         this.attackState = new AttackState();
         this.dodgeState = new DodgeState();
+        this.hurtState = new HurtState();
+        this.deathState = new DeathState();
 
         this.currentState = idleState;
         this.stateTime = 0f;
@@ -88,37 +95,33 @@ public class Player {
     // GAME LOOP (UPDATE)
     // =========================================================
     public void update(float dt) {
-        // 1. Update Component Stats
         stats.update(dt);
 
-        // 2. Cooldowns
+        if (invincibilityTimer > 0) {
+            invincibilityTimer -= dt;
+        }
+
         if (attackTimer > 0) attackTimer -= dt;
 
-        // Update Cooldown Dodge
         if (dodgeCooldownTimer > 0) {
             dodgeCooldownTimer -= dt;
         }
 
-        // 3. Input & Fisika
+        if (currentState == deathState) {
+            stateTime += dt;
+            velocity.set(0, 0);
+            return;
+        }
+
         inputHandler.handleInput(this);
 
-        // --- KHUSUS DODGE MOVEMENT ---
         if (currentState == dodgeState) {
-            // Paksa velocity ke arah dodge dengan kecepatan tinggi
             velocity.set(dodgeDirection).scl(DODGE_SPEED);
-
-            // Kurangi timer durasi dash
             dodgeTimer -= dt;
             if (dodgeTimer <= 0) {
-                // DODGE SELESAI
                 velocity.set(0, 0);
                 changeState(idleState);
-
-                // PERUBAHAN PENTING:
-                // Set cooldown timer DI SINI (saat dodge selesai), bukan saat mulai.
-                // Ini memastikan ada jeda "istirahat" sebelum bisa dodge lagi.
                 dodgeCooldownTimer = DODGE_WAIT_TIME;
-
                 System.out.println("Dodge Selesai. Masuk Cooldown: " + DODGE_WAIT_TIME + " detik.");
             }
         }
@@ -132,7 +135,6 @@ public class Player {
             facingRight = false;
         }
 
-        // 4. State Machine Logic
         if (currentState == dodgeState) {
             // Tunggu logika di atas
         }
@@ -141,13 +143,24 @@ public class Player {
                 changeState(idleState);
             }
         }
-        else {
-            if (currentState != idleState) {
+        else if (currentState == hurtState) {
+            if (hurtState.isFinished(stateTime)) {
                 changeState(idleState);
             }
         }
+        else {
+            if (velocity.len2() > 0) {
+                if (currentState != walkState) {
+                    changeState(walkState);
+                }
+            }
+            else {
+                if (currentState != idleState) {
+                    changeState(idleState);
+                }
+            }
+        }
 
-        // 5. Update Timer State
         stateTime += dt;
         currentState.update(dt);
     }
@@ -204,13 +217,35 @@ public class Player {
     // =========================================================
 
     public void takeDamage(float amount) {
-        // --- MEKANIK INVINCIBILITY (KEBAL) ---
+        // Cek Dodge
         if (currentState == dodgeState) {
-            System.out.println("DODGED! (Damage diabaikan)");
+            System.out.println("DODGED! (Damage diabaikan karena rolling)");
             return;
         }
 
+        // Cek timer kebal
+        if (invincibilityTimer > 0) {
+            return;
+        }
+
+        // Proses Damage
         stats.takeDamage(amount);
+
+        if (stats.getCurrentHealth() <= 0) {
+            if (currentState != deathState) {
+                changeState(deathState);
+                velocity.set(0, 0);
+                System.out.println("Player Mati -> Masuk DeathState");
+            }
+        } else {
+            changeState(hurtState);
+            System.out.println("Player Luka -> Masuk HurtState");
+        }
+
+        // Reset Timer, nyalain mode kebal buat 1 detik ke depan
+        invincibilityTimer = INVINCIBILITY_DURATION;
+
+        System.out.println("Player terkena hit! Kebal aktif selama " + INVINCIBILITY_DURATION + "s");
     }
 
     public Rectangle getAttackHitbox() {
@@ -281,5 +316,24 @@ public class Player {
             // Reset warna batch
             batch.setColor(Color.WHITE);
         }
+    }
+    public void reset(float startX, float startY) {
+        this.position.set(startX, startY);
+        this.velocity.set(0, 0);
+        this.facingRight = true;
+
+        this.stats.reset();
+
+        this.invincibilityTimer = 0f;
+        this.attackTimer = 0f;
+        this.dodgeCooldownTimer = 0f;
+
+        changeState(idleState);
+
+        System.out.println("Player Reset: HP Penuh, State kembali ke Idle.");
+    }
+
+    public boolean isDeathAnimationFinished() {
+        return currentState == deathState && stateTime > 1.0f;
     }
 }

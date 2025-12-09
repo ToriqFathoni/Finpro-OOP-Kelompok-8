@@ -99,58 +99,72 @@ public class Main extends ApplicationAdapter {
         float dt = Gdx.graphics.getDeltaTime();
 
         if (!isGameOver) {
-            // Check Game Over
-            if (player.stats.getCurrentHealth() <= 0) {
-                isGameOver = true;
-            }
-
-            // 1. UPDATE PLAYER
             player.update(dt);
             handleInvisibleWall();
 
-            // 2. SPAWN SYSTEM & CLEANUP (Bertahap)
-
-        // Hapus monster mati dari list (penting untuk efisiensi)
-        for (int i = monsters.size() - 1; i >= 0; i--) {
-            if (monsters.get(i).canBeRemoved()) {
-                monsters.remove(i);
+            if (player.stats.getCurrentHealth() <= 0) {
+                if (player.isDeathAnimationFinished()) {
+                    isGameOver = true;
+                }
             }
-        }            // Spawn jika populasi kurang dari target maksimum
+
+            // 2. SPAWN SYSTEM & CLEANUP
+            for (int i = monsters.size() - 1; i >= 0; i--) {
+                if (monsters.get(i).canBeRemoved()) {
+                    monsters.remove(i);
+                }
+            }
+
             if (monsters.size() < maxOrcCount) {
                 spawnTimer += dt;
                 if (spawnTimer >= nextSpawnDelay) {
-                    // Panggil factory untuk spawn orc baru di lokasi acak hutan
                     monsters.add(MonsterFactory.createOrcInForest());
 
                     spawnTimer = 0;
-                    // Random waktu spawn berikutnya (cepat: 0.2 detik - 1.5 detik)
-                    nextSpawnDelay = MathUtils.random(0.2f, 1.5f);
+                    // Random waktu spawn berikutnya (cepat: 0.2 detik - 1.2 detik)
+                    nextSpawnDelay = MathUtils.random(0.2f, 1.2f);
                 }
             }
 
             // 3. UPDATE MONSTERS & COLLISION
             for (Monster m : monsters) {
-                // m.update() berisi logika boundary monster
                 m.update(dt);
                 m.aiBehavior(dt, player);
 
                 if (m.isDead()) continue;
 
-                // A. Player -> Monster
+                Rectangle playerBody = new Rectangle(player.position.x, player.position.y, player.getWidth(), player.getHeight());
+
+                // Player Serang Monster (Player Menyerang)
                 if (player.isHitboxActive()) {
                     if (player.getAttackHitbox().overlaps(m.getBodyHitbox())) {
                         m.takeDamage(10);
+                        // Knockback Monster
                         Vector2 knockback = new Vector2(m.position).sub(player.position).nor().scl(10);
                         m.position.add(knockback);
                     }
                 }
 
-                // B. Monster -> Player
+                // Monster Serang Player (Monster Mengayunkan Senjata)
                 Rectangle mAtkRect = m.getAttackHitbox();
                 if (mAtkRect.width > 0) {
-                    Rectangle playerBody = new Rectangle(player.position.x, player.position.y, player.getWidth(), player.getHeight());
                     if (mAtkRect.overlaps(playerBody)) {
                         player.takeDamage(m.getDamage());
+                    }
+                }
+
+                // C. Contact Damage
+                if (playerBody.overlaps(m.getBodyHitbox())) {
+                    player.takeDamage(5);
+
+                    // 2. Efek Push Back Player
+                    if (!player.isDodging()) {
+                        Vector2 pushDirection = new Vector2(player.position).sub(m.position).nor();
+
+                        // Kekuatan dorongan (sesuaikan)
+                        float pushForce = 300f * dt;
+
+                        player.position.mulAdd(pushDirection, pushForce);
                     }
                 }
             }
@@ -184,12 +198,12 @@ public class Main extends ApplicationAdapter {
         // --- RENDER GRID (Agar pergerakan terlihat) ---
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        
+
         worldRenderer.begin(ShapeRenderer.ShapeType.Line);
         worldRenderer.setColor(1f, 1f, 1f, 0.15f); // Putih transparan
 
         float gridSize = 100f;
-        
+
         // Hitung batas kamera agar tidak menggambar grid di seluruh dunia (Optimasi)
         float startX = camera.position.x - camera.viewportWidth / 2;
         float endX = camera.position.x + camera.viewportWidth / 2;
@@ -209,7 +223,7 @@ public class Main extends ApplicationAdapter {
         for (float y = startY; y <= endY; y += gridSize) {
             worldRenderer.line(startX, y, endX, y);
         }
-        
+
         worldRenderer.end();
         Gdx.gl.glDisable(GL20.GL_BLEND);
 
@@ -225,7 +239,7 @@ public class Main extends ApplicationAdapter {
         // Render Monster Debug (Hitbox Only)
         Gdx.gl.glEnable(GL20.GL_BLEND);
         debugRenderer.setProjectionMatrix(camera.combined);
-        debugRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        debugRenderer.begin(ShapeRenderer.ShapeType.Line);
         for (Monster m : monsters) {
             m.renderDebug(debugRenderer);
         }
@@ -270,8 +284,7 @@ public class Main extends ApplicationAdapter {
     }
 
     private void restartGame() {
-        player.position.set(2800, 0);
-        player.stats.reset();
+        player.reset(2800, 0);
         monsters.clear();
         spawnTimer = 0;
         isGameOver = false;
