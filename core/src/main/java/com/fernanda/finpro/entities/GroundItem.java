@@ -84,4 +84,5 @@ public class GroundItem {
     public Rectangle getHitbox() { return hitbox; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+    public Vector2 getPosition() { return position; }
 }

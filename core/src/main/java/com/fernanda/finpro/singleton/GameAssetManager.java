@@ -22,6 +22,15 @@ public class GameAssetManager {
     public static final String ORC_DEATH = "Orc-Death.png";
     public static final String ORC_SKULL = "orcskull.png";
 
+    // World Assets
+    public static final String TREE_1 = "world_assets/Objects/Tree_1.png";
+    public static final String TREE_2 = "world_assets/Objects/Tree_2.png";
+    public static final String TREE_3 = "world_assets/Objects/Tree_3.png";
+    public static final String FENCE_1 = "world_assets/Objects/Fence_1.png";
+    public static final String GRASS_1 = "world_assets/tanah/grass_1.png";
+    public static final String GRASS_2 = "world_assets/tanah/grass_2.png";
+    public static final String GRASS_3 = "world_assets/tanah/grass_3.png";
+
 
     private GameAssetManager() {
         manager = new AssetManager();
@@ -47,7 +56,14 @@ public class GameAssetManager {
         manager.load(ORC_HURT, Texture.class);
         manager.load(ORC_DEATH, Texture.class);
         manager.load(ORC_SKULL, Texture.class);
-
+        
+        manager.load(TREE_1, Texture.class);
+        manager.load(TREE_2, Texture.class);
+        manager.load(TREE_3, Texture.class);
+        manager.load(FENCE_1, Texture.class);
+        manager.load(GRASS_1, Texture.class);
+        manager.load(GRASS_2, Texture.class);
+        manager.load(GRASS_3, Texture.class);
 
     }
 
@@ -66,6 +82,13 @@ public class GameAssetManager {
         setFilter(ORC_ATTACK);
         setFilter(ORC_HURT);
         setFilter(ORC_DEATH);
+        setFilter(TREE_1);
+        setFilter(TREE_2);
+        setFilter(TREE_3);
+        setFilter(FENCE_1);
+        setFilter(GRASS_1);
+        setFilter(GRASS_2);
+        setFilter(GRASS_3);
     }
 
     private void setFilter(String fileName) {
