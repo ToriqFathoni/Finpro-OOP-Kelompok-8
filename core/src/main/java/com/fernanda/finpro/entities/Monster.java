@@ -88,11 +88,11 @@ public abstract class Monster {
     }
 
     protected void enforceZoneBoundaries() {
-        // Clamp to Map Bounds (0 to 7040)
+        // Clamp to Map Bounds (0 to 1168)
         if (position.x < 0) position.x = 0;
-        if (position.x > 7040 - bodyRect.width) position.x = 7040 - bodyRect.width;
+        if (position.x > 1168 - bodyRect.width) position.x = 1168 - bodyRect.width;
         if (position.y < 0) position.y = 0;
-        if (position.y > 7040 - bodyRect.height) position.y = 7040 - bodyRect.height;
+        if (position.y > 1168 - bodyRect.height) position.y = 1168 - bodyRect.height;
     }
 
     // Getters
