@@ -84,6 +84,7 @@ public class Main extends ApplicationAdapter {
     private Vector2 playerSpawnPoint = new Vector2(100, 100); // Default fallback
 
     private boolean isGameOver = false;
+    private boolean isIceWorld = false;
 
     @Override
     public void create() {
@@ -236,7 +237,7 @@ public class Main extends ApplicationAdapter {
                 }
 
                 // Spawn
-                if (monsters.size() < maxOrcCount) {
+                if (!isIceWorld && monsters.size() < maxOrcCount) {
                     spawnTimer += dt;
                     if (spawnTimer >= nextSpawnDelay) {
                         monsters.add(MonsterFactory.createOrcInForest());
@@ -418,6 +419,61 @@ public class Main extends ApplicationAdapter {
         // Player Collision
         Rectangle playerRect = player.getHitbox();
         handleEntityCollision(playerRect, player.position, player.getWidth(), player.getHeight());
+
+        // Check for World Transition (Green World -> Ice World)
+        if (!isIceWorld) {
+            checkWorldTransition(playerRect);
+        }
+    }
+
+    private void checkWorldTransition(Rectangle playerRect) {
+        // Check collision with "boss_spawn" layer
+        TiledMapTileLayer bossSpawnLayer = (TiledMapTileLayer) map.getLayers().get("boss_spawn");
+        if (bossSpawnLayer != null) {
+            int tileX = (int) ((playerRect.x + playerRect.width / 2) / 16);
+            int tileY = (int) ((playerRect.y + playerRect.height / 2) / 16);
+            
+            TiledMapTileLayer.Cell cell = bossSpawnLayer.getCell(tileX, tileY);
+            if (cell != null && cell.getTile() != null) {
+                switchToIceWorld();
+            }
+        }
+    }
+
+    private void switchToIceWorld() {
+        System.out.println("Switching to Ice World!");
+        isIceWorld = true;
+        
+        // Load Ice Map
+        map = GameAssetManager.getInstance().getIceMap();
+        mapRenderer.setMap(map);
+
+        // Find Ice Spawn Point
+        MapLayer layer = map.getLayers().get("spawn_ice_player");
+        if (layer instanceof TiledMapTileLayer) {
+            TiledMapTileLayer spawnLayer = (TiledMapTileLayer) layer;
+            boolean found = false;
+            for (int x = 0; x < spawnLayer.getWidth(); x++) {
+                for (int y = 0; y < spawnLayer.getHeight(); y++) {
+                    TiledMapTileLayer.Cell cell = spawnLayer.getCell(x, y);
+                    if (cell != null) {
+                        player.position.set(x * 16, y * 16);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+        }
+
+        // Clear Monsters and Items
+        monsters.clear();
+        groundItems.clear();
+        
+        // Disable Campfire and SignBoards in Ice World (for now)
+        // Or move them if needed. For now, just move them far away or clear list
+        signBoards.clear();
+        campfire = new Campfire(-1000, -1000); // Hide campfire
     }
 
     private void handleEntityCollision(Rectangle hitbox, Vector2 position, float width, float height) {
@@ -450,9 +506,13 @@ public class Main extends ApplicationAdapter {
         if (tileX < 0 || tileX >= 73 || tileY < 0 || tileY >= 73) return true; // Block out of bounds
 
         // Layers to check for collision
-        String[] collisionLayers = {
-            "building_coklat", "building_hijau"
-        };
+        String[] collisionLayers;
+        
+        if (isIceWorld) {
+            collisionLayers = new String[] { "ice_building" };
+        } else {
+            collisionLayers = new String[] { "building_coklat", "building_hijau" };
+        }
 
         for (String layerName : collisionLayers) {
             TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get(layerName);
