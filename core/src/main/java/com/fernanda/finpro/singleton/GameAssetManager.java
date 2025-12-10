@@ -26,7 +26,7 @@ public class GameAssetManager {
     public static final String ORC_SKULL = "orcskull.png";
 
     // Map Assets
-    public static final String MAP_TMX = "maps/oop_world_draft.tmx";
+    public static final String MAP_TMX = "maps/green_world_fix.tmx";
 
     private GameAssetManager() {
         manager = new AssetManager();

@@ -9,6 +9,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
@@ -78,6 +81,8 @@ public class Main extends ApplicationAdapter {
     private float nextSpawnDelay = 0;
     private int maxOrcCount;
 
+    private Vector2 playerSpawnPoint = new Vector2(100, 100); // Default fallback
+
     private boolean isGameOver = false;
 
     @Override
@@ -95,11 +100,26 @@ public class Main extends ApplicationAdapter {
         map = GameAssetManager.getInstance().getMap();
         mapRenderer = new OrthogonalTiledMapRenderer(map, 1.0f);
 
-        // Spawn Player near "Rumah Danau" (Top-Left of Map)
-        // House is approx at (640-832, 0-192) in Tiled coords (Top-Left origin)
-        // In LibGDX (Bottom-Left origin), Y = 7040 - 192 = 6848.
-        // Spawning slightly below the house.
-        player = new Player(730, 6700);
+        // Find Player Spawn Point
+        MapLayer layer = map.getLayers().get("spawn_player");
+        if (layer instanceof TiledMapTileLayer) {
+            TiledMapTileLayer spawnLayer = (TiledMapTileLayer) layer;
+            boolean found = false;
+            for (int x = 0; x < spawnLayer.getWidth(); x++) {
+                for (int y = 0; y < spawnLayer.getHeight(); y++) {
+                    TiledMapTileLayer.Cell cell = spawnLayer.getCell(x, y);
+                    if (cell != null) {
+                        playerSpawnPoint.set(x * 16, y * 16);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+        }
+
+        // Spawn Player
+        player = new Player(playerSpawnPoint.x, playerSpawnPoint.y);
 
         camera = new OrthographicCamera();
         viewport = new FitViewport(VIEWPORT_WIDTH, VIEWPORT_HEIGHT, camera);
@@ -117,16 +137,16 @@ public class Main extends ApplicationAdapter {
         renderQueue = new ArrayList<>();
 
         // Initialize Hardcore Cooking & Tutorial System
-        // Move Campfire right next to Player spawn for easy testing!
-        campfire = new Campfire(780, 6650);  // Near Player spawn at (730, 6700)
+        // Place Campfire near Player spawn (offset by 64 pixels / 4 tiles to the right)
+        campfire = new Campfire(playerSpawnPoint.x + 64, playerSpawnPoint.y);
         signBoards = new ArrayList<>();
         
         // SignBoard 1: Near Player Start (Tutorial)
-        signBoards.add(new SignBoard(700, 6650, 
+        signBoards.add(new SignBoard(playerSpawnPoint.x - 32, playerSpawnPoint.y, 
             "SURVIVAL TIP: Kill Monsters -> Gather Ingredients -> Cook at Fire!"));
         
         // SignBoard 2: Near Campfire (Recipe Hint)
-        signBoards.add(new SignBoard(850, 6650, 
+        signBoards.add(new SignBoard(playerSpawnPoint.x + 64, playerSpawnPoint.y + 40, 
             "CHEF'S NOTE: The Legendary Burger requires Meat, Herbs, and Slime Gel!"));
 
         maxOrcCount = MathUtils.random(40, 80);
@@ -179,8 +199,8 @@ public class Main extends ApplicationAdapter {
                 handleMapCollision();
                 
                 // Keep player within map bounds
-                player.position.x = MathUtils.clamp(player.position.x, 0, 7040 - player.getWidth());
-                player.position.y = MathUtils.clamp(player.position.y, 0, 7040 - player.getHeight());
+                player.position.x = MathUtils.clamp(player.position.x, 0, 1168 - player.getWidth());
+                player.position.y = MathUtils.clamp(player.position.y, 0, 1168 - player.getHeight());
 
                 // Update SignBoards (Campfire doesn't need update anymore)
                 for (SignBoard sign : signBoards) {
@@ -411,10 +431,10 @@ public class Main extends ApplicationAdapter {
     private void checkCollision(float x, float y, Vector2 position, float width, float height) {
         if (isCellBlocked(x, y)) {
             // Find center of the tile
-            int tileX = (int) (x / 32);
-            int tileY = (int) (y / 32);
-            float tileCenterX = tileX * 32 + 16;
-            float tileCenterY = tileY * 32 + 16;
+            int tileX = (int) (x / 16);
+            int tileY = (int) (y / 16);
+            float tileCenterX = tileX * 16 + 8;
+            float tileCenterY = tileY * 16 + 8;
             
             Vector2 pushDir = new Vector2(position.x + width/2 - tileCenterX, 
                                           position.y + height/2 - tileCenterY).nor();
@@ -424,15 +444,14 @@ public class Main extends ApplicationAdapter {
     }
 
     private boolean isCellBlocked(float x, float y) {
-        int tileX = (int) (x / 32);
-        int tileY = (int) (y / 32);
+        int tileX = (int) (x / 16);
+        int tileY = (int) (y / 16);
 
-        if (tileX < 0 || tileX >= 220 || tileY < 0 || tileY >= 220) return true; // Block out of bounds
+        if (tileX < 0 || tileX >= 73 || tileY < 0 || tileY >= 73) return true; // Block out of bounds
 
         // Layers to check for collision
         String[] collisionLayers = {
-            "danau", "tree_danau", "pagar_danau", "rumah_danau", 
-            "pagar_rumah_danau", "rock_rumah_danau", "nisan_rumah_danau"
+            "building_coklat", "building_hijau"
         };
 
         for (String layerName : collisionLayers) {
@@ -448,7 +467,7 @@ public class Main extends ApplicationAdapter {
     }
 
     private void restartGame() {
-        player.reset(3500, 3500);
+        player.reset(playerSpawnPoint.x, playerSpawnPoint.y);
         monsters.clear();
         groundItems. clear();
         spawnTimer = 0;
