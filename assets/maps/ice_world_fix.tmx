@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="73" height="73" tilewidth="16" tileheight="16" infinite="0" nextlayerid="10" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="73" height="73" tilewidth="16" tileheight="16" infinite="0" nextlayerid="11" nextobjectid="1">
  <tileset firstgid="1" source="tanah_b.tsx"/>
  <tileset firstgid="78" source="tanah.tsx"/>
  <tileset firstgid="650" source="house.tsx"/>
@@ -7,12 +7,17 @@
  <tileset firstgid="1913" source="dessert.tsx"/>
  <layer id="1" name="floor_ice" width="73" height="73">
   <data encoding="base64" compression="zlib">
-   eJztw0ENAAAMA6EzUP92Z2MPSFg1VVVVVVVVVVVVVVVVVVVVVVVVVVV9/ABpQQ6t
+   eJzt0rEJACAMRcFgn2ncfzcrS2MjKHKB68PjZ0QkAAAAAAAAAAAAAAAAAAAAAAAA8J3e7v/wOo00OtVIp9o8nfad7GltAI9RD8Y=
+  </data>
+ </layer>
+ <layer id="10" name="back_map_forest" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJzt0DENAAAIwDCCJfx74+AmXHxtMgOLAAAAAAAAAAAAAAAAAAAAAAAAAAD4Uzmx8+jWvFsA1Q==
   </data>
  </layer>
  <layer id="3" name="spawn_ice_player" width="73" height="73">
   <data encoding="base64" compression="zlib">
-   eJztzkERAAAIA6CdlezfzRjzAQlIAAAAAAAAAAAAAAAAAAAAAAAAAABo2mkP/juPtgA2
+   eJztzkEJAAAIBLDDSvbvZggfgmwJlgAAAAAAAAAAAAAAAAAAAAAAAAAAW13XA/htAAcFADY=
   </data>
  </layer>
  <layer id="6" name="lantai_ice" width="73" height="73">

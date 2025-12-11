@@ -64,8 +64,9 @@ public class Main extends ApplicationAdapter {
     private boolean gamePaused = false;
     private boolean isCookingMenuOpen = false;
 
-    private static final float VIEWPORT_WIDTH = 960f;
-    private static final float VIEWPORT_HEIGHT = 540f;
+    // Viewport diperkecil agar kamera lebih zoom-in ke player
+    private static final float VIEWPORT_WIDTH = 480f;
+    private static final float VIEWPORT_HEIGHT = 270f;
 
     ShapeRenderer worldRenderer;
     ShapeRenderer debugRenderer;
@@ -84,6 +85,7 @@ public class Main extends ApplicationAdapter {
     private Vector2 playerSpawnPoint = new Vector2(100, 100); // Default fallback
 
     private boolean isGameOver = false;
+    private boolean isIceWorld = false;
 
     @Override
     public void create() {
@@ -91,7 +93,7 @@ public class Main extends ApplicationAdapter {
         worldRenderer = new ShapeRenderer();
         debugRenderer = new ShapeRenderer();
         font = new BitmapFont();
-        font.getData().setScale(1.5f);
+        font.getData().setScale(0.8f); // Scale disesuaikan dengan viewport kecil
 
         GameAssetManager.getInstance().loadImages();
         GameAssetManager. getInstance().finishLoading();
@@ -137,16 +139,49 @@ public class Main extends ApplicationAdapter {
         renderQueue = new ArrayList<>();
 
         // Initialize Hardcore Cooking & Tutorial System
-        // Place Campfire near Player spawn (offset by 64 pixels / 4 tiles to the right)
-        campfire = new Campfire(playerSpawnPoint.x + 64, playerSpawnPoint.y);
+        // Find Campfire Position from Map Layer
+        Vector2 campfirePos = new Vector2(playerSpawnPoint.x + 64, playerSpawnPoint.y); // Default
+        MapLayer campfireLayer = map.getLayers().get("campfire");
+        if (campfireLayer instanceof TiledMapTileLayer) {
+            TiledMapTileLayer cfLayer = (TiledMapTileLayer) campfireLayer;
+            boolean found = false;
+            for (int x = 0; x < cfLayer.getWidth(); x++) {
+                for (int y = 0; y < cfLayer.getHeight(); y++) {
+                    if (cfLayer.getCell(x, y) != null) {
+                        campfirePos.set(x * 16, y * 16);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+        }
+
+        campfire = new Campfire(campfirePos.x, campfirePos.y);
         signBoards = new ArrayList<>();
 
-        // SignBoard 1: Near Player Start (Tutorial)
-        signBoards.add(new SignBoard(playerSpawnPoint.x - 32, playerSpawnPoint.y,
+        // SignBoard 1: Survival Tips from Map Layer
+        Vector2 survivalTipPos = new Vector2(playerSpawnPoint.x - 32, playerSpawnPoint.y); // Default
+        MapLayer tipsLayer = map.getLayers().get("survival_tips");
+        if (tipsLayer instanceof TiledMapTileLayer) {
+            TiledMapTileLayer tl = (TiledMapTileLayer) tipsLayer;
+            boolean found = false;
+            for (int x = 0; x < tl.getWidth(); x++) {
+                for (int y = 0; y < tl.getHeight(); y++) {
+                    if (tl.getCell(x, y) != null) {
+                        survivalTipPos.set(x * 16, y * 16);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+        }
+        signBoards.add(new SignBoard(survivalTipPos.x, survivalTipPos.y,
             "SURVIVAL TIP: Kill Monsters -> Gather Ingredients -> Cook at Fire!"));
 
         // SignBoard 2: Near Campfire (Recipe Hint)
-        signBoards.add(new SignBoard(playerSpawnPoint.x + 64, playerSpawnPoint.y + 40,
+        signBoards.add(new SignBoard(campfirePos.x + 40, campfirePos.y + 40,
             "CHEF'S NOTE: The Legendary Burger requires Meat, Herbs, and Slime Gel!"));
 
         monsters = new ArrayList<>();
@@ -236,7 +271,9 @@ public class Main extends ApplicationAdapter {
                 }
 
                 // Spawn
-                spawnManager.update(dt);
+                if (!isIceWorld) {
+                    spawnManager.update(dt);
+                }
 
                 for (Monster m : monsters) {
                     m.update(dt);
@@ -362,26 +399,163 @@ public class Main extends ApplicationAdapter {
             com.badlogic.gdx.math.Matrix4 uiMatrix = new com.badlogic.gdx.math.Matrix4();
             uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             batch.setProjectionMatrix(uiMatrix);
-            debugRenderer.setProjectionMatrix(uiMatrix);
-
-            cookingMenu.render(batch, debugRenderer, player.inventory);
+            worldRenderer.setProjectionMatrix(uiMatrix);
+            
+            cookingMenu.render(batch, worldRenderer, player.inventory);
         }
 
         if (isGameOver) {
             batch.setProjectionMatrix(camera.combined);
             batch.begin();
             font.setColor(Color.RED);
-            font.draw(batch, "GAME OVER - Press R to Restart", player.position.x - 200, player.position.y + 100);
+            font.draw(batch, "GAME OVER - Press R to Restart", player.position.x - 100, player.position.y + 50);
             batch.end();
-        }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys. ESCAPE)) Gdx.app.exit();
+            if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+                restartGame();
+            }
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) Gdx.app.exit();
+        }
     }
 
     private void handleMapCollision() {
         // Player Collision
         Rectangle playerRect = player.getHitbox();
         handleEntityCollision(playerRect, player.position, player.getWidth(), player.getHeight());
+
+        // Check for World Transition
+        checkWorldTransition(playerRect);
+    }
+
+    private void checkWorldTransition(Rectangle playerRect) {
+        String targetLayerName = isIceWorld ? "back_map_forest" : "next_map";
+        
+        TiledMapTileLayer transitionLayer = (TiledMapTileLayer) map.getLayers().get(targetLayerName);
+        if (transitionLayer != null) {
+            int tileX = (int) ((playerRect.x + playerRect.width / 2) / 16);
+            int tileY = (int) ((playerRect.y + playerRect.height / 2) / 16);
+            
+            TiledMapTileLayer.Cell cell = transitionLayer.getCell(tileX, tileY);
+            if (cell != null && cell.getTile() != null) {
+                if (isIceWorld) {
+                    switchToForestWorld();
+                } else {
+                    switchToIceWorld();
+                }
+            }
+        }
+    }
+
+    private void switchToIceWorld() {
+        System.out.println("Switching to Ice World!");
+        isIceWorld = true;
+        
+        // Load Ice Map
+        map = GameAssetManager.getInstance().getIceMap();
+        mapRenderer.setMap(map);
+
+        // Find Ice Spawn Point
+        MapLayer layer = map.getLayers().get("spawn_ice_player");
+        if (layer instanceof TiledMapTileLayer) {
+            TiledMapTileLayer spawnLayer = (TiledMapTileLayer) layer;
+            boolean found = false;
+            for (int x = 0; x < spawnLayer.getWidth(); x++) {
+                for (int y = 0; y < spawnLayer.getHeight(); y++) {
+                    if (spawnLayer.getCell(x, y) != null) {
+                        player.position.set(x * 16, y * 16);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+        }
+
+        // Clear Monsters and Items
+        monsters.clear();
+        groundItems.clear();
+        spawnManager.reset();
+
+        // Disable Campfire and SignBoards in Ice World
+        signBoards.clear();
+        campfire = new Campfire(-1000, -1000); // Hide campfire
+    }
+
+    private void switchToForestWorld() {
+        System.out.println("Switching to Forest World!");
+        isIceWorld = false;
+        
+        // Load Forest Map
+        map = GameAssetManager.getInstance().getMap();
+        mapRenderer.setMap(map);
+
+        // Find Player Spawn Point (or a specific return point if you have one)
+        // Using spawn_player_back layer for returning from Ice World
+        MapLayer layer = map.getLayers().get("spawn_player_back");
+        if (layer instanceof TiledMapTileLayer) {
+            TiledMapTileLayer spawnLayer = (TiledMapTileLayer) layer;
+            boolean found = false;
+            for (int x = 0; x < spawnLayer.getWidth(); x++) {
+                for (int y = 0; y < spawnLayer.getHeight(); y++) {
+                    if (spawnLayer.getCell(x, y) != null) {
+                        player.position.set(x * 16, y * 16);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+        }
+
+        // Clear Monsters and Items
+        monsters.clear();
+        groundItems.clear();
+        spawnManager.reset();
+
+        // Re-initialize Campfire and SignBoards
+        // We need to re-run the logic to find campfire position
+        Vector2 campfirePos = new Vector2(player.position.x + 64, player.position.y);
+        MapLayer campfireLayer = map.getLayers().get("campfire");
+        if (campfireLayer instanceof TiledMapTileLayer) {
+            TiledMapTileLayer cl = (TiledMapTileLayer) campfireLayer;
+            boolean found = false;
+            for (int x = 0; x < cl.getWidth(); x++) {
+                for (int y = 0; y < cl.getHeight(); y++) {
+                    if (cl.getCell(x, y) != null) {
+                        campfirePos.set(x * 16, y * 16);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+        }
+        campfire = new Campfire(campfirePos.x, campfirePos.y);
+        
+        signBoards.clear();
+        
+        // SignBoard 1: Survival Tips from Map Layer
+        Vector2 survivalTipPos = new Vector2(player.position.x - 32, player.position.y); // Default
+        MapLayer tipsLayer = map.getLayers().get("survival_tips");
+        if (tipsLayer instanceof TiledMapTileLayer) {
+            TiledMapTileLayer tl = (TiledMapTileLayer) tipsLayer;
+            boolean found = false;
+            for (int x = 0; x < tl.getWidth(); x++) {
+                for (int y = 0; y < tl.getHeight(); y++) {
+                    if (tl.getCell(x, y) != null) {
+                        survivalTipPos.set(x * 16, y * 16);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+        }
+        signBoards.add(new SignBoard(survivalTipPos.x, survivalTipPos.y,
+            "SURVIVAL TIP: Kill Monsters -> Gather Ingredients -> Cook at Fire!"));
+
+        signBoards.add(new SignBoard(campfirePos.x + 40, campfirePos.y + 40,
+            "CHEF'S NOTE: The Legendary Burger requires Meat, Herbs, and Slime Gel!"));
     }
 
     private void handleEntityCollision(Rectangle hitbox, Vector2 position, float width, float height) {
@@ -414,9 +588,13 @@ public class Main extends ApplicationAdapter {
         if (tileX < 0 || tileX >= 73 || tileY < 0 || tileY >= 73) return true; // Block out of bounds
 
         // Layers to check for collision
-        String[] collisionLayers = {
-            "building_coklat", "building_hijau"
-        };
+        String[] collisionLayers;
+        
+        if (isIceWorld) {
+            collisionLayers = new String[] { "ice_building" };
+        } else {
+            collisionLayers = new String[] { "building_coklat", "building_hijau" };
+        }
 
         for (String layerName : collisionLayers) {
             TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get(layerName);
