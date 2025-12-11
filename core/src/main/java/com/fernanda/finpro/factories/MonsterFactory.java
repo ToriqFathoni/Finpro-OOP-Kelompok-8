@@ -58,7 +58,7 @@ public class MonsterFactory {
     }
 
     // --- HELPER MATH ---
-    private static Vector2 getRandomSpawnPoint() {
+    public static Vector2 getRandomSpawnPoint() {
         TiledMap map = GameAssetManager.getInstance().getMap();
         MapLayer layer = map.getLayers().get("spawn_monster");
 

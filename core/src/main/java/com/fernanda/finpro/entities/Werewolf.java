@@ -17,7 +17,7 @@ public class Werewolf extends Monster {
     private static final int   WW_DMG = 20;
 
     // Dimensi Fisik
-    private static final float WIDTH = 30f;
+    private static final float WIDTH = 25f;
     private static final float HEIGHT = 35f;
 
     // AI Range
@@ -29,7 +29,7 @@ public class Werewolf extends Monster {
     private static final float HABITAT_MAX = 3500f;
 
     // Attack Timing
-    private static final float WINDUP_TIME = 0.2f;
+    private static final float WINDUP_TIME = 0.5f;
     private static final float ACTIVE_TIME = 0.6f;
     private static final float RECOVERY_TIME = 0.5f;
 
@@ -46,6 +46,7 @@ public class Werewolf extends Monster {
 
         this.detectionRadius = DETECT_RANGE;
         this.attackRadius = ATTACK_RANGE;
+        this.knockbackDistance = 1f;
 
         idleAnim = createAnimation(GameAssetManager.WEREWOLF_IDLE, 4, 0.15f, Animation.PlayMode.LOOP);
         attackAnim = createAnimation(GameAssetManager.WEREWOLF_ATTACK, 6, 0.1f, Animation.PlayMode.NORMAL);
@@ -141,12 +142,8 @@ public class Werewolf extends Monster {
         }
     }
 
-    private void moveTowards(Vector2 target) {
-        velocity.set(target).sub(position).nor().scl(speed);
-    }
-
     private void createAttackHitbox() {
-        float atkWidth = 30f;
+        float atkWidth = 25f;
         float atkHeight = 30f;
 
         float offsetIn = 5f;

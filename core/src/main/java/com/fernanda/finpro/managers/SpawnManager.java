@@ -1,48 +1,90 @@
 package com.fernanda.finpro.managers;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.fernanda.finpro.entities.Monster;
+import com.fernanda.finpro.entities.Orc;
+import com.fernanda.finpro.entities.Werewolf;
 import com.fernanda.finpro.factories.MonsterFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SpawnManager {
-    // Referensi ke list monster yang ada di Main
     private List<Monster> monsterList;
+    private List<SpawnRule> spawnRules;
 
-    // Config Spawn (Logika Timer & Jumlah)
-    private float spawnTimer = 0;
-    private float nextSpawnDelay = 0.5f;
-    private int maxOrcCount;
+    private static class SpawnRule {
+        MonsterFactory.Type type;
+        Class<? extends Monster> classType;
+        int maxCount;
+        float spawnInterval;
+        float timer;
+
+        public SpawnRule(MonsterFactory.Type type, Class<? extends Monster> classType, int maxCount, float interval) {
+            this.type = type;
+            this.classType = classType;
+            this.maxCount = maxCount;
+            this.spawnInterval = interval;
+            this.timer = 0;
+        }
+    }
 
     public SpawnManager(List<Monster> monsterList) {
         this.monsterList = monsterList;
+        this.spawnRules = new ArrayList<>();
 
-        this.maxOrcCount = MathUtils.random(10, 15);
-        System.out.println("Spawn Manager Active. Target: " + maxOrcCount + " Orcs.");
+        spawnRules.add(new SpawnRule(MonsterFactory.Type.ORC, Orc.class, 10, 3.0f));
+
+        spawnRules.add(new SpawnRule(MonsterFactory.Type.WEREWOLF, Werewolf.class, 4, 10.0f));
+
+        System.out.println("Spawn Manager Initialized with " + spawnRules.size() + " rules.");
     }
 
     public void update(float dt) {
-        // Cek apakah populasi masih kurang dari target
-        if (monsterList.size() < maxOrcCount) {
-            spawnTimer += dt;
+        for (SpawnRule rule : spawnRules) {
 
-            if (spawnTimer >= nextSpawnDelay) {
-                // Panggil Factory untuk spawn orc di hutan
-                monsterList.add(MonsterFactory.createForestMonster());
+            //  Cek Populasi Spesifik
+            int currentCount = countMonsters(rule.classType);
 
-                // Reset timer & acak waktu spawn berikutnya
-                spawnTimer = 0;
-                nextSpawnDelay = MathUtils.random(2f, 5f);
+            // Jika masih ada slot kosong
+            if (currentCount < rule.maxCount) {
+
+                // Jalankan Timer
+                rule.timer += dt;
+
+                if (rule.timer >= rule.spawnInterval) {
+                    // SPAWN!
+                    spawnMonster(rule.type);
+                    rule.timer = 0;
+                }
             }
         }
     }
 
-    // Method untuk reset saat Game Restart
+    private void spawnMonster(MonsterFactory.Type type) {
+        Vector2 pos = MonsterFactory.getRandomSpawnPoint();
+
+        Monster m = MonsterFactory.createMonster(type, pos.x, pos.y);
+        monsterList.add(m);
+
+        System.out.println("Spawned: " + type);
+    }
+
+    private int countMonsters(Class<?> type) {
+        int count = 0;
+        for (Monster m : monsterList) {
+            if (type.isInstance(m)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public void reset() {
-        spawnTimer = 0;
-        nextSpawnDelay = 0.5f;
-        maxOrcCount = MathUtils.random(10, 15);
-        System.out.println("Spawn Manager Reset. New Target: " + maxOrcCount);
+        for (SpawnRule rule : spawnRules) {
+            rule.timer = 0;
+        }
+        System.out.println("Spawn Manager Reset.");
     }
 }

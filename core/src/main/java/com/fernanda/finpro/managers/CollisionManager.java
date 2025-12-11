@@ -25,10 +25,11 @@ public class CollisionManager {
             // PLAYER MENYERANG MONSTER
             if (player.isHitboxActive()) {
                 if (player.getAttackHitbox().overlaps(m.getBodyHitbox())) {
-                    m.takeDamage(10);
+                    m.takeDamage(player.getDamage());
 
-                    // Efek Knockback ke Monster
-                    Vector2 knockback = new Vector2(m.position).sub(player.position).nor().scl(10);
+                    float distance = m.getKnockbackDistance();
+
+                    Vector2 knockback = new Vector2(m.position).sub(player.position).nor().scl(distance);
                     m.position.add(knockback);
                 }
             }

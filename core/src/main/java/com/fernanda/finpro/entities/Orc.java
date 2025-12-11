@@ -53,6 +53,7 @@ public class Orc extends Monster {
 
         this.detectionRadius = DETECT_RANGE;
         this.attackRadius = ATTACK_RANGE;
+        this.knockbackDistance = 20f;
 
         // Init Animations
         idleAnim = createAnimation(GameAssetManager.ORC_IDLE, 6, 0.1f, Animation.PlayMode.LOOP);
@@ -200,9 +201,9 @@ public class Orc extends Monster {
         }
     }
 
-    private void moveTowards(Vector2 target) {
-        velocity.set(target).sub(position).nor().scl(speed);
-    }
+    // private void moveTowards(Vector2 target) {
+    //    velocity.set(target).sub(position).nor().scl(speed);
+    //}
 
     private void createAttackHitbox() {
         float atkWidth = 20f;
