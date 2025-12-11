@@ -1,0 +1,32 @@
+C:\Users\fosin\Downloads\frontends\frontends\core\src\main\java\com\fernanda\finpro\Main.java:145: error: variable layer is already defined in method create()
+            TiledMapTileLayer layer = (TiledMapTileLayer) campfireLayer;
+                              ^
+C:\Users\fosin\Downloads\frontends\frontends\core\src\main\java\com\fernanda\finpro\Main.java:386: error: method render in class CookingMenu cannot be applied to given types;
+            cookingMenu.render(batch);
+                       ^
+  required: SpriteBatch,ShapeRenderer,Inventory
+  found:    SpriteBatch
+  reason: actual and formal argument lists differ in length
+2 errors
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':core:compileJava'.
+> Compilation failed; see the compiler output below.
+  C:\Users\fosin\Downloads\frontends\frontends\core\src\main\java\com\fernanda\finpro\Main.java:386: error: method render in class CookingMenu cannot be applied to given types;
+              cookingMenu.render(batch);
+                         ^
+    required: SpriteBatch,ShapeRenderer,Inventory
+    found:    SpriteBatch
+    reason: actual and formal argument lists differ in length
+  C:\Users\fosin\Downloads\frontends\frontends\core\src\main\java\com\fernanda\finpro\Main.java:145: error: variable layer is already defined in method create()
+              TiledMapTileLayer layer = (TiledMapTileLayer) campfireLayer;
+                                ^
+  2 errors
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights.
+
+BUILD FAILED in 36s
