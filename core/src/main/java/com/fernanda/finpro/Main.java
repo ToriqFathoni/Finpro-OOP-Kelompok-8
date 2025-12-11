@@ -26,6 +26,8 @@ import com.fernanda.finpro.entities.Monster;
 import com.fernanda.finpro.entities.Orc;
 import com.fernanda.finpro.entities.Player;
 import com.fernanda.finpro.factories.MonsterFactory;
+import com.fernanda.finpro.managers.CollisionManager;
+import com.fernanda.finpro.managers.SpawnManager;
 import com.fernanda.finpro.objects.Campfire;
 import com.fernanda.finpro.objects.SignBoard;
 import com.fernanda.finpro.singleton.GameAssetManager;
@@ -46,10 +48,10 @@ public class Main extends ApplicationAdapter {
     GameHud gameHud;
     InventoryUI inventoryUI;
     CookingMenu cookingMenu;
-    
+
     TiledMap map;
     OrthogonalTiledMapRenderer mapRenderer;
-    
+
     List<Monster> monsters;
     List<GroundItem> groundItems;
     List<Renderable> renderQueue;
@@ -76,15 +78,12 @@ public class Main extends ApplicationAdapter {
     private static final float RADIUS_FOREST = 3500f;
 
     private Vector2 tempVector = new Vector2();
-
-    private float spawnTimer = 0;
-    private float nextSpawnDelay = 0;
-    private int maxOrcCount;
+    private SpawnManager spawnManager;
+    private CollisionManager collisionManager;
 
     private Vector2 playerSpawnPoint = new Vector2(100, 100); // Default fallback
 
     private boolean isGameOver = false;
-    private boolean isIceWorld = false;
 
     @Override
     public void create() {
@@ -141,18 +140,18 @@ public class Main extends ApplicationAdapter {
         // Place Campfire near Player spawn (offset by 64 pixels / 4 tiles to the right)
         campfire = new Campfire(playerSpawnPoint.x + 64, playerSpawnPoint.y);
         signBoards = new ArrayList<>();
-        
+
         // SignBoard 1: Near Player Start (Tutorial)
-        signBoards.add(new SignBoard(playerSpawnPoint.x - 32, playerSpawnPoint.y, 
+        signBoards.add(new SignBoard(playerSpawnPoint.x - 32, playerSpawnPoint.y,
             "SURVIVAL TIP: Kill Monsters -> Gather Ingredients -> Cook at Fire!"));
-        
+
         // SignBoard 2: Near Campfire (Recipe Hint)
-        signBoards.add(new SignBoard(playerSpawnPoint.x + 64, playerSpawnPoint.y + 40, 
+        signBoards.add(new SignBoard(playerSpawnPoint.x + 64, playerSpawnPoint.y + 40,
             "CHEF'S NOTE: The Legendary Burger requires Meat, Herbs, and Slime Gel!"));
 
-        maxOrcCount = MathUtils.random(40, 80);
-        System.out.println("Target Populasi Orc: " + maxOrcCount);
-        nextSpawnDelay = 0.5f;
+        monsters = new ArrayList<>();
+        spawnManager = new SpawnManager(monsters);
+        collisionManager = new CollisionManager(player, monsters);
     }
 
     @Override
@@ -198,7 +197,7 @@ public class Main extends ApplicationAdapter {
             if (!gamePaused) {
                 player.update(dt);
                 handleMapCollision();
-                
+
                 // Keep player within map bounds
                 player.position.x = MathUtils.clamp(player.position.x, 0, 1168 - player.getWidth());
                 player.position.y = MathUtils.clamp(player.position.y, 0, 1168 - player.getHeight());
@@ -237,51 +236,15 @@ public class Main extends ApplicationAdapter {
                 }
 
                 // Spawn
-                if (!isIceWorld && monsters.size() < maxOrcCount) {
-                    spawnTimer += dt;
-                    if (spawnTimer >= nextSpawnDelay) {
-                        monsters.add(MonsterFactory.createOrcInForest());
-                        spawnTimer = 0;
-                        nextSpawnDelay = MathUtils.random(0.2f, 1.2f);
-                    }
-                }
+                spawnManager.update(dt);
 
-                // Monster AI & Collision
                 for (Monster m : monsters) {
                     m.update(dt);
-                    m. aiBehavior(dt, player);
-                    
-                    // Apply Map Collision to Monster
+                    m.aiBehavior(dt, player);
+
                     handleEntityCollision(m.getBodyHitbox(), m.position, m.getBodyHitbox().width, m.getBodyHitbox().height);
-
-                    if (m.isDead()) continue;
-
-                    Rectangle playerBody = player.getHitbox();
-
-                    if (player.isHitboxActive()) {
-                        if (player.getAttackHitbox().overlaps(m.getBodyHitbox())) {
-                            m.takeDamage(10);
-                            Vector2 knockback = new Vector2(m.position).sub(player.position).nor().scl(10);
-                            m.position.add(knockback);
-                        }
-                    }
-
-                    Rectangle mAtkRect = m.getAttackHitbox();
-                    if (mAtkRect.width > 0) {
-                        if (mAtkRect.overlaps(playerBody)) {
-                            player.takeDamage(m.getDamage());
-                        }
-                    }
-
-                    if (playerBody.overlaps(m.getBodyHitbox())) {
-                        player.takeDamage(5);
-                        if (! player.isDodging()) {
-                            Vector2 pushDirection = new Vector2(player.position).sub(m.position).nor();
-                            float pushForce = 300f * dt;
-                            player.position.mulAdd(pushDirection, pushForce);
-                        }
-                    }
                 }
+                collisionManager.update(dt);
             } else {
                 // Handle inventory input & check if should close
                 boolean shouldClose = inventoryUI.handleInput();
@@ -316,7 +279,7 @@ public class Main extends ApplicationAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         viewport.apply();
-        
+
         // Render Map
         mapRenderer.setView(camera);
         mapRenderer.render();
@@ -324,7 +287,7 @@ public class Main extends ApplicationAdapter {
         // Render Sprites
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        
+
         // Prepare Render Queue
         renderQueue.clear();
 
@@ -350,12 +313,12 @@ public class Main extends ApplicationAdapter {
         }
 
         player.render(batch);
-        
+
         // Render SignBoard text (must be in batch)
         for (SignBoard sign : signBoards) {
             sign.renderText(batch);
         }
-        
+
         batch.end();
 
         // Debug
@@ -400,7 +363,7 @@ public class Main extends ApplicationAdapter {
             uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             batch.setProjectionMatrix(uiMatrix);
             debugRenderer.setProjectionMatrix(uiMatrix);
-            
+
             cookingMenu.render(batch, debugRenderer, player.inventory);
         }
 
@@ -419,61 +382,6 @@ public class Main extends ApplicationAdapter {
         // Player Collision
         Rectangle playerRect = player.getHitbox();
         handleEntityCollision(playerRect, player.position, player.getWidth(), player.getHeight());
-
-        // Check for World Transition (Green World -> Ice World)
-        if (!isIceWorld) {
-            checkWorldTransition(playerRect);
-        }
-    }
-
-    private void checkWorldTransition(Rectangle playerRect) {
-        // Check collision with "boss_spawn" layer
-        TiledMapTileLayer bossSpawnLayer = (TiledMapTileLayer) map.getLayers().get("boss_spawn");
-        if (bossSpawnLayer != null) {
-            int tileX = (int) ((playerRect.x + playerRect.width / 2) / 16);
-            int tileY = (int) ((playerRect.y + playerRect.height / 2) / 16);
-            
-            TiledMapTileLayer.Cell cell = bossSpawnLayer.getCell(tileX, tileY);
-            if (cell != null && cell.getTile() != null) {
-                switchToIceWorld();
-            }
-        }
-    }
-
-    private void switchToIceWorld() {
-        System.out.println("Switching to Ice World!");
-        isIceWorld = true;
-        
-        // Load Ice Map
-        map = GameAssetManager.getInstance().getIceMap();
-        mapRenderer.setMap(map);
-
-        // Find Ice Spawn Point
-        MapLayer layer = map.getLayers().get("spawn_ice_player");
-        if (layer instanceof TiledMapTileLayer) {
-            TiledMapTileLayer spawnLayer = (TiledMapTileLayer) layer;
-            boolean found = false;
-            for (int x = 0; x < spawnLayer.getWidth(); x++) {
-                for (int y = 0; y < spawnLayer.getHeight(); y++) {
-                    TiledMapTileLayer.Cell cell = spawnLayer.getCell(x, y);
-                    if (cell != null) {
-                        player.position.set(x * 16, y * 16);
-                        found = true;
-                        break;
-                    }
-                }
-                if (found) break;
-            }
-        }
-
-        // Clear Monsters and Items
-        monsters.clear();
-        groundItems.clear();
-        
-        // Disable Campfire and SignBoards in Ice World (for now)
-        // Or move them if needed. For now, just move them far away or clear list
-        signBoards.clear();
-        campfire = new Campfire(-1000, -1000); // Hide campfire
     }
 
     private void handleEntityCollision(Rectangle hitbox, Vector2 position, float width, float height) {
@@ -491,10 +399,10 @@ public class Main extends ApplicationAdapter {
             int tileY = (int) (y / 16);
             float tileCenterX = tileX * 16 + 8;
             float tileCenterY = tileY * 16 + 8;
-            
-            Vector2 pushDir = new Vector2(position.x + width/2 - tileCenterX, 
+
+            Vector2 pushDir = new Vector2(position.x + width/2 - tileCenterX,
                                           position.y + height/2 - tileCenterY).nor();
-            
+
             position.add(pushDir.scl(2.0f));
         }
     }
@@ -506,13 +414,9 @@ public class Main extends ApplicationAdapter {
         if (tileX < 0 || tileX >= 73 || tileY < 0 || tileY >= 73) return true; // Block out of bounds
 
         // Layers to check for collision
-        String[] collisionLayers;
-        
-        if (isIceWorld) {
-            collisionLayers = new String[] { "ice_building" };
-        } else {
-            collisionLayers = new String[] { "building_coklat", "building_hijau" };
-        }
+        String[] collisionLayers = {
+            "building_coklat", "building_hijau"
+        };
 
         for (String layerName : collisionLayers) {
             TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get(layerName);
@@ -530,7 +434,7 @@ public class Main extends ApplicationAdapter {
         player.reset(playerSpawnPoint.x, playerSpawnPoint.y);
         monsters.clear();
         groundItems. clear();
-        spawnTimer = 0;
+        spawnManager.reset();
         isGameOver = false;
         isInventoryOpen = false;
         gamePaused = false;

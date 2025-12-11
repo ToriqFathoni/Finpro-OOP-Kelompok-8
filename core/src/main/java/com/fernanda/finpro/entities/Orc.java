@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.fernanda.finpro.components.ItemType;
 import com.fernanda.finpro.singleton.GameAssetManager;
@@ -15,12 +16,12 @@ public class Orc extends Monster {
 
     // --- CONFIG KHUSUS ORC ---
     private static final float ORC_SPEED = 80f;
-    private static final int   ORC_HP = 100;
-    private static final int   ORC_DMG = 15;
+    private static final int   ORC_HP = 50;
+    private static final int   ORC_DMG = 10;
 
     // Dimensi Hitbox Orc
-    private static final float WIDTH = 30f;
-    private static final float HEIGHT = 35f;
+    private static final float WIDTH = 20f;
+    private static final float HEIGHT = 25f;
 
     // AI Range
     private static final float DETECT_RANGE = 300f;
@@ -35,9 +36,9 @@ public class Orc extends Monster {
     private static final float ACTIVE_TIME = 0.6f; // Disesuaikan dengan durasi animasi (6 frame * 0.1s)
     private static final float RECOVERY_TIME = 0.5f;
 
-    // Hitbox baru muncul di detik ke-0.3 (Frame ke-3) agar pas dengan ayunan tangan
+    // Hitbox baru muncul di detik ke-0.3 (Frame ke-3)
     private static final float HIT_START_TIME = 0.3f;
-    // Hitbox menghilang di detik ke-0.5 (Sebelum animasi selesai)
+    // Hitbox menghilang di detik ke-0.5
     private static final float HIT_END_TIME = 0.5f;
 
     // --- ANIMATIONS ---
@@ -94,6 +95,26 @@ public class Orc extends Monster {
         Animation<TextureRegion> anim = new Animation<>(frameDuration, frames);
         anim.setPlayMode(mode);
         return anim;
+    }
+
+    private Rectangle getPredictedAttackHitbox() {
+        float atkWidth = 25f;
+        float atkHeight = 60f;
+
+        float offsetIn = 5f;
+        float offsetDown = 0f;
+
+        float atkX;
+        if (facingRight) {
+            atkX = (position.x + WIDTH) - offsetIn;
+        } else {
+            atkX = (position.x - atkWidth) + offsetIn;
+        }
+
+        float atkY = position.y + (HEIGHT / 2) - (atkHeight / 2) - offsetDown;
+
+        // Return rectangle baru (hanya untuk pengecekan)
+        return new Rectangle(atkX, atkY, atkWidth, atkHeight);
     }
 
     @Override
@@ -186,7 +207,7 @@ public class Orc extends Monster {
     private void createAttackHitbox() {
         float atkWidth = 20f;
         float atkHeight = 30f;
-        float offsetIn = 0.5f;   // Jarak geser "ke dalam" (mendekat ke badan)
+        float offsetIn = 3f;   // Jarak geser "ke dalam" (mendekat ke badan)
         float offsetDown = 0.5f; // Jarak geser "ke bawah"
 
         float atkX;
@@ -248,6 +269,9 @@ public class Orc extends Monster {
     @Override
     public void renderDebug(ShapeRenderer sr) {
         if (isDead) return;
+
+        sr.setColor(Color.BLUE); // Set warna biru
+        sr.rect(bodyRect.x, bodyRect.y, bodyRect.width, bodyRect.height);
 
         // Visualisasi Hitbox Serangan (Hanya muncul saat timing pas / kotak kuning)
         if (currentState == State.ATTACKING && attackRect.width > 0) {
