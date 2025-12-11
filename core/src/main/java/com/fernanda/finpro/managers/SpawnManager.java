@@ -34,11 +34,24 @@ public class SpawnManager {
         this.monsterList = monsterList;
         this.spawnRules = new ArrayList<>();
 
-        spawnRules.add(new SpawnRule(MonsterFactory.Type.ORC, Orc.class, 10, 3.0f));
+        // Aturan Spawn: Max 10 Orc, Interval 15 detik
+        spawnRules.add(new SpawnRule(MonsterFactory.Type.ORC, Orc.class, 10, 15.0f));
 
-        spawnRules.add(new SpawnRule(MonsterFactory.Type.WEREWOLF, Werewolf.class, 4, 10.0f));
+        // Aturan Spawn: Max 5 Werewolf, Interval 15 detik (Total 15 Monster)
+        spawnRules.add(new SpawnRule(MonsterFactory.Type.WEREWOLF, Werewolf.class, 5, 15.0f));
 
         System.out.println("Spawn Manager Initialized with " + spawnRules.size() + " rules.");
+        
+        // Spawn awal langsung (agar tidak menunggu player)
+        spawnInitialMonsters();
+    }
+
+    private void spawnInitialMonsters() {
+        for (SpawnRule rule : spawnRules) {
+            for (int i = 0; i < rule.maxCount; i++) {
+                spawnMonster(rule.type);
+            }
+        }
     }
 
     public void update(float dt) {
@@ -85,6 +98,8 @@ public class SpawnManager {
         for (SpawnRule rule : spawnRules) {
             rule.timer = 0;
         }
+        // Spawn ulang saat reset game
+        spawnInitialMonsters();
         System.out.println("Spawn Manager Reset.");
     }
 }
