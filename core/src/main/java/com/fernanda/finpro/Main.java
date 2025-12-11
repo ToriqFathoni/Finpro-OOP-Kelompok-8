@@ -65,8 +65,8 @@ public class Main extends ApplicationAdapter {
     private boolean isCookingMenuOpen = false;
 
     // Viewport diperkecil agar kamera lebih zoom-in ke player
-    private static final float VIEWPORT_WIDTH = 480f;
-    private static final float VIEWPORT_HEIGHT = 270f;
+    private static final float VIEWPORT_WIDTH = 800f;
+    private static final float VIEWPORT_HEIGHT = 450f;
 
     ShapeRenderer worldRenderer;
     ShapeRenderer debugRenderer;
@@ -400,7 +400,7 @@ public class Main extends ApplicationAdapter {
             uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             batch.setProjectionMatrix(uiMatrix);
             worldRenderer.setProjectionMatrix(uiMatrix);
-            
+
             cookingMenu.render(batch, worldRenderer, player.inventory);
         }
 
@@ -429,12 +429,12 @@ public class Main extends ApplicationAdapter {
 
     private void checkWorldTransition(Rectangle playerRect) {
         String targetLayerName = isIceWorld ? "back_map_forest" : "next_map";
-        
+
         TiledMapTileLayer transitionLayer = (TiledMapTileLayer) map.getLayers().get(targetLayerName);
         if (transitionLayer != null) {
             int tileX = (int) ((playerRect.x + playerRect.width / 2) / 16);
             int tileY = (int) ((playerRect.y + playerRect.height / 2) / 16);
-            
+
             TiledMapTileLayer.Cell cell = transitionLayer.getCell(tileX, tileY);
             if (cell != null && cell.getTile() != null) {
                 if (isIceWorld) {
@@ -449,7 +449,7 @@ public class Main extends ApplicationAdapter {
     private void switchToIceWorld() {
         System.out.println("Switching to Ice World!");
         isIceWorld = true;
-        
+
         // Load Ice Map
         map = GameAssetManager.getInstance().getIceMap();
         mapRenderer.setMap(map);
@@ -484,7 +484,7 @@ public class Main extends ApplicationAdapter {
     private void switchToForestWorld() {
         System.out.println("Switching to Forest World!");
         isIceWorld = false;
-        
+
         // Load Forest Map
         map = GameAssetManager.getInstance().getMap();
         mapRenderer.setMap(map);
@@ -531,9 +531,9 @@ public class Main extends ApplicationAdapter {
             }
         }
         campfire = new Campfire(campfirePos.x, campfirePos.y);
-        
+
         signBoards.clear();
-        
+
         // SignBoard 1: Survival Tips from Map Layer
         Vector2 survivalTipPos = new Vector2(player.position.x - 32, player.position.y); // Default
         MapLayer tipsLayer = map.getLayers().get("survival_tips");
@@ -589,7 +589,7 @@ public class Main extends ApplicationAdapter {
 
         // Layers to check for collision
         String[] collisionLayers;
-        
+
         if (isIceWorld) {
             collisionLayers = new String[] { "ice_building" };
         } else {
