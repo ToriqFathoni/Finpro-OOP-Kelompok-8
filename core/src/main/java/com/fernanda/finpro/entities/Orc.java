@@ -24,7 +24,7 @@ public class Orc extends Monster {
     private static final float HEIGHT = 25f;
 
     // AI Range
-    private static final float DETECT_RANGE = 300f;
+    private static final float DETECT_RANGE = 100f; // Diperkecil agar tidak terlalu agresif
     private static final float ATTACK_RANGE = 35f;
 
     // --- BATAS WILAYAH ORC (HUTAN) ---
@@ -48,12 +48,18 @@ public class Orc extends Monster {
     private Animation<TextureRegion> hurtAnim;
     private Animation<TextureRegion> deathAnim;
 
+    private Vector2 wanderTarget = new Vector2();
+    private float wanderWaitTimer = 0f;
+    private boolean isWanderWalking = false;
+    private boolean forceReverse = false;
+
     public Orc(float x, float y) {
         super(x, y, ORC_SPEED, ORC_HP, ORC_DMG, WIDTH, HEIGHT, HABITAT_MIN, HABITAT_MAX);
 
         this.detectionRadius = DETECT_RANGE;
         this.attackRadius = ATTACK_RANGE;
         this.knockbackDistance = 20f;
+        this.wanderTarget.set(x, y); // Init target ke posisi awal
 
         // Init Animations
         idleAnim = createAnimation(GameAssetManager.ORC_IDLE, 6, 0.1f, Animation.PlayMode.LOOP);
@@ -138,7 +144,8 @@ public class Orc extends Monster {
 
             case WANDER:
                 handleWander(dt);
-                if (distToPlayer < detectionRadius) {
+                // Hanya kejar jika player dekat DAN player masuk area patroli
+                if (distToPlayer < detectionRadius && player.position.dst(spawnPosition) < wanderRadius * 1.5f) {
                     currentState = State.CHASE;
                 }
                 break;
@@ -150,9 +157,10 @@ public class Orc extends Monster {
                     currentState = State.PREPARE_ATTACK;
                     stateTimer = 0;
                     velocity.set(0, 0);
-                } else if (distToPlayer > detectionRadius * 1.5f) {
-                    // Stop chasing if player is too far
+                } else if (player.position.dst(spawnPosition) > wanderRadius * 2.0f) {
+                    // Stop chasing if player runs too far from spawn point
                     currentState = State.WANDER;
+                    wanderTarget.set(spawnPosition); // Kembali ke spawn
                 }
                 break;
 
@@ -194,10 +202,70 @@ public class Orc extends Monster {
     }
 
     private void handleWander(float dt) {
-        if (stateTimer > 2.0f) {
-            float randomAngle = MathUtils.random(0, 360);
-            velocity.set(1, 0).setAngleDeg(randomAngle).scl(speed * 0.5f);
-            stateTimer = 0;
+        if (isWanderWalking) {
+            // Sedang berjalan ke target
+            if (position.dst(wanderTarget) > 5f) {
+                // Gerak lurus manual (bypass moveTowards parent yang ada avoidance)
+                velocity.set(wanderTarget).sub(position).nor().scl(speed);
+                
+                // Cek collision di depan (Center + Direction * Offset)
+                float checkDist = 16f; // Cek 16 pixel ke depan
+                float centerX = position.x + (WIDTH / 2);
+                float centerY = position.y + (HEIGHT / 2);
+                Vector2 dir = new Vector2(velocity).nor();
+                
+                float checkX = centerX + dir.x * checkDist;
+                float checkY = centerY + dir.y * checkDist;
+                
+                if (isTileBlocked(checkX, checkY)) {
+                     // Nabrak Tembok!
+                     velocity.set(0, 0);
+                     isWanderWalking = false;
+                     wanderWaitTimer = MathUtils.random(0.5f, 1.0f); // Idle sebentar sebelum balik arah
+                     forceReverse = true; // Tandai untuk balik arah setelah tunggu
+                }
+                
+                // Timeout jika kelamaan gak nyampe-nyampe (5 detik)
+                if (stateTimer > 5.0f) {
+                     isWanderWalking = false;
+                     wanderWaitTimer = MathUtils.random(1.0f, 3.0f);
+                     velocity.set(0, 0);
+                }
+
+            } else {
+                // Sampai di target
+                isWanderWalking = false;
+                wanderWaitTimer = MathUtils.random(2.0f, 5.0f); // Tunggu lama
+                velocity.set(0, 0);
+            }
+        } else {
+            // Sedang diam (Idle)
+            wanderWaitTimer -= dt;
+            velocity.set(0, 0); // Pastikan diam
+            
+            if (wanderWaitTimer <= 0) {
+                if (forceReverse) {
+                    // Balik arah (Opposite direction)
+                    // Jika facingRight (kanan), berarti nabrak tembok di kanan -> jalan ke kiri (180 derajat)
+                    // Jika !facingRight (kiri), berarti nabrak tembok di kiri -> jalan ke kanan (0 derajat)
+                    float baseAngle = facingRight ? 180f : 0f;
+                    float randomOffset = MathUtils.random(-45f, 45f); // Variasi sedikit
+                    float angle = baseAngle + randomOffset;
+                    
+                    float dist = MathUtils.random(30f, wanderRadius); // Jalan agak jauh
+                    wanderTarget.set(position).add(new Vector2(dist, 0).rotateDeg(angle));
+                    
+                    forceReverse = false; // Reset flag
+                } else {
+                    // Cari target baru (Random)
+                    float angle = MathUtils.random(0f, 360f);
+                    float dist = MathUtils.random(10f, wanderRadius);
+                    wanderTarget.set(spawnPosition).add(new Vector2(dist, 0).rotateDeg(angle));
+                }
+                
+                isWanderWalking = true;
+                stateTimer = 0; // Reset timer untuk timeout jalan
+            }
         }
     }
 
@@ -234,6 +302,13 @@ public class Orc extends Monster {
         switch (currentState) {
             case IDLE: currentAnim = idleAnim; break;
             case WANDER:
+                // Gunakan idleAnim jika diam, walkAnim jika jalan
+                if (velocity.len2() > 0.1f) {
+                    currentAnim = walkAnim;
+                } else {
+                    currentAnim = idleAnim;
+                }
+                break;
             case CHASE: currentAnim = walkAnim; break;
             case PREPARE_ATTACK: currentAnim = idleAnim; break;
             case ATTACKING:

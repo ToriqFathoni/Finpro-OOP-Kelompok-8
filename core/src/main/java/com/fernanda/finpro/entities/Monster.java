@@ -14,6 +14,7 @@ public abstract class Monster {
 
     // --- PHYSICS ---
     public Vector2 position;
+    public Vector2 spawnPosition; // Posisi awal spawn
     public Vector2 velocity;
     public Rectangle bodyRect;
     public Rectangle attackRect;
@@ -21,6 +22,7 @@ public abstract class Monster {
     // --- STATS ---
     protected float speed;
     protected float detectionRadius;
+    protected float wanderRadius = 64f; // Radius patroli (4 tiles)
     protected float attackRadius;
     protected int maxHealth;
     protected int currentHealth;
@@ -43,6 +45,7 @@ public abstract class Monster {
     // Constructor menerima zoneMin dan zoneMax
     public Monster(float x, float y, float speed, int maxHp, int damage, float width, float height, float zoneMin, float zoneMax) {
         this.position = new Vector2(x, y);
+        this.spawnPosition = new Vector2(x, y); // Simpan posisi spawn
         this.velocity = new Vector2(0, 0);
         this.speed = speed;
         this.maxHealth = maxHp;
