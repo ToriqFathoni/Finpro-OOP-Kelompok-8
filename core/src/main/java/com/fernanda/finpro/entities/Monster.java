@@ -1,10 +1,16 @@
 package com.fernanda.finpro.entities;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.fernanda.finpro.singleton.GameAssetManager;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class Monster {
 
@@ -63,6 +69,41 @@ public abstract class Monster {
         this.stateTimer = 0;
         this.isDead = false;
         this.facingRight = true;
+    }
+
+    protected Animation<TextureRegion> createAnimation(String assetName, int cols, float frameDuration, Animation.PlayMode mode) {
+        Texture texture = GameAssetManager.getInstance().getTexture(assetName);
+
+        int totalWidth = texture.getWidth();
+        int totalHeight = texture.getHeight();
+
+        int frameWidth = totalWidth / cols;
+        int rows = 1;
+
+        // Deteksi otomatis jika sprite sheet memiliki lebih dari 1 baris
+        if (totalHeight > frameWidth * 1.5f) {
+            rows = Math.round((float) totalHeight / frameWidth);
+            if (rows < 1) rows = 1;
+        }
+        int frameHeight = totalHeight / rows;
+
+        TextureRegion[][] tmp = TextureRegion.split(texture, frameWidth, frameHeight);
+
+        // Ratakan Array 2D menjadi 1D List agar aman
+        List<TextureRegion> framesList = new ArrayList<>();
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (i < tmp.length && j < tmp[i].length) {
+                    framesList.add(tmp[i][j]);
+                }
+            }
+        }
+
+        TextureRegion[] frames = framesList.toArray(new TextureRegion[0]);
+
+        Animation<TextureRegion> anim = new Animation<>(frameDuration, frames);
+        anim.setPlayMode(mode);
+        return anim;
     }
 
     public void takeDamage(int amount) {
