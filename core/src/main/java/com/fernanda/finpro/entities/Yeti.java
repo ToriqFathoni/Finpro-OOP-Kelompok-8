@@ -22,18 +22,18 @@ public class Yeti extends Monster {
     private static final float HEIGHT = 45f;
 
     private static final float DETECT_RANGE = 250f;
-    private static final float ATTACK_RANGE = 45f; // Jangkauan tangan panjang
+    private static final float ATTACK_RANGE = 45f;
 
     private static final float HABITAT_MIN = 0f;
     private static final float HABITAT_MAX = 2000f;
 
-    private static final float WINDUP_TIME = 0.5f;   // Ancang-ancang lama
-    private static final float ACTIVE_TIME = 0.8f;
-    private static final float RECOVERY_TIME = 1.5f; // Istirahat lama setelah memukul
+    private static final float WINDUP_TIME = 0.5f;
+    private static final float ACTIVE_TIME = 0.72f;
+    private static final float RECOVERY_TIME = 1.5f;
 
     // Hitbox timing
-    private static final float HIT_START_TIME = 0.5f;
-    private static final float HIT_END_TIME = 0.7f;
+    private static final float HIT_START_TIME = 0.36f;
+    private static final float HIT_END_TIME = 0.72f;
 
     private Animation<TextureRegion> idleAnim;
     private Animation<TextureRegion> attackAnim;
@@ -48,7 +48,7 @@ public class Yeti extends Monster {
 
         this.detectionRadius = DETECT_RANGE;
         this.attackRadius = ATTACK_RANGE;
-        this.knockbackDistance = 2f;
+        this.knockbackDistance = 0.5f;
         this.wanderTarget.set(x, y);
 
         // Init Animations
@@ -126,7 +126,6 @@ public class Yeti extends Monster {
     }
 
     private void handleWander(float dt) {
-        // Logic Wander sama persis dengan Orc/Werewolf
         if (isWanderWalking) {
             if (position.dst(wanderTarget) > 5f) {
                 // Panggil moveTowards dari Parent (Monster.java) agar menghindari tembok
@@ -166,9 +165,9 @@ public class Yeti extends Monster {
 
     private void createAttackHitbox() {
         // Hitbox Yeti Besar
-        float atkWidth = 40f;
+        float atkWidth = 60f;
         float atkHeight = 50f;
-        float offsetIn = 5f;
+        float offsetIn = 1f;
 
         float atkX;
         if (facingRight) {
