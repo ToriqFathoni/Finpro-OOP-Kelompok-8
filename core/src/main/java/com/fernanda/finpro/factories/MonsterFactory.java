@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.fernanda.finpro.entities.Monster;
 import com.fernanda.finpro.entities.Orc;
 import com.fernanda.finpro.entities.Werewolf;
+import com.fernanda.finpro.entities.Yeti;
 import com.fernanda.finpro.singleton.GameAssetManager;
 
 import java.util.ArrayList;
@@ -20,34 +21,27 @@ public class MonsterFactory {
 
     public enum Type {
         ORC,
-        WEREWOLF
+        WEREWOLF,
+        YETI
     }
 
     // --- CONFIG AREA SPAWN ---
     private static final float MAP_WIDTH = 1168f;
     private static final float MAP_HEIGHT = 1168f;
 
-    /**
-     * Method utama pembuatan monster.
-     * Logic ini scalable: cukup tambah case baru jika ada monster baru.
-     */
     public static Monster createMonster(Type type, float x, float y) {
         switch (type) {
             case ORC:
                 return new Orc(x, y);
-
             case WEREWOLF:
                 return new Werewolf(x, y);
+            case YETI: return new Yeti(x, y);
 
             default:
                 throw new IllegalArgumentException("Tipe Monster belum terdaftar: " + type);
         }
     }
 
-    /**
-     * Method khusus untuk spawn Orc di area Hutan.
-     * Mengatur posisi acak dalam lingkaran, lalu memanggil createMonster.
-     */
     public static Monster createForestMonster() {
         Vector2 pos = getRandomSpawnPoint();
         if (MathUtils.randomBoolean()) {

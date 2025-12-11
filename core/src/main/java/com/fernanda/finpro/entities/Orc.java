@@ -71,39 +71,6 @@ public class Orc extends Monster {
         this.deathDuration = 1.5f; // Body lingers for a while
     }
 
-    // Method helper canggih dari kode asli Anda (dipertahankan)
-    private Animation<TextureRegion> createAnimation(String assetName, int cols, float frameDuration, Animation.PlayMode mode) {
-        Texture texture = GameAssetManager.getInstance().getTexture(assetName);
-
-        int totalWidth = texture.getWidth();
-        int totalHeight = texture.getHeight();
-
-        int frameWidth = totalWidth / cols;
-        int rows = 1;
-        if (totalHeight > frameWidth * 1.5f) {
-            rows = Math.round((float)totalHeight / frameWidth);
-            if (rows < 1) rows = 1;
-        }
-        int frameHeight = totalHeight / rows;
-
-        float ratio = (float)frameWidth / frameHeight;
-        if (ratio > 1.2f || ratio < 0.8f) {
-            frameWidth = frameHeight;
-        }
-
-        TextureRegion[][] tmp = TextureRegion.split(texture, frameWidth, frameHeight);
-        int framesToUse = tmp[0].length;
-
-        TextureRegion[] frames = new TextureRegion[framesToUse];
-        for (int i = 0; i < framesToUse; i++) {
-            frames[i] = tmp[0][i];
-        }
-
-        Animation<TextureRegion> anim = new Animation<>(frameDuration, frames);
-        anim.setPlayMode(mode);
-        return anim;
-    }
-
     private Rectangle getPredictedAttackHitbox() {
         float atkWidth = 25f;
         float atkHeight = 60f;
@@ -203,20 +170,17 @@ public class Orc extends Monster {
 
     private void handleWander(float dt) {
         if (isWanderWalking) {
-            // Sedang berjalan ke target
             if (position.dst(wanderTarget) > 5f) {
-                // Gerak lurus manual (bypass moveTowards parent yang ada avoidance)
                 velocity.set(wanderTarget).sub(position).nor().scl(speed);
-                
-                // Cek collision di depan (Center + Direction * Offset)
-                float checkDist = 16f; // Cek 16 pixel ke depan
+
+                float checkDist = 16f;
                 float centerX = position.x + (WIDTH / 2);
                 float centerY = position.y + (HEIGHT / 2);
                 Vector2 dir = new Vector2(velocity).nor();
-                
+
                 float checkX = centerX + dir.x * checkDist;
                 float checkY = centerY + dir.y * checkDist;
-                
+
                 if (isTileBlocked(checkX, checkY)) {
                      // Nabrak Tembok!
                      velocity.set(0, 0);
@@ -224,7 +188,7 @@ public class Orc extends Monster {
                      wanderWaitTimer = MathUtils.random(0.5f, 1.0f); // Idle sebentar sebelum balik arah
                      forceReverse = true; // Tandai untuk balik arah setelah tunggu
                 }
-                
+
                 // Timeout jika kelamaan gak nyampe-nyampe (5 detik)
                 if (stateTimer > 5.0f) {
                      isWanderWalking = false;
@@ -242,7 +206,7 @@ public class Orc extends Monster {
             // Sedang diam (Idle)
             wanderWaitTimer -= dt;
             velocity.set(0, 0); // Pastikan diam
-            
+
             if (wanderWaitTimer <= 0) {
                 if (forceReverse) {
                     // Balik arah (Opposite direction)
@@ -251,10 +215,10 @@ public class Orc extends Monster {
                     float baseAngle = facingRight ? 180f : 0f;
                     float randomOffset = MathUtils.random(-45f, 45f); // Variasi sedikit
                     float angle = baseAngle + randomOffset;
-                    
+
                     float dist = MathUtils.random(30f, wanderRadius); // Jalan agak jauh
                     wanderTarget.set(position).add(new Vector2(dist, 0).rotateDeg(angle));
-                    
+
                     forceReverse = false; // Reset flag
                 } else {
                     // Cari target baru (Random)
@@ -262,7 +226,7 @@ public class Orc extends Monster {
                     float dist = MathUtils.random(10f, wanderRadius);
                     wanderTarget.set(spawnPosition).add(new Vector2(dist, 0).rotateDeg(angle));
                 }
-                
+
                 isWanderWalking = true;
                 stateTimer = 0; // Reset timer untuk timeout jalan
             }
@@ -276,15 +240,13 @@ public class Orc extends Monster {
     private void createAttackHitbox() {
         float atkWidth = 20f;
         float atkHeight = 30f;
-        float offsetIn = 3f;   // Jarak geser "ke dalam" (mendekat ke badan)
-        float offsetDown = 0.5f; // Jarak geser "ke bawah"
+        float offsetIn = 3f;
+        float offsetDown = 0.5f;
 
         float atkX;
         if (facingRight) {
-            // Jika hadap kanan, posisi X dikurangi offsetIn agar mundur ke kiri
             atkX = (position.x + WIDTH) - offsetIn;
         } else {
-            // Jika hadap kiri, posisi X ditambah offsetIn agar mundur ke kanan
             atkX = (position.x - atkWidth) + offsetIn;
         }
 
@@ -302,7 +264,6 @@ public class Orc extends Monster {
         switch (currentState) {
             case IDLE: currentAnim = idleAnim; break;
             case WANDER:
-                // Gunakan idleAnim jika diam, walkAnim jika jalan
                 if (velocity.len2() > 0.1f) {
                     currentAnim = walkAnim;
                 } else {

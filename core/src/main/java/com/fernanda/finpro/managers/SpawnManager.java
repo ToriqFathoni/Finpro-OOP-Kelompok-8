@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.fernanda.finpro.entities.Monster;
 import com.fernanda.finpro.entities.Orc;
 import com.fernanda.finpro.entities.Werewolf;
+import com.fernanda.finpro.entities.Yeti;
 import com.fernanda.finpro.factories.MonsterFactory;
 
 import java.util.ArrayList;
@@ -40,8 +41,10 @@ public class SpawnManager {
         // Aturan Spawn: Max 5 Werewolf, Interval 15 detik (Total 15 Monster)
         spawnRules.add(new SpawnRule(MonsterFactory.Type.WEREWOLF, Werewolf.class, 5, 15.0f));
 
+        spawnRules.add(new SpawnRule(MonsterFactory.Type.YETI, Yeti.class, 5, 15.0f));
+
         System.out.println("Spawn Manager Initialized with " + spawnRules.size() + " rules.");
-        
+
         // Spawn awal langsung (agar tidak menunggu player)
         spawnInitialMonsters();
     }
