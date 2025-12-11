@@ -1,8 +1,10 @@
 package com.fernanda.finpro.entities;
 
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.fernanda.finpro.singleton.GameAssetManager;
 
 public abstract class Monster {
 
@@ -23,9 +25,9 @@ public abstract class Monster {
     protected int maxHealth;
     protected int currentHealth;
     protected int attackDamage;
+    protected float knockbackDistance;
 
-    // --- ZONA HABITAT (SCALABILITY) ---
-    // Batas wilayah dimana monster boleh hidup
+    // --- ZONA HABITAT ---
     protected float zoneMinRadius;
     protected float zoneMaxRadius;
 
@@ -79,20 +81,73 @@ public abstract class Monster {
         if (immunityTimer > 0) immunityTimer -= dt;
         stateTimer += dt;
 
-        // --- LOGIKA BATAS WILAYAH (SCALABLE) ---
-        // Monster menjaga dirinya sendiri agar tidak keluar zona
         enforceZoneBoundaries();
 
-        // Update posisi hitbox mengikuti body
         bodyRect.setPosition(position.x, position.y);
     }
 
     protected void enforceZoneBoundaries() {
-        // Clamp to Map Bounds (0 to 1168)
         if (position.x < 0) position.x = 0;
         if (position.x > 1168 - bodyRect.width) position.x = 1168 - bodyRect.width;
         if (position.y < 0) position.y = 0;
         if (position.y > 1168 - bodyRect.height) position.y = 1168 - bodyRect.height;
+    }
+
+    protected void moveTowards(Vector2 target) {
+        // Arah ideal (Garis lurus ke player)
+        Vector2 direction = new Vector2(target).sub(position).nor();
+
+        // Jarak sensor (cek 32 pixel ke depan)
+        float checkDist = 32f;
+
+        // Titik tengah badan monster
+        float centerX = position.x + (bodyRect.width / 2);
+        float centerY = position.y + (bodyRect.height / 2);
+
+        // Posisi ujung sensor
+        float feelerX = centerX + (direction.x * checkDist);
+        float feelerY = centerY + (direction.y * checkDist);
+
+        // Jika sensor menabrak tembok
+        if (isTileBlocked(feelerX, feelerY)) {
+            // Coba cari jalan ke KANAN (serong 45 derajat)
+            Vector2 rightDir = new Vector2(direction).rotateDeg(-45);
+            if (!isTileBlocked(centerX + rightDir.x * checkDist, centerY + rightDir.y * checkDist)) {
+                direction = rightDir;
+            }
+            // Coba cari jalan ke KIRI (serong 45 derajat)
+            else {
+                Vector2 leftDir = new Vector2(direction).rotateDeg(45);
+                if (!isTileBlocked(centerX + leftDir.x * checkDist, centerY + leftDir.y * checkDist)) {
+                    direction = leftDir;
+                }
+            }
+        }
+
+        velocity.set(direction).scl(speed);
+    }
+
+    // Method Helper untuk membaca Map (Mendeteksi Tembok)
+    protected boolean isTileBlocked(float x, float y) {
+        com.badlogic.gdx.maps.tiled.TiledMap map = GameAssetManager.getInstance().getMap();
+
+        int tileX = (int) (x / 16);
+        int tileY = (int) (y / 16);
+
+        if (tileX < 0 || tileX >= 73 || tileY < 0 || tileY >= 73) return true;
+
+        String[] collisionLayers = { "building_coklat", "building_hijau" };
+
+        for (String layerName : collisionLayers) {
+            TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get(layerName);
+            if (layer != null) {
+                TiledMapTileLayer.Cell cell = layer.getCell(tileX, tileY);
+                if (cell != null && cell.getTile() != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // Getters
@@ -101,6 +156,9 @@ public abstract class Monster {
     public boolean isDead() { return isDead; }
     public boolean canBeRemoved() { return isDead && stateTimer > deathDuration; }
     public int getDamage() { return attackDamage; }
+    public float getKnockbackDistance() {
+        return knockbackDistance;
+    }
 
     // Abstract
     public abstract void aiBehavior(float dt, Player player);

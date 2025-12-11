@@ -18,10 +18,12 @@ public class Player {
 
     // --- COMPONENTS ---
     public PlayerStats stats;
-    public Inventory inventory; // NEW
+    public Inventory inventory;
 
-    // --- CONFIG BADAN (LOGIKA) ---
-    // Diperkecil agar collision lebih forgiving (bisa masuk celah sempit)
+    // STATS
+    private int attackDamage = 15;
+
+    // CONFIG BADAN (LOGIKA)
     private static final int LOGICAL_WIDTH = 15;
     private static final int LOGICAL_HEIGHT = 20;
 
@@ -30,7 +32,7 @@ public class Player {
     private static final float DRAW_OFFSET_Y = 0f;
 
     // --- CONFIG HITBOX SERANGAN ---
-    private static final float ATTACK_WIDTH = 25f;
+    private static final float ATTACK_WIDTH = 18f;
     private static final float ATTACK_HEIGHT = 25f;
     private static final float ATTACK_OFFSET_Y = 0f;
 
@@ -42,7 +44,7 @@ public class Player {
 
     // --- COOLDOWN & TIMERS ---
     private float attackTimer = 0f;
-    private final float ATTACK_COOLDOWN = 1f;
+    private final float ATTACK_COOLDOWN = 0.5f;
 
     // --- DODGE CONFIG ---
     private DodgeState dodgeState;
@@ -88,7 +90,7 @@ public class Player {
 
         // Inisialisasi Components
         this.stats = new PlayerStats(50f, 100f, 1.0f, 15f);
-        this.inventory = new Inventory(); // NEW
+        this.inventory = new Inventory();
     }
 
     public void update(float dt) {
@@ -258,6 +260,12 @@ public class Player {
 
     public float getWidth() { return LOGICAL_WIDTH; }
     public float getHeight() { return LOGICAL_HEIGHT; }
+    public int getDamage() {
+        return attackDamage;
+    }
+    public void setDamage(int amount) {
+        this.attackDamage = amount;
+    }
 
     public void render(SpriteBatch batch) {
         TextureRegion currentFrame = currentState.getCurrentFrame(stateTime);
