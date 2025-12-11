@@ -25,9 +25,13 @@ public class GameAssetManager {
     public static final String ORC_DEATH = "Orc-Death.png";
     public static final String ORC_SKULL = "orcskull.png";
 
+    // Werewolf Assets
+    public static final String WEREWOLF_IDLE = "Werewolf-Idle.png";
+    public static final String WEREWOLF_ATTACK = "Werewolf-Attack.png";
+    public static final String WEREWOLF_WALK = "Werewolf-Walk.png";
+
     // Map Assets
     public static final String MAP_TMX = "maps/green_world_fix.tmx";
-    public static final String ICE_MAP_TMX = "maps/ice_world_fix.tmx";
 
     private GameAssetManager() {
         manager = new AssetManager();
@@ -54,16 +58,19 @@ public class GameAssetManager {
         manager.load(ORC_HURT, Texture.class);
         manager.load(ORC_DEATH, Texture.class);
         manager.load(ORC_SKULL, Texture.class);
-        
+
+        // Werewolf
+        manager.load(WEREWOLF_IDLE, Texture.class);
+        manager.load(WEREWOLF_ATTACK, Texture.class);
+        manager.load(WEREWOLF_WALK, Texture.class);
+
         // Map
         manager.load(MAP_TMX, TiledMap.class);
-        manager.load(ICE_MAP_TMX, TiledMap.class);
     }
 
     public void finishLoading() {
         manager.finishLoading();
 
-        // Filter Nearest untuk Pixel Art agar tajam
         setFilter(SOLDIER_WALK);
         setFilter(SOLDIER_IDLE);
         setFilter(SOLDIER_ATTACK);
@@ -75,6 +82,10 @@ public class GameAssetManager {
         setFilter(ORC_ATTACK);
         setFilter(ORC_HURT);
         setFilter(ORC_DEATH);
+
+        setFilter(WEREWOLF_IDLE);
+        setFilter(WEREWOLF_ATTACK);
+        setFilter(WEREWOLF_WALK);
     }
 
     private void setFilter(String fileName) {
@@ -84,5 +95,4 @@ public class GameAssetManager {
     public void dispose() { manager.dispose(); }
     public Texture getTexture(String name) { return manager.get(name, Texture.class); }
     public TiledMap getMap() { return manager.get(MAP_TMX, TiledMap.class); }
-    public TiledMap getIceMap() { return manager.get(ICE_MAP_TMX, TiledMap.class); }
 }

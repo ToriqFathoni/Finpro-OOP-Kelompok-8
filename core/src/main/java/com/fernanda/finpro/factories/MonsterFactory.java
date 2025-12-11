@@ -10,16 +10,17 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.fernanda.finpro.entities.Monster;
 import com.fernanda.finpro.entities.Orc;
+import com.fernanda.finpro.entities.Werewolf;
 import com.fernanda.finpro.singleton.GameAssetManager;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class MonsterFactory {
 
-    // --- ENUM TIPE MONSTER ---
-    // Saat ini hanya ORC. Nanti tinggal tambah koma dan nama baru (misal: ORC, SLIME)
     public enum Type {
-        ORC
+        ORC,
+        WEREWOLF
     }
 
     // --- CONFIG AREA SPAWN ---
@@ -35,6 +36,9 @@ public class MonsterFactory {
             case ORC:
                 return new Orc(x, y);
 
+            case WEREWOLF:
+                return new Werewolf(x, y);
+
             default:
                 throw new IllegalArgumentException("Tipe Monster belum terdaftar: " + type);
         }
@@ -44,16 +48,20 @@ public class MonsterFactory {
      * Method khusus untuk spawn Orc di area Hutan.
      * Mengatur posisi acak dalam lingkaran, lalu memanggil createMonster.
      */
-    public static Monster createOrcInForest() {
+    public static Monster createForestMonster() {
         Vector2 pos = getRandomSpawnPoint();
-        return createMonster(Type.ORC, pos.x, pos.y);
+        if (MathUtils.randomBoolean()) {
+            return createMonster(Type.ORC, pos.x, pos.y);
+        } else {
+            return createMonster(Type.WEREWOLF, pos.x, pos.y);
+        }
     }
 
     // --- HELPER MATH ---
     private static Vector2 getRandomSpawnPoint() {
         TiledMap map = GameAssetManager.getInstance().getMap();
         MapLayer layer = map.getLayers().get("spawn_monster");
-        
+
         List<Vector2> spawnTiles = new ArrayList<>();
 
         if (layer instanceof TiledMapTileLayer) {
@@ -73,6 +81,6 @@ public class MonsterFactory {
         }
 
         // Fallback if no spawn points found
-        return new Vector2(500, 500); 
+        return new Vector2(500, 500);
     }
 }

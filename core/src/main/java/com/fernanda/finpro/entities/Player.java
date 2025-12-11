@@ -22,8 +22,8 @@ public class Player {
 
     // --- CONFIG BADAN (LOGIKA) ---
     // Diperkecil agar collision lebih forgiving (bisa masuk celah sempit)
-    private static final int LOGICAL_WIDTH = 10;
-    private static final int LOGICAL_HEIGHT = 10;
+    private static final int LOGICAL_WIDTH = 15;
+    private static final int LOGICAL_HEIGHT = 20;
 
     // --- CONFIG VISUAL (GAMBAR) ---
     private static final float DRAW_OFFSET_X = 0f;
@@ -300,7 +300,7 @@ public class Player {
         this.facingRight = true;
 
         this.stats.reset();
-        this.inventory.clear(); // NEW
+        this.inventory.clear();
 
         this.invincibilityTimer = 0f;
         this.attackTimer = 0f;
