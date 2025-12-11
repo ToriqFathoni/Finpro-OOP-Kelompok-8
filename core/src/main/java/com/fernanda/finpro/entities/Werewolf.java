@@ -40,6 +40,7 @@ public class Werewolf extends Monster {
     private Animation<TextureRegion> idleAnim;
     private Animation<TextureRegion> attackAnim;
     private Animation<TextureRegion> walkAnim;
+    private Animation<TextureRegion> deathAnim;
 
     private Vector2 wanderTarget = new Vector2();
     private float wanderWaitTimer = 0f;
@@ -57,6 +58,7 @@ public class Werewolf extends Monster {
         idleAnim = createAnimation(GameAssetManager.WEREWOLF_IDLE, 4, 0.15f, Animation.PlayMode.LOOP);
         attackAnim = createAnimation(GameAssetManager.WEREWOLF_ATTACK, 6, 0.1f, Animation.PlayMode.NORMAL);
         walkAnim = createAnimation(GameAssetManager.WEREWOLF_WALK, 4, 0.15f, Animation.PlayMode.LOOP);
+        deathAnim = createAnimation(GameAssetManager.WEREWOLF_DEATH, 4, 0.2f, Animation.PlayMode.NORMAL);
 
         this.deathDuration = 1.0f;
     }
@@ -145,16 +147,16 @@ public class Werewolf extends Monster {
             if (position.dst(wanderTarget) > 5f) {
                 // Gerak lurus manual (bypass moveTowards parent yang ada avoidance)
                 velocity.set(wanderTarget).sub(position).nor().scl(speed);
-                
+
                 // Cek collision di depan (Center + Direction * Offset)
                 float checkDist = 16f; // Cek 16 pixel ke depan
                 float centerX = position.x + (WIDTH / 2);
                 float centerY = position.y + (HEIGHT / 2);
                 Vector2 dir = new Vector2(velocity).nor();
-                
+
                 float checkX = centerX + dir.x * checkDist;
                 float checkY = centerY + dir.y * checkDist;
-                
+
                 if (isTileBlocked(checkX, checkY)) {
                      // Nabrak Tembok!
                      velocity.set(0, 0);
@@ -162,7 +164,7 @@ public class Werewolf extends Monster {
                      wanderWaitTimer = MathUtils.random(0.5f, 1.0f); // Idle sebentar sebelum balik arah
                      forceReverse = true; // Tandai untuk balik arah setelah tunggu
                 }
-                
+
                 if (stateTimer > 5.0f) {
                      isWanderWalking = false;
                      wanderWaitTimer = MathUtils.random(1.0f, 3.0f);
@@ -176,24 +178,24 @@ public class Werewolf extends Monster {
         } else {
             wanderWaitTimer -= dt;
             velocity.set(0, 0);
-            
+
             if (wanderWaitTimer <= 0) {
                 if (forceReverse) {
                     // Balik arah (Opposite direction)
                     float baseAngle = facingRight ? 180f : 0f;
                     float randomOffset = MathUtils.random(-45f, 45f);
                     float angle = baseAngle + randomOffset;
-                    
+
                     float dist = MathUtils.random(30f, wanderRadius);
                     wanderTarget.set(position).add(new Vector2(dist, 0).rotateDeg(angle));
-                    
+
                     forceReverse = false;
                 } else {
                     float angle = MathUtils.random(0f, 360f);
                     float dist = MathUtils.random(10f, wanderRadius);
                     wanderTarget.set(spawnPosition).add(new Vector2(dist, 0).rotateDeg(angle));
                 }
-                
+
                 isWanderWalking = true;
                 stateTimer = 0;
             }
@@ -246,6 +248,10 @@ public class Werewolf extends Monster {
                 break;
             case HURT:
                 currentAnim = idleAnim;
+                break;
+            case DEAD:
+                currentAnim = deathAnim;
+                loop = false;
                 break;
         }
 

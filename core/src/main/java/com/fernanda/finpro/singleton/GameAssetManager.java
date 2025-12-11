@@ -29,6 +29,7 @@ public class GameAssetManager {
     public static final String WEREWOLF_IDLE = "Werewolf-Idle.png";
     public static final String WEREWOLF_ATTACK = "Werewolf-Attack.png";
     public static final String WEREWOLF_WALK = "Werewolf-Walk.png";
+    public static final String WEREWOLF_DEATH = "Werewolf-Death.png";
 
     // Map Assets
     public static final String MAP_TMX = "maps/green_world_fix.tmx";
@@ -64,6 +65,7 @@ public class GameAssetManager {
         manager.load(WEREWOLF_IDLE, Texture.class);
         manager.load(WEREWOLF_ATTACK, Texture.class);
         manager.load(WEREWOLF_WALK, Texture.class);
+        manager.load(WEREWOLF_DEATH, Texture.class);
 
         // Map
         manager.load(MAP_TMX, TiledMap.class);
@@ -88,6 +90,7 @@ public class GameAssetManager {
         setFilter(WEREWOLF_IDLE);
         setFilter(WEREWOLF_ATTACK);
         setFilter(WEREWOLF_WALK);
+        setFilter(WEREWOLF_DEATH);
     }
 
     private void setFilter(String fileName) {
