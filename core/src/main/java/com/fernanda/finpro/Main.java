@@ -34,11 +34,14 @@ import com.fernanda.finpro.ui.GameHud;
 import com.fernanda.finpro.ui.InventoryUI;
 import com.fernanda.finpro.ui.CookingMenu;
 import com.fernanda.finpro.ui.TutorialPopup;
+import com.fernanda.finpro.ui.LoginUI;
+import com.fernanda.finpro.managers.NetworkManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class Main extends ApplicationAdapter {
     SpriteBatch batch;
@@ -48,6 +51,7 @@ public class Main extends ApplicationAdapter {
     GameHud gameHud;
     InventoryUI inventoryUI;
     CookingMenu cookingMenu;
+    LoginUI loginUI;
 
     TiledMap map;
     OrthogonalTiledMapRenderer mapRenderer;
@@ -129,6 +133,22 @@ public class Main extends ApplicationAdapter {
         gameHud = new GameHud();
         inventoryUI = new InventoryUI();
         cookingMenu = new CookingMenu();
+        loginUI = new LoginUI(viewport, new LoginUI.LoginListener() {
+            @Override
+            public void onLoginSuccess(String username, Map<String, Integer> inventoryData) {
+                // Populate inventory
+                player.inventory.clear();
+                for (Map.Entry<String, Integer> entry : inventoryData.entrySet()) {
+                    try {
+                        ItemType type = ItemType.valueOf(entry.getKey());
+                        player.inventory.addItem(type, entry.getValue());
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Unknown item type: " + entry.getKey());
+                    }
+                }
+                System.out.println("Logged in as: " + username);
+            }
+        });
 
         player.stats.addListener(gameHud);
         gameHud.onHealthChanged(player.stats.getCurrentHealth(), player.stats.maxHealth);
@@ -179,6 +199,14 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void render() {
+        // 1. Render Login UI if visible
+        if (loginUI.isVisible()) {
+            Gdx.gl.glClearColor(0, 0, 0, 1);
+            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+            loginUI.render();
+            return;
+        }
+
         float dt = Gdx.graphics.getDeltaTime();
 
         if (!isGameOver) {
@@ -191,6 +219,18 @@ public class Main extends ApplicationAdapter {
             if (tutorialPopup.isVisible() && Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
                 tutorialPopup.hide();
                 System.out.println("Tutorial Popup closed via SPACE");
+            // Toggle Inventory
+            if (Gdx.input.isKeyJustPressed(Input.Keys.TAB)) {
+                if (!isCookingMenuOpen) { // Only toggle inventory if cooking menu is closed
+                    isInventoryOpen = !isInventoryOpen;
+                    gamePaused = isInventoryOpen;
+                    System.out.println("Inventory:  " + (isInventoryOpen ?  "OPEN (PAUSED)" : "CLOSED"));
+                    
+                    // Save inventory when closing
+                    if (!isInventoryOpen) {
+                        NetworkManager.getInstance().saveInventory(player);
+                    }
+                }
             }
             
             // ========== PAUSE LOGIC: If tutorial is visible, skip game updates ==========
@@ -240,6 +280,8 @@ public class Main extends ApplicationAdapter {
                     if (item.isActive() && item.getHitbox().overlaps(player.getHitbox())) {
                         player.inventory.addItem(item.getType(), 1);
                         itemIterator.remove();
+                        // Auto-save inventory on pickup
+                        NetworkManager.getInstance().saveInventory(player);
                     }
                 }
 
@@ -715,6 +757,10 @@ public class Main extends ApplicationAdapter {
         cookingMenu.dispose();
         tutorialPopup.dispose();
         font.dispose();
+        cookingMenu.dispose();        loginUI.dispose();        font.dispose();
+        for (SignBoard sign : signBoards) {
+            sign.dispose();
+        }
         mapRenderer.dispose();
         GameAssetManager.getInstance().dispose();
     }
@@ -734,4 +780,4 @@ public class Main extends ApplicationAdapter {
             return Float.compare(other.y, this.y);
         }
     }
-}   
+}
