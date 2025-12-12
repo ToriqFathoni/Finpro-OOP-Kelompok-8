@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.fernanda.finpro.components.ItemType;
 import com.fernanda.finpro.singleton.GameAssetManager;
 
 public class Yeti extends Monster {
@@ -231,5 +232,10 @@ public class Yeti extends Monster {
             sr.setColor(Color.RED); // Serangan Yeti warna Merah (Bahaya)
             sr.rect(attackRect.x, attackRect.y, attackRect.width, attackRect.height);
         }
+    }
+
+    @Override
+    public ItemType rollDrop() {
+        return ItemType.YETI_HEART;
     }
 }

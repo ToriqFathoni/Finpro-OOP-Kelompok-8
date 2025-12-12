@@ -321,10 +321,11 @@ public class Orc extends Monster {
             sr.circle(position.x + WIDTH/2, position.y + HEIGHT + 10, 5);
         }
     }
+    @Override
     public ItemType rollDrop() {
-        // 50% chance RAW_MEAT, 50% chance ORC_SKULL (for testing)
-        if (MathUtils.randomBoolean()) {
-            return ItemType.RAW_MEAT;
+        float roll = MathUtils.random();
+        if (roll < 0.5f) {
+            return ItemType.ORC_MEAT;
         } else {
             return ItemType.ORC_SKULL;
         }

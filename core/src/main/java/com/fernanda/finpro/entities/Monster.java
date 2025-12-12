@@ -210,4 +210,5 @@ public abstract class Monster {
     public abstract void aiBehavior(float dt, Player player);
     public abstract void render(com.badlogic.gdx.graphics.g2d.SpriteBatch batch);
     public abstract void renderDebug(ShapeRenderer shapeRenderer);
+    public abstract com.fernanda.finpro.components.ItemType rollDrop();
 }

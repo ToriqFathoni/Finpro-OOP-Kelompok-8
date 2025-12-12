@@ -56,6 +56,12 @@ public class GroundItem {
         switch (type) {
             case ORC_SKULL:
                 return GameAssetManager.getInstance().getTexture(GameAssetManager.ORC_SKULL);
+            case ORC_MEAT:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.ORC_MEAT);
+            case WEREWOLF_CLAW:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.WEREWOLF_CLAW);
+            case YETI_HEART:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.YETI_HEART);
             default:
                 return null;
         }
@@ -63,20 +69,27 @@ public class GroundItem {
 
     public void renderDebug(ShapeRenderer sr) {
         if (!active) return;
-        
+
         // Color-coded items for visual distinction
         switch (type) {
             case RAW_MEAT:
+            case ORC_MEAT:
                 sr.setColor(Color.YELLOW);
                 break;
             case ORC_SKULL:
                 sr.setColor(Color.LIGHT_GRAY);
                 break;
+            case WEREWOLF_CLAW:
+                sr.setColor(Color.BROWN);
+                break;
+            case YETI_HEART:
+                sr.setColor(Color.CYAN);
+                break;
             default:
                 sr.setColor(Color.WHITE);
                 break;
         }
-        
+
         sr.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
     }
 

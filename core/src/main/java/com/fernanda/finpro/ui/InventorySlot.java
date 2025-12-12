@@ -88,6 +88,12 @@ public class InventorySlot {
         switch (itemType) {
             case ORC_SKULL:
                 return GameAssetManager.getInstance().getTexture(GameAssetManager.ORC_SKULL);
+            case ORC_MEAT:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.ORC_MEAT);
+            case WEREWOLF_CLAW:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.WEREWOLF_CLAW);
+            case YETI_HEART:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.YETI_HEART);
             default:
                 return null;
         }
