@@ -30,7 +30,16 @@ public class CollisionManager {
                     float distance = m.getKnockbackDistance();
 
                     Vector2 knockback = new Vector2(m.position).sub(player.position).nor().scl(distance);
-                    m.position.add(knockback);
+                    
+                    // Validasi knockback tidak tembus building
+                    Vector2 newPos = new Vector2(m.position).add(knockback);
+                    float centerX = newPos.x + (m.getBodyHitbox().width / 2);
+                    float centerY = newPos.y + (m.getBodyHitbox().height / 2);
+                    
+                    // Cek apakah posisi baru tidak blocked
+                    if (!m.isTileBlocked(centerX, centerY)) {
+                        m.position.add(knockback);
+                    }
                 }
             }
 

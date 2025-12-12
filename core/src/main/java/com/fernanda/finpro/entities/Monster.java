@@ -172,7 +172,7 @@ public abstract class Monster {
     }
 
     // Method Helper untuk membaca Map (Mendeteksi Tembok)
-    protected boolean isTileBlocked(float x, float y) {
+    public boolean isTileBlocked(float x, float y) {
         com.badlogic.gdx.maps.tiled.TiledMap map = GameAssetManager.getInstance().getMap();
 
         int tileX = (int) (x / 16);
