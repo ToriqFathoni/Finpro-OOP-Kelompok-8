@@ -52,18 +52,18 @@ public class MonsterFactory {
     }
 
     // --- HELPER MATH ---
-    public static Vector2 getRandomSpawnPoint() {
-        TiledMap map = GameAssetManager.getInstance().getMap();
-        MapLayer layer = map.getLayers().get("spawn_monster");
-
+    public static Vector2 getRandomSpawnPoint(TiledMap map, String[] layerNames) {
         List<Vector2> spawnTiles = new ArrayList<>();
 
-        if (layer instanceof TiledMapTileLayer) {
-            TiledMapTileLayer spawnLayer = (TiledMapTileLayer) layer;
-            for (int x = 0; x < spawnLayer.getWidth(); x++) {
-                for (int y = 0; y < spawnLayer.getHeight(); y++) {
-                    if (spawnLayer.getCell(x, y) != null) {
-                        spawnTiles.add(new Vector2(x * 16, y * 16));
+        for (String layerName : layerNames) {
+            MapLayer layer = map.getLayers().get(layerName);
+            if (layer instanceof TiledMapTileLayer) {
+                TiledMapTileLayer spawnLayer = (TiledMapTileLayer) layer;
+                for (int x = 0; x < spawnLayer.getWidth(); x++) {
+                    for (int y = 0; y < spawnLayer.getHeight(); y++) {
+                        if (spawnLayer.getCell(x, y) != null) {
+                            spawnTiles.add(new Vector2(x * 16, y * 16));
+                        }
                     }
                 }
             }
@@ -76,5 +76,13 @@ public class MonsterFactory {
 
         // Fallback if no spawn points found
         return new Vector2(500, 500);
+    }
+
+    public static Vector2 getRandomSpawnPoint(TiledMap map, String layerName) {
+        return getRandomSpawnPoint(map, new String[]{layerName});
+    }
+
+    public static Vector2 getRandomSpawnPoint() {
+        return getRandomSpawnPoint(GameAssetManager.getInstance().getMap(), "spawn_monster");
     }
 }

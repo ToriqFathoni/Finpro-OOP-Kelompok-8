@@ -41,6 +41,7 @@ public class GameAssetManager {
     // Map Assets
     public static final String MAP_TMX = "maps/green_world_fix.tmx";
     public static final String ICE_MAP_TMX = "maps/ice_world_fix.tmx";
+    public static final String LAVA_MAP_TMX = "maps/inferno/lava_world_fix.tmx";
 
     private GameAssetManager() {
         manager = new AssetManager();
@@ -85,6 +86,7 @@ public class GameAssetManager {
         // Map
         manager.load(MAP_TMX, TiledMap.class);
         manager.load(ICE_MAP_TMX, TiledMap.class);
+        manager.load(LAVA_MAP_TMX, TiledMap.class);
     }
 
     public void finishLoading() {
@@ -123,4 +125,5 @@ public class GameAssetManager {
     public Texture getTexture(String name) { return manager.get(name, Texture.class); }
     public TiledMap getMap() { return manager.get(MAP_TMX, TiledMap.class); }
     public TiledMap getIceMap() { return manager.get(ICE_MAP_TMX, TiledMap.class); }
+    public TiledMap getLavaMap() { return manager.get(LAVA_MAP_TMX, TiledMap.class); }
 }
