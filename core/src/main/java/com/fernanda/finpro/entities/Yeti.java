@@ -64,12 +64,20 @@ public class Yeti extends Monster {
     public void aiBehavior(float dt, Player player) {
         if (isDead) return;
 
-        // Logic Facing
+        float distToPlayer = position.dst(player.position);
+        
+        // Update facing direction berdasarkan posisi player (kecuali saat wander)
+        if (currentState != State.WANDER && currentState != State.DEAD) {
+            float dx = player.position.x - position.x;
+            if (Math.abs(dx) > 5f) { // Threshold untuk menghindari jitter
+                facingRight = dx > 0;
+            }
+        }
+        
+        // Logic Facing saat bergerak
         if (Math.abs(velocity.x) > 1.0f) {
             facingRight = velocity.x > 0;
         }
-
-        float distToPlayer = position.dst(player.position);
 
         switch (currentState) {
             case HURT:

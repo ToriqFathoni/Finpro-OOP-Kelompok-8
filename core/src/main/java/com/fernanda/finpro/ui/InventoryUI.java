@@ -143,6 +143,14 @@ public class InventoryUI {
                 slots[row][col]. render(batch, shapeRenderer, font, isSelected);
             }
         }
+        
+        // 5.5. Render item name untuk slot yang dipilih
+        for (int row = 0; row < GRID_ROWS; row++) {
+            for (int col = 0; col < GRID_COLS; col++) {
+                boolean isSelected = (row == selectedRow && col == selectedCol);
+                slots[row][col].renderItemName(batch, font, isSelected);
+            }
+        }
 
         // 6. UI Elements
         batch.begin();
