@@ -29,6 +29,9 @@ public class GameAssetManager {
     //Campfire Assets
     public static final String CAMPFIRE = "Campfire.png";
 
+    // UI Assets
+    public static final String NOTE = "note.png";
+
     // Werewolf Assets
     public static final String WEREWOLF_IDLE = "Werewolf-Idle.png";
     public static final String WEREWOLF_ATTACK = "Werewolf-Attack.png";
@@ -73,6 +76,9 @@ public class GameAssetManager {
         // Campfire
         manager.load(CAMPFIRE, Texture.class);
 
+        // UI Assets
+        manager.load(NOTE, Texture.class);
+
         // Werewolf
         manager.load(WEREWOLF_IDLE, Texture.class);
         manager.load(WEREWOLF_ATTACK, Texture.class);
@@ -107,6 +113,7 @@ public class GameAssetManager {
         setFilter(ORC_MEAT);
 
         setFilter(CAMPFIRE);
+        setFilter(NOTE);
 
         setFilter(WEREWOLF_IDLE);
         setFilter(WEREWOLF_ATTACK);
