@@ -35,6 +35,7 @@ public class InventoryUI {
     private static final float PANEL_WIDTH = 240f;
     private static final float PANEL_HEIGHT = 230f;
     private static final float HEADER_HEIGHT = 24f;
+    private static final float INFO_BOX_HEIGHT = 30f;
 
     // Colors
     private static final Color HEADER_COLOR = new Color(0.2f, 0.5f, 0.3f, 1f);
@@ -144,12 +145,23 @@ public class InventoryUI {
             }
         }
         
-        // 5.5. Render item name untuk slot yang dipilih
-        for (int row = 0; row < GRID_ROWS; row++) {
-            for (int col = 0; col < GRID_COLS; col++) {
-                boolean isSelected = (row == selectedRow && col == selectedCol);
-                slots[row][col].renderItemName(batch, font, isSelected);
-            }
+        // 5.5. Info box untuk item yang dipilih
+        InventorySlot selectedSlot = slots[selectedRow][selectedCol];
+        if (!selectedSlot.isEmpty()) {
+            // Background info box
+            float infoBoxY = panelY + 18;
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(0.15f, 0.35f, 0.2f, 0.9f); // Dark green semi-transparent
+            shapeRenderer.rect(panelX + 8, infoBoxY, PANEL_WIDTH - 16, INFO_BOX_HEIGHT);
+            shapeRenderer.end();
+            
+            // Border info box
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+            shapeRenderer.setColor(0.85f, 0.75f, 0.5f, 1f); // Light border
+            Gdx.gl.glLineWidth(1.5f);
+            shapeRenderer.rect(panelX + 8, infoBoxY, PANEL_WIDTH - 16, INFO_BOX_HEIGHT);
+            shapeRenderer.end();
+            Gdx.gl.glLineWidth(1);
         }
 
         // 6. UI Elements
@@ -177,10 +189,24 @@ public class InventoryUI {
 
         font.getData().setScale(0.6f);
 
-        // Instructions
-        font.setColor(0.4f, 0.3f, 0.2f, 1f);
-        font.draw(batch, "[TAB] Close  [Arrows] Navigate", panelX + 12, panelY + 12);
-
+        // Item Info Display
+        if (!selectedSlot.isEmpty()) {
+            ItemType selectedItem = selectedSlot.getItemType();
+            int itemCount = selectedSlot.getCount();
+            
+            // Item name dengan font yang lebih besar dan jelas
+            titleFont.setColor(Color.WHITE);
+            titleFont.getData().setScale(0.65f);
+            titleFont.draw(batch, selectedItem.getDisplayName(), panelX + 14, panelY + 40);
+            
+            // Item count
+            font.setColor(Color.LIGHT_GRAY);
+            font.getData().setScale(0.5f);
+            font.draw(batch, "Quantity: " + itemCount, panelX + 14, panelY + 27);
+            font.getData().setScale(0.6f);
+            titleFont.getData().setScale(0.8f);
+        }
+        
         batch.end();
 
         Gdx.gl.glDisable(GL20.GL_BLEND);

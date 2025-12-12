@@ -81,27 +81,6 @@ public class InventorySlot {
             batch.end();
         }
     }
-    
-    // Render nama item di bawah slot (dipanggil dari InventoryUI)
-    public void renderItemName(SpriteBatch batch, BitmapFont font, boolean isSelected) {
-        if (isEmpty() || !isSelected) return;
-        
-        batch.begin();
-        font.setColor(Color.WHITE);
-        font.getData().setScale(0.35f);
-        
-        String itemName = itemType.getDisplayName();
-        com.badlogic.gdx.graphics.g2d.GlyphLayout layout = new com.badlogic.gdx.graphics.g2d.GlyphLayout();
-        layout.setText(font, itemName);
-        
-        // Center text di bawah slot
-        float textX = bounds.x + (SLOT_SIZE - layout.width) / 2f;
-        float textY = bounds.y - 3;
-        
-        font.draw(batch, itemName, textX, textY);
-        font.getData().setScale(0.6f);
-        batch.end();
-    }
 
     private Texture getIconTexture() {
         if (itemType == null) return null;
