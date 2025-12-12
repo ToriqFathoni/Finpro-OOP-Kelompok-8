@@ -24,6 +24,10 @@ public class GameAssetManager {
     public static final String ORC_HURT = "Orc-Hurt.png";
     public static final String ORC_DEATH = "Orc-Death.png";
     public static final String ORC_SKULL = "orcskull.png";
+    public static final String ORC_MEAT = "OrcMeat.png";
+
+    //Campfire Assets
+    public static final String CAMPFIRE = "Campfire.png";
 
     // Werewolf Assets
     public static final String WEREWOLF_IDLE = "Werewolf-Idle.png";
@@ -64,6 +68,10 @@ public class GameAssetManager {
         manager.load(ORC_HURT, Texture.class);
         manager.load(ORC_DEATH, Texture.class);
         manager.load(ORC_SKULL, Texture.class);
+        manager.load(ORC_MEAT, Texture.class);
+
+        // Campfire
+        manager.load(CAMPFIRE, Texture.class);
 
         // Werewolf
         manager.load(WEREWOLF_IDLE, Texture.class);
@@ -95,6 +103,10 @@ public class GameAssetManager {
         setFilter(ORC_ATTACK);
         setFilter(ORC_HURT);
         setFilter(ORC_DEATH);
+        setFilter(ORC_SKULL);
+        setFilter(ORC_MEAT);
+
+        setFilter(CAMPFIRE);
 
         setFilter(WEREWOLF_IDLE);
         setFilter(WEREWOLF_ATTACK);
