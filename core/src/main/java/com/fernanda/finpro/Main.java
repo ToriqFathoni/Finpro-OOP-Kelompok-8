@@ -29,11 +29,11 @@ import com.fernanda.finpro.factories.MonsterFactory;
 import com.fernanda.finpro.managers.CollisionManager;
 import com.fernanda.finpro.managers.SpawnManager;
 import com.fernanda.finpro.objects.Campfire;
-import com.fernanda.finpro.objects.SignBoard;
 import com.fernanda.finpro.singleton.GameAssetManager;
 import com.fernanda.finpro.ui.GameHud;
 import com.fernanda.finpro.ui.InventoryUI;
 import com.fernanda.finpro.ui.CookingMenu;
+import com.fernanda.finpro.ui.TutorialPopup;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,7 +58,7 @@ public class Main extends ApplicationAdapter {
 
     // Hardcore Cooking & Tutorial System
     Campfire campfire;
-    List<SignBoard> signBoards;
+    TutorialPopup tutorialPopup;
 
     private boolean isInventoryOpen = false;
     private boolean gamePaused = false;
@@ -158,35 +158,16 @@ public class Main extends ApplicationAdapter {
         }
 
         campfire = new Campfire(campfirePos.x, campfirePos.y);
-        signBoards = new ArrayList<>();
-
-        // SignBoard 1: Survival Tips from Map Layer
-        Vector2 survivalTipPos = new Vector2(playerSpawnPoint.x - 32, playerSpawnPoint.y); // Default
-        MapLayer tipsLayer = map.getLayers().get("survival_tips");
-        if (tipsLayer instanceof TiledMapTileLayer) {
-            TiledMapTileLayer tl = (TiledMapTileLayer) tipsLayer;
-            boolean found = false;
-            for (int x = 0; x < tl.getWidth(); x++) {
-                for (int y = 0; y < tl.getHeight(); y++) {
-                    if (tl.getCell(x, y) != null) {
-                        survivalTipPos.set(x * 16, y * 16);
-                        found = true;
-                        break;
-                    }
-                }
-                if (found) break;
-            }
-        }
-        signBoards.add(new SignBoard(survivalTipPos.x, survivalTipPos.y,
-            "SURVIVAL TIP: Kill Monsters -> Gather Ingredients -> Cook at Fire!"));
-
-        // SignBoard 2: Near Campfire (Recipe Hint)
-        signBoards.add(new SignBoard(campfirePos.x + 40, campfirePos.y + 40,
-            "CHEF'S NOTE: The Legendary Burger requires Meat, Herbs, and Slime Gel!"));
+        
+        // Initialize Tutorial Popup (shows on game start)
+        tutorialPopup = new TutorialPopup();
 
         monsters = new ArrayList<>();
         spawnManager = new SpawnManager(monsters);
         collisionManager = new CollisionManager(player, monsters);
+        
+        // DEBUG CONFIRMATION
+        System.out.println("✅ DEBUG: Game Started Successfully!");
     }
 
     @Override
@@ -201,49 +182,57 @@ public class Main extends ApplicationAdapter {
         float dt = Gdx.graphics.getDeltaTime();
 
         if (!isGameOver) {
-            // Toggle Inventory
-            if (Gdx.input.isKeyJustPressed(Input.Keys.TAB)) {
-                if (!isCookingMenuOpen) { // Only toggle inventory if cooking menu is closed
-                    isInventoryOpen = !isInventoryOpen;
-                    gamePaused = isInventoryOpen;
-                    System.out.println("Inventory:  " + (isInventoryOpen ?  "OPEN (PAUSED)" : "CLOSED"));
-                }
+            // ========== TUTORIAL POPUP INPUT (HIGHEST PRIORITY) ==========
+            if (Gdx.input.isKeyJustPressed(Input.Keys.H)) {
+                tutorialPopup.toggle();
+                System.out.println("Tutorial Popup toggled: " + tutorialPopup.isVisible());
             }
-
-            // Toggle Cooking Menu (when near campfire)
-            if (Gdx.input.isKeyJustPressed(Input.Keys.C)) {
-                if (!isInventoryOpen && campfire.isPlayerNearby(player)) {
-                    isCookingMenuOpen = !isCookingMenuOpen;
-                    cookingMenu.setVisible(isCookingMenuOpen);
-                    gamePaused = isCookingMenuOpen;
-                }
+            
+            if (tutorialPopup.isVisible() && Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+                tutorialPopup.hide();
+                System.out.println("Tutorial Popup closed via SPACE");
             }
-
-            // Update Cooking Menu
-            if (isCookingMenuOpen) {
-                cookingMenu.update(player.inventory);
-                if (!cookingMenu.isVisible()) {
-                    isCookingMenuOpen = false;
-                    gamePaused = false;
-                }
-            }
-
-            // Update game (ONLY if not paused)
-            if (!gamePaused) {
-                player.update(dt);
-                handleMapCollision();
-
-                // Keep player within map bounds
-                player.position.x = MathUtils.clamp(player.position.x, 0, 1168 - player.getWidth());
-                player.position.y = MathUtils.clamp(player.position.y, 0, 1168 - player.getHeight());
-
-                // Update SignBoards (Campfire doesn't need update anymore)
-                for (SignBoard sign : signBoards) {
-                    sign.update(player);
+            
+            // ========== PAUSE LOGIC: If tutorial is visible, skip game updates ==========
+            if (!tutorialPopup.isVisible()) {
+                // Toggle Inventory
+                if (Gdx.input.isKeyJustPressed(Input.Keys.TAB)) {
+                    if (!isCookingMenuOpen) { // Only toggle inventory if cooking menu is closed
+                        isInventoryOpen = !isInventoryOpen;
+                        gamePaused = isInventoryOpen;
+                        System.out.println("Inventory:  " + (isInventoryOpen ?  "OPEN (PAUSED)" : "CLOSED"));
+                    }
                 }
 
-                // Item Pickup
-                Iterator<GroundItem> itemIterator = groundItems.iterator();
+                // Toggle Cooking Menu (when near campfire)
+                if (Gdx.input.isKeyJustPressed(Input.Keys.C)) {
+                    if (!isInventoryOpen && campfire.isPlayerNearby(player)) {
+                        isCookingMenuOpen = !isCookingMenuOpen;
+                        cookingMenu.setVisible(isCookingMenuOpen);
+                        gamePaused = isCookingMenuOpen;
+                    }
+                }
+
+                // Update Cooking Menu
+                if (isCookingMenuOpen) {
+                    cookingMenu.update(player.inventory);
+                    if (!cookingMenu.isVisible()) {
+                        isCookingMenuOpen = false;
+                        gamePaused = false;
+                    }
+                }
+
+                // Update game (ONLY if not paused)
+                if (!gamePaused) {
+                    player.update(dt);
+                    handleMapCollision();
+
+                    // Keep player within map bounds
+                    player.position.x = MathUtils.clamp(player.position.x, 0, 1168 - player.getWidth());
+                    player.position.y = MathUtils.clamp(player.position.y, 0, 1168 - player.getHeight());
+
+                    // Item Pickup
+                    Iterator<GroundItem> itemIterator = groundItems.iterator();
                 while (itemIterator. hasNext()) {
                     GroundItem item = itemIterator.next();
                     item.update(dt);
@@ -289,6 +278,7 @@ public class Main extends ApplicationAdapter {
                     System.out.println("Inventory closed via UI button");
                 }
             }
+            } // End of !tutorialPopup.isVisible() check
 
             // Death check
             if (player.stats. getCurrentHealth() <= 0) {
@@ -381,11 +371,6 @@ public class Main extends ApplicationAdapter {
 
         player.render(batch);
 
-        // Render SignBoard text (must be in batch)
-        for (SignBoard sign : signBoards) {
-            sign.renderText(batch);
-        }
-
         batch.end();
 
         // Render Monster HP Bars
@@ -419,11 +404,7 @@ public class Main extends ApplicationAdapter {
         }
         debugRenderer.end();
 
-        // Render SignBoards (Filled shapes)
         debugRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        for (SignBoard sign : signBoards) {
-            sign.render(debugRenderer);
-        }
         debugRenderer.end();
 
         if (debugMode) {
@@ -453,6 +434,17 @@ public class Main extends ApplicationAdapter {
             worldRenderer.setProjectionMatrix(uiMatrix);
 
             cookingMenu.render(batch, worldRenderer, player.inventory);
+        }
+        
+        // Render Tutorial Popup (ABSOLUTE LAST - above everything)
+        if (tutorialPopup.isVisible()) {
+            // Switch to UI/Screen coordinates
+            com.badlogic.gdx.math.Matrix4 uiMatrix = new com.badlogic.gdx.math.Matrix4();
+            uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.setProjectionMatrix(uiMatrix);
+            debugRenderer.setProjectionMatrix(uiMatrix);
+            
+            tutorialPopup.render(batch, debugRenderer);
         }
 
         if (isGameOver) {
@@ -610,10 +602,10 @@ public class Main extends ApplicationAdapter {
         spawnManager.reset();
 
         // Reset Environment Objects
-        signBoards.clear();
+        // (No more signBoards to clear)
 
         if (currentWorld == com.fernanda.finpro.enums.WorldType.FOREST) {
-             // Re-initialize Campfire and SignBoards for Forest
+             // Re-initialize Campfire for Forest
              initForestEnvironment();
         } else {
              // Hide campfire in other worlds
@@ -640,29 +632,6 @@ public class Main extends ApplicationAdapter {
             }
         }
         campfire = new Campfire(campfirePos.x, campfirePos.y);
-
-        // SignBoard 1: Survival Tips from Map Layer
-        Vector2 survivalTipPos = new Vector2(player.position.x - 32, player.position.y); // Default
-        MapLayer tipsLayer = map.getLayers().get("survival_tips");
-        if (tipsLayer instanceof TiledMapTileLayer) {
-            TiledMapTileLayer tl = (TiledMapTileLayer) tipsLayer;
-            boolean found = false;
-            for (int x = 0; x < tl.getWidth(); x++) {
-                for (int y = 0; y < tl.getHeight(); y++) {
-                    if (tl.getCell(x, y) != null) {
-                        survivalTipPos.set(x * 16, y * 16);
-                        found = true;
-                        break;
-                    }
-                }
-                if (found) break;
-            }
-        }
-        signBoards.add(new SignBoard(survivalTipPos.x, survivalTipPos.y,
-            "SURVIVAL TIP: Kill Monsters -> Gather Ingredients -> Cook at Fire!"));
-
-        signBoards.add(new SignBoard(campfirePos.x + 40, campfirePos.y + 40,
-            "CHEF'S NOTE: The Legendary Burger requires Meat, Herbs, and Slime Gel!"));
     }
 
     private void handleEntityCollision(Rectangle hitbox, Vector2 position, float width, float height) {
@@ -744,10 +713,8 @@ public class Main extends ApplicationAdapter {
         gameHud.dispose();
         inventoryUI.dispose();
         cookingMenu.dispose();
+        tutorialPopup.dispose();
         font.dispose();
-        for (SignBoard sign : signBoards) {
-            sign.dispose();
-        }
         mapRenderer.dispose();
         GameAssetManager.getInstance().dispose();
     }
