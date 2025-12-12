@@ -341,6 +341,9 @@ public class Main extends ApplicationAdapter {
             renderQueue.add(new Renderable(item.getPosition().y, () -> item.render(batch)));
         }
 
+        // Add Campfire
+        renderQueue.add(new Renderable(campfire.getPosition().y, () -> campfire.render(batch)));
+
         // Sort by Y (Descending)
         Collections.sort(renderQueue);
 
@@ -367,9 +370,8 @@ public class Main extends ApplicationAdapter {
         }
         debugRenderer.end();
 
-        // Render Campfire and SignBoards (Filled shapes)
+        // Render SignBoards (Filled shapes)
         debugRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        campfire.render(debugRenderer);
         for (SignBoard sign : signBoards) {
             sign.render(debugRenderer);
         }
