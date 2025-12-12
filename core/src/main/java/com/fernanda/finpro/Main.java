@@ -309,26 +309,26 @@ public class Main extends ApplicationAdapter {
         } else {
             float targetX = player.position.x + (player.getWidth() / 2);
             float targetY = player. position.y + (player.getHeight() / 2);
-            
+
             // Clamp Camera to Map Bounds to avoid black bars
             float mapWidth = 1168f;
             float mapHeight = 1168f;
-            
+
             float visibleWidth = camera.viewportWidth * camera.zoom;
             float visibleHeight = camera.viewportHeight * camera.zoom;
-            
+
             float minX = visibleWidth / 2;
             float maxX = mapWidth - visibleWidth / 2;
             float minY = visibleHeight / 2;
             float maxY = mapHeight - visibleHeight / 2;
-            
+
             // Clamp X
             if (mapWidth < visibleWidth) {
                 camera.position.x = mapWidth / 2;
             } else {
                 camera.position.x = MathUtils.clamp(targetX, minX, maxX);
             }
-            
+
             // Clamp Y
             if (mapHeight < visibleHeight) {
                 camera.position.y = mapHeight / 2;
@@ -384,6 +384,28 @@ public class Main extends ApplicationAdapter {
         }
 
         batch.end();
+
+        // Render Monster HP Bars
+        worldRenderer.setProjectionMatrix(camera.combined);
+        worldRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        for (Monster m : monsters) {
+            if (!m.isDead()) {
+                float hpPercent = (float) m.getCurrentHealth() / m.getMaxHealth();
+                float barWidth = 20f;
+                float barHeight = 4f;
+                float barX = m.position.x + (m.getBodyHitbox().width - barWidth) / 2;
+                float barY = m.position.y + m.getBodyHitbox().height + 5f;
+
+                // Background (Red)
+                worldRenderer.setColor(Color.RED);
+                worldRenderer.rect(barX, barY, barWidth, barHeight);
+
+                // Foreground (Green)
+                worldRenderer.setColor(Color.GREEN);
+                worldRenderer.rect(barX, barY, barWidth * hpPercent, barHeight);
+            }
+        }
+        worldRenderer.end();
 
         // Debug
         Gdx.gl.glEnable(GL20.GL_BLEND);
@@ -456,7 +478,7 @@ public class Main extends ApplicationAdapter {
 
     private void checkWorldTransition(Rectangle playerRect) {
         TiledMapTileLayer transitionLayer = null;
-        
+
         if (currentWorld == com.fernanda.finpro.enums.WorldType.FOREST) {
             transitionLayer = (TiledMapTileLayer) map.getLayers().get("next_map");
             if (checkLayerCollision(playerRect, transitionLayer)) {
@@ -469,7 +491,7 @@ public class Main extends ApplicationAdapter {
                 switchToForestWorld();
                 return;
             }
-            
+
             // Check Next to Inferno
             transitionLayer = (TiledMapTileLayer) map.getLayers().get("inferno_next_map");
             if (checkLayerCollision(playerRect, transitionLayer)) {
@@ -503,14 +525,14 @@ public class Main extends ApplicationAdapter {
         // Load Ice Map
         map = GameAssetManager.getInstance().getIceMap();
         mapRenderer.setMap(map);
-        
+
         camera.zoom = 1.0f;
 
         // Find Ice Spawn Point
         setPlayerSpawn("spawn_ice_player");
         resetWorldState();
     }
-    
+
     private void switchToIceWorldFromInferno() {
         System.out.println("Switching to Ice World (From Inferno)!");
         currentWorld = com.fernanda.finpro.enums.WorldType.ICE;
@@ -519,7 +541,7 @@ public class Main extends ApplicationAdapter {
         // Load Ice Map
         map = GameAssetManager.getInstance().getIceMap();
         mapRenderer.setMap(map);
-        
+
         camera.zoom = 1.0f;
 
         // Find Back Spawn Point
@@ -535,14 +557,14 @@ public class Main extends ApplicationAdapter {
         // Load Forest Map
         map = GameAssetManager.getInstance().getMap();
         mapRenderer.setMap(map);
-        
+
         camera.zoom = 1.0f;
 
         // Find Player Spawn Point
         setPlayerSpawn("spawn_player_back");
         resetWorldState();
     }
-    
+
     private void switchToInfernoWorld() {
         System.out.println("Switching to Inferno World!");
         currentWorld = com.fernanda.finpro.enums.WorldType.INFERNO;
@@ -551,7 +573,7 @@ public class Main extends ApplicationAdapter {
         // Load Inferno Map
         map = GameAssetManager.getInstance().getLavaMap();
         mapRenderer.setMap(map);
-        
+
         // Zoom Out Camera (Fit ~90% of map height)
         // Map Height 1168 * 0.9 = 1051. Viewport Height 450. Zoom ~2.3
         camera.zoom = 2.3f;
@@ -560,7 +582,7 @@ public class Main extends ApplicationAdapter {
         setPlayerSpawn("spawn_player_inferno");
         resetWorldState();
     }
-    
+
     private void setPlayerSpawn(String layerName) {
         MapLayer layer = map.getLayers().get(layerName);
         if (layer instanceof TiledMapTileLayer) {
@@ -578,7 +600,7 @@ public class Main extends ApplicationAdapter {
             }
         }
     }
-    
+
     private void resetWorldState() {
         // Clear Monsters and Items
         monsters.clear();
@@ -587,16 +609,16 @@ public class Main extends ApplicationAdapter {
 
         // Reset Environment Objects
         signBoards.clear();
-        
+
         if (currentWorld == com.fernanda.finpro.enums.WorldType.FOREST) {
              // Re-initialize Campfire and SignBoards for Forest
              initForestEnvironment();
         } else {
              // Hide campfire in other worlds
-             campfire = new Campfire(-1000, -1000); 
+             campfire = new Campfire(-1000, -1000);
         }
     }
-    
+
     private void initForestEnvironment() {
         // We need to re-run the logic to find campfire position
         Vector2 campfirePos = new Vector2(player.position.x + 64, player.position.y);
@@ -703,7 +725,7 @@ public class Main extends ApplicationAdapter {
         } else {
             player.reset(playerSpawnPoint.x, playerSpawnPoint.y);
         }
-        
+
         monsters.clear();
         groundItems.clear();
         spawnManager.reset();
@@ -743,4 +765,4 @@ public class Main extends ApplicationAdapter {
             return Float.compare(other.y, this.y);
         }
     }
-}
+}   
