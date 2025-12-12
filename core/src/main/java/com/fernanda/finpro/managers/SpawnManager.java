@@ -78,8 +78,30 @@ public class SpawnManager {
         }
     }
 
+    private com.fernanda.finpro.enums.WorldType currentWorld = com.fernanda.finpro.enums.WorldType.FOREST;
+
+    public void setWorld(com.fernanda.finpro.enums.WorldType world) {
+        this.currentWorld = world;
+    }
+
     private void spawnMonster(MonsterFactory.Type type) {
-        Vector2 pos = MonsterFactory.getRandomSpawnPoint();
+        Vector2 pos;
+        
+        if (type == MonsterFactory.Type.YETI) {
+            // Yeti hanya spawn di Ice World
+            if (currentWorld != com.fernanda.finpro.enums.WorldType.ICE) return; 
+            pos = MonsterFactory.getRandomSpawnPoint(
+                com.fernanda.finpro.singleton.GameAssetManager.getInstance().getIceMap(), 
+                "ice_monster_spawn"
+            );
+        } else {
+            // Orc & Werewolf hanya spawn di Forest World
+            if (currentWorld != com.fernanda.finpro.enums.WorldType.FOREST) return;
+            pos = MonsterFactory.getRandomSpawnPoint(
+                com.fernanda.finpro.singleton.GameAssetManager.getInstance().getMap(), 
+                "spawn_monster"
+            );
+        }
 
         Monster m = MonsterFactory.createMonster(type, pos.x, pos.y);
         monsterList.add(m);
