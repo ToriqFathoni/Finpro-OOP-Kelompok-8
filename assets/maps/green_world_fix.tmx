@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="73" height="73" tilewidth="16" tileheight="16" infinite="0" nextlayerid="17" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="73" height="73" tilewidth="16" tileheight="16" infinite="0" nextlayerid="19" nextobjectid="1">
  <tileset firstgid="1" source="tanah.tsx"/>
  <tileset firstgid="573" source="dessert.tsx"/>
  <tileset firstgid="813" source="floor_detail.tsx"/>
@@ -21,9 +21,19 @@
    eJztmAlqw0AMRdNCcpVeoukJeuXSq5XBiMjTkTW75dF/IByaBf6rpHFyuwEAAADgivw+tgLHkCe40tEc/Tz2VyDj0ZHHzL0I7uBPBn5epDzAz57YB/zIkBv4kYEfHfjRQR8dw3cRd+XNWcqD5ER6fnVycnpxUQv86MCRDhwd42Evt2Zc3Q+nNqs3R7lnvMf7H6Imt0dPgdLMHh2V4HXmYo72j/Q7pLe9dZRX+017dTc5wAEA//m6bzXic1dhhKNR3jWe9331ZISj2XAvvf0QPf/3q/VQb0bMWU7+GW4s95A2R7P8tGajzxg9Z3FPzZyv1nyzd9BZ+6c051lnPHGFHW3lPnG2Iy23FS8Bi7N29mzFnOHnSj0UsNJD/EyHoz6v8YzVXpqNNm+pv43w9nl/lTVKHOW8L4fvt604Ft0Qmgepb2r7ifzEjgJWPeVmrO23GMmR1TkLnLGPrzZruWgueX/kFmGxh0rPp5zXpfZL/LzkyBo8rxVH1nqoFjhqB450Wh2Rp5n326m9PPK7V+vO5m5GOCrZvSOoOfclp70dWfxeHuf/eN8qx5HWS/FspMoqqdz0uNXRKvs8dsOLHKVcSazihaPtnOCGrle4z+7JkRd+lXppVeJsuWcY9RJ/z6pI+7nEEfEHqISqfA==
   </data>
  </layer>
- <layer id="10" name="spawn_monster" width="73" height="73">
+ <layer id="10" name="spawn_monster_2" width="73" height="73">
   <data encoding="base64" compression="zlib">
-   eJzt2NENgmAMReHuv4I6hDqEusUdReITGCIIf7ilnC/piwE8NAQTI4BxcgckJXcAAOBvcgcAAAAgNfXmiNTomKoUbe+/5bWyUNS8LwCoQsF7GkAOcgegBLkDAADAZuQOAKLucyh3QAIK/jebS+6AQuQOwIfcAUnJHbCS3AFIQZHr913ugBGKXDuqQO4ANHfq5vw1t970P7+YGt2uMdzJr7mbGt3Y0TR2NG3LHWnl+S48R9Me3TxnzsvUeFRyB+yA3AEFaQffP+eYlue5r70XcgcAC8kdADQgd0BicgcsJHdAMXIHIIU3FIZmaw==
+   eJzt2csNglAQhtHbfwtqEWoRahd/Kbo0LsQHMpfrOclsiMDnhLChNQAAAADgX6U6oHNp8+5ozmv1Im3M/wUwijTvaaAPqQ5gCKkOAADgr6Q6ABhKqgPgiVQHfCnVAXQhzXexKWl2NLdUBzC7zW22D3O4m/vju6LGavs3fnv8WUXf7GiaHU1bckf58vwqnqNpp9ucX5xLUSOwnAx8/7Veey1SHQAfSnUA8FOpDqALqQ6gC1cuoDIn
+  </data>
+ </layer>
+ <layer id="18" name="spawn_monster_3" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJzt2aENwDAUQ8G//5QepbSgoCCSE+VOMn/cMwAAAABwr7zGt7QDAAAAAAAAYJGMf/CvtANgsbQDAAAAgOulHXCAtAMAADaQdgDAAR5VnQqB
+  </data>
+ </layer>
+ <layer id="17" name="spawn_monster_1" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJzt0LENwDAMA0HvP44n0igp4t5qAgLKHcD+wbUAAGardAAAAAAAAAAAAG2VDoDBKh0AAABHpQOgaZ/x2s39mY/ufHTnozsfAcxS6QAAgI9VOgAGegAgpilp
   </data>
  </layer>
  <layer id="8" name="building_hijau" width="73" height="73">

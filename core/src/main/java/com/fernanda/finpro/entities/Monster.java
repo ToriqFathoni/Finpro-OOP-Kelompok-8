@@ -203,6 +203,8 @@ public abstract class Monster {
     public float getKnockbackDistance() {
         return knockbackDistance;
     }
+    public int getCurrentHealth() { return currentHealth; }
+    public int getMaxHealth() { return maxHealth; }
 
     // Abstract
     public abstract void aiBehavior(float dt, Player player);

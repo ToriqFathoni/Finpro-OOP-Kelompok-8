@@ -92,14 +92,14 @@ public class SpawnManager {
             if (currentWorld != com.fernanda.finpro.enums.WorldType.ICE) return; 
             pos = MonsterFactory.getRandomSpawnPoint(
                 com.fernanda.finpro.singleton.GameAssetManager.getInstance().getIceMap(), 
-                "ice_monster_spawn"
+                new String[]{"ice_monster_spawn_1", "ice_monster_spawn_2", "ice_monster_spawn_3"}
             );
         } else {
             // Orc & Werewolf hanya spawn di Forest World
             if (currentWorld != com.fernanda.finpro.enums.WorldType.FOREST) return;
             pos = MonsterFactory.getRandomSpawnPoint(
                 com.fernanda.finpro.singleton.GameAssetManager.getInstance().getMap(), 
-                "spawn_monster"
+                new String[]{"spawn_monster_1", "spawn_monster_2", "spawn_monster_3"}
             );
         }
 
