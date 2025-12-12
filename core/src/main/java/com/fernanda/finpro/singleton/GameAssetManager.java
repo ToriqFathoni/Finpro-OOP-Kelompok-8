@@ -37,9 +37,11 @@ public class GameAssetManager {
     public static final String WEREWOLF_ATTACK = "Werewolf-Attack.png";
     public static final String WEREWOLF_WALK = "Werewolf-Walk.png";
     public static final String WEREWOLF_DEATH = "Werewolf-Death.png";
+    public static final String WEREWOLF_CLAW = "WerewolfClaw.png";
 
     public static final String YETI_IDLE = "Yeti-Idle.png";
     public static final String YETI_ATTACK = "Yeti-Attack.png";
+    public static final String YETI_HEART = "YetiHeart.png";
 
     // Map Assets
     public static final String MAP_TMX = "maps/green_world_fix.tmx";
@@ -84,10 +86,12 @@ public class GameAssetManager {
         manager.load(WEREWOLF_ATTACK, Texture.class);
         manager.load(WEREWOLF_WALK, Texture.class);
         manager.load(WEREWOLF_DEATH, Texture.class);
+        manager.load(WEREWOLF_CLAW, Texture.class);
 
         // Yeti
         manager.load(YETI_IDLE, Texture.class);
         manager.load(YETI_ATTACK, Texture.class);
+        manager.load(YETI_HEART, Texture.class);
 
         // Map
         manager.load(MAP_TMX, TiledMap.class);
@@ -118,6 +122,11 @@ public class GameAssetManager {
         setFilter(WEREWOLF_IDLE);
         setFilter(WEREWOLF_ATTACK);
         setFilter(WEREWOLF_WALK);
+        setFilter(WEREWOLF_CLAW);
+
+        setFilter(YETI_IDLE);
+        setFilter(YETI_ATTACK);
+        setFilter(YETI_HEART);
         setFilter(WEREWOLF_DEATH);
 
         setFilter(YETI_IDLE);

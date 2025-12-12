@@ -3,11 +3,14 @@ package com. fernanda.finpro.components;
 public enum ItemType {
     // Raw Materials
     ORC_SKULL("Orc Skull", "💀"),
+    ORC_MEAT("Orc Meat", "🥩"),
+    WEREWOLF_CLAW("Werewolf Claw", "🦴"),
+    YETI_HEART("Yeti Heart", "🦷"),
     RAW_MEAT("Raw Meat", "🥩"),
     SLIME_GEL("Slime Gel", "💧"),
     HERB("Healing Herb", "🌿"),
     POTION("Health Potion", "🧪"),
-    
+
     // Crafted Foods
     ROASTED_MEAT("Roasted Meat", "🍖"),
     HERBAL_TEA("Herbal Tea", "🍵"),
@@ -15,7 +18,7 @@ public enum ItemType {
     FOREST_SOUP("Forest Soup", "🍲"),
     SLIME_JELLY("Slime Jelly", "🟢"),
     GOURMET_BURGER("Gourmet Burger", "🍔"),
-    
+
     // Special Crafted Items
     SKULL_ELIXIR("Skull Elixir", "⚗️");
 

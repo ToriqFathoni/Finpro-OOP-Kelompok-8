@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.fernanda.finpro.components.ItemType;
 import com.fernanda.finpro.singleton.GameAssetManager;
 
 public class Werewolf extends Monster {
@@ -284,5 +285,10 @@ public class Werewolf extends Monster {
             sr.setColor(Color.ORANGE);
             sr.circle(position.x + WIDTH/2, position.y + HEIGHT + 5, 3);
         }
+    }
+
+    @Override
+    public ItemType rollDrop() {
+        return ItemType.WEREWOLF_CLAW;
     }
 }
