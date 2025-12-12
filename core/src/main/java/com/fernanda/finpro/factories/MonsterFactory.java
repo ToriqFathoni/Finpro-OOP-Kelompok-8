@@ -52,9 +52,8 @@ public class MonsterFactory {
     }
 
     // --- HELPER MATH ---
-    public static Vector2 getRandomSpawnPoint() {
-        TiledMap map = GameAssetManager.getInstance().getMap();
-        MapLayer layer = map.getLayers().get("spawn_monster");
+    public static Vector2 getRandomSpawnPoint(TiledMap map, String layerName) {
+        MapLayer layer = map.getLayers().get(layerName);
 
         List<Vector2> spawnTiles = new ArrayList<>();
 
@@ -76,5 +75,9 @@ public class MonsterFactory {
 
         // Fallback if no spawn points found
         return new Vector2(500, 500);
+    }
+
+    public static Vector2 getRandomSpawnPoint() {
+        return getRandomSpawnPoint(GameAssetManager.getInstance().getMap(), "spawn_monster");
     }
 }

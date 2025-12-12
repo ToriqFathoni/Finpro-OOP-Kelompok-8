@@ -85,7 +85,7 @@ public class Main extends ApplicationAdapter {
     private Vector2 playerSpawnPoint = new Vector2(100, 100); // Default fallback
 
     private boolean isGameOver = false;
-    private boolean isIceWorld = false;
+    private com.fernanda.finpro.enums.WorldType currentWorld = com.fernanda.finpro.enums.WorldType.FOREST;
 
     @Override
     public void create() {
@@ -271,9 +271,7 @@ public class Main extends ApplicationAdapter {
                 }
 
                 // Spawn
-                if (!isIceWorld) {
-                    spawnManager.update(dt);
-                }
+                spawnManager.update(dt);
 
                 for (Monster m : monsters) {
                     m.update(dt);
@@ -305,10 +303,39 @@ public class Main extends ApplicationAdapter {
         }
 
         // Camera
-        float targetX = player.position.x + (player.getWidth() / 2);
-        float targetY = player. position.y + (player.getHeight() / 2);
-        camera.position.x = targetX;
-        camera.position. y = targetY;
+        if (currentWorld == com.fernanda.finpro.enums.WorldType.INFERNO) {
+            // Static Camera centered on map (1168x1168)
+            camera.position.set(584, 584, 0);
+        } else {
+            float targetX = player.position.x + (player.getWidth() / 2);
+            float targetY = player. position.y + (player.getHeight() / 2);
+            
+            // Clamp Camera to Map Bounds to avoid black bars
+            float mapWidth = 1168f;
+            float mapHeight = 1168f;
+            
+            float visibleWidth = camera.viewportWidth * camera.zoom;
+            float visibleHeight = camera.viewportHeight * camera.zoom;
+            
+            float minX = visibleWidth / 2;
+            float maxX = mapWidth - visibleWidth / 2;
+            float minY = visibleHeight / 2;
+            float maxY = mapHeight - visibleHeight / 2;
+            
+            // Clamp X
+            if (mapWidth < visibleWidth) {
+                camera.position.x = mapWidth / 2;
+            } else {
+                camera.position.x = MathUtils.clamp(targetX, minX, maxX);
+            }
+            
+            // Clamp Y
+            if (mapHeight < visibleHeight) {
+                camera.position.y = mapHeight / 2;
+            } else {
+                camera.position.y = MathUtils.clamp(targetY, minY, maxY);
+            }
+        }
         camera.update();
 
         // RENDERING
@@ -428,70 +455,114 @@ public class Main extends ApplicationAdapter {
     }
 
     private void checkWorldTransition(Rectangle playerRect) {
-        String targetLayerName = isIceWorld ? "back_map_forest" : "next_map";
+        TiledMapTileLayer transitionLayer = null;
+        
+        if (currentWorld == com.fernanda.finpro.enums.WorldType.FOREST) {
+            transitionLayer = (TiledMapTileLayer) map.getLayers().get("next_map");
+            if (checkLayerCollision(playerRect, transitionLayer)) {
+                switchToIceWorld();
+            }
+        } else if (currentWorld == com.fernanda.finpro.enums.WorldType.ICE) {
+            // Check Back to Forest
+            transitionLayer = (TiledMapTileLayer) map.getLayers().get("back_map_forest");
+            if (checkLayerCollision(playerRect, transitionLayer)) {
+                switchToForestWorld();
+                return;
+            }
+            
+            // Check Next to Inferno
+            transitionLayer = (TiledMapTileLayer) map.getLayers().get("inferno_next_map");
+            if (checkLayerCollision(playerRect, transitionLayer)) {
+                switchToInfernoWorld();
+            }
+        } else if (currentWorld == com.fernanda.finpro.enums.WorldType.INFERNO) {
+            // Check Back to Ice
+            transitionLayer = (TiledMapTileLayer) map.getLayers().get("exit_player_inferno");
+            if (checkLayerCollision(playerRect, transitionLayer)) {
+                switchToIceWorldFromInferno();
+            }
+        }
+    }
 
-        TiledMapTileLayer transitionLayer = (TiledMapTileLayer) map.getLayers().get(targetLayerName);
-        if (transitionLayer != null) {
+    private boolean checkLayerCollision(Rectangle playerRect, TiledMapTileLayer layer) {
+        if (layer != null) {
             int tileX = (int) ((playerRect.x + playerRect.width / 2) / 16);
             int tileY = (int) ((playerRect.y + playerRect.height / 2) / 16);
 
-            TiledMapTileLayer.Cell cell = transitionLayer.getCell(tileX, tileY);
-            if (cell != null && cell.getTile() != null) {
-                if (isIceWorld) {
-                    switchToForestWorld();
-                } else {
-                    switchToIceWorld();
-                }
-            }
+            TiledMapTileLayer.Cell cell = layer.getCell(tileX, tileY);
+            return cell != null && cell.getTile() != null;
         }
+        return false;
     }
 
     private void switchToIceWorld() {
         System.out.println("Switching to Ice World!");
-        isIceWorld = true;
+        currentWorld = com.fernanda.finpro.enums.WorldType.ICE;
+        spawnManager.setWorld(currentWorld);
 
         // Load Ice Map
         map = GameAssetManager.getInstance().getIceMap();
         mapRenderer.setMap(map);
+        
+        camera.zoom = 1.0f;
 
         // Find Ice Spawn Point
-        MapLayer layer = map.getLayers().get("spawn_ice_player");
-        if (layer instanceof TiledMapTileLayer) {
-            TiledMapTileLayer spawnLayer = (TiledMapTileLayer) layer;
-            boolean found = false;
-            for (int x = 0; x < spawnLayer.getWidth(); x++) {
-                for (int y = 0; y < spawnLayer.getHeight(); y++) {
-                    if (spawnLayer.getCell(x, y) != null) {
-                        player.position.set(x * 16, y * 16);
-                        found = true;
-                        break;
-                    }
-                }
-                if (found) break;
-            }
-        }
+        setPlayerSpawn("spawn_ice_player");
+        resetWorldState();
+    }
+    
+    private void switchToIceWorldFromInferno() {
+        System.out.println("Switching to Ice World (From Inferno)!");
+        currentWorld = com.fernanda.finpro.enums.WorldType.ICE;
+        spawnManager.setWorld(currentWorld);
 
-        // Clear Monsters and Items
-        monsters.clear();
-        groundItems.clear();
-        spawnManager.reset();
+        // Load Ice Map
+        map = GameAssetManager.getInstance().getIceMap();
+        mapRenderer.setMap(map);
+        
+        camera.zoom = 1.0f;
 
-        // Disable Campfire and SignBoards in Ice World
-        signBoards.clear();
-        campfire = new Campfire(-1000, -1000); // Hide campfire
+        // Find Back Spawn Point
+        setPlayerSpawn("back_spawn_inferno");
+        resetWorldState();
     }
 
     private void switchToForestWorld() {
         System.out.println("Switching to Forest World!");
-        isIceWorld = false;
+        currentWorld = com.fernanda.finpro.enums.WorldType.FOREST;
+        spawnManager.setWorld(currentWorld);
 
         // Load Forest Map
         map = GameAssetManager.getInstance().getMap();
         mapRenderer.setMap(map);
+        
+        camera.zoom = 1.0f;
 
-        // Find Player Spawn Point (or a specific return point if you have one)
-        // Using spawn_player_back layer for returning from Ice World
-        MapLayer layer = map.getLayers().get("spawn_player_back");
+        // Find Player Spawn Point
+        setPlayerSpawn("spawn_player_back");
+        resetWorldState();
+    }
+    
+    private void switchToInfernoWorld() {
+        System.out.println("Switching to Inferno World!");
+        currentWorld = com.fernanda.finpro.enums.WorldType.INFERNO;
+        spawnManager.setWorld(currentWorld);
+
+        // Load Inferno Map
+        map = GameAssetManager.getInstance().getLavaMap();
+        mapRenderer.setMap(map);
+        
+        // Zoom Out Camera (Fit ~90% of map height)
+        // Map Height 1168 * 0.9 = 1051. Viewport Height 450. Zoom ~2.3
+        camera.zoom = 2.3f;
+
+        // Find Inferno Spawn Point
+        setPlayerSpawn("spawn_player_inferno");
+        resetWorldState();
+    }
+    
+    private void setPlayerSpawn(String layerName) {
+        MapLayer layer = map.getLayers().get(layerName);
         if (layer instanceof TiledMapTileLayer) {
             TiledMapTileLayer spawnLayer = (TiledMapTileLayer) layer;
             boolean found = false;
@@ -506,13 +577,27 @@ public class Main extends ApplicationAdapter {
                 if (found) break;
             }
         }
-
+    }
+    
+    private void resetWorldState() {
         // Clear Monsters and Items
         monsters.clear();
         groundItems.clear();
         spawnManager.reset();
 
-        // Re-initialize Campfire and SignBoards
+        // Reset Environment Objects
+        signBoards.clear();
+        
+        if (currentWorld == com.fernanda.finpro.enums.WorldType.FOREST) {
+             // Re-initialize Campfire and SignBoards for Forest
+             initForestEnvironment();
+        } else {
+             // Hide campfire in other worlds
+             campfire = new Campfire(-1000, -1000); 
+        }
+    }
+    
+    private void initForestEnvironment() {
         // We need to re-run the logic to find campfire position
         Vector2 campfirePos = new Vector2(player.position.x + 64, player.position.y);
         MapLayer campfireLayer = map.getLayers().get("campfire");
@@ -531,8 +616,6 @@ public class Main extends ApplicationAdapter {
             }
         }
         campfire = new Campfire(campfirePos.x, campfirePos.y);
-
-        signBoards.clear();
 
         // SignBoard 1: Survival Tips from Map Layer
         Vector2 survivalTipPos = new Vector2(player.position.x - 32, player.position.y); // Default
@@ -590,8 +673,10 @@ public class Main extends ApplicationAdapter {
         // Layers to check for collision
         String[] collisionLayers;
 
-        if (isIceWorld) {
+        if (currentWorld == com.fernanda.finpro.enums.WorldType.ICE) {
             collisionLayers = new String[] { "ice_building" };
+        } else if (currentWorld == com.fernanda.finpro.enums.WorldType.INFERNO) {
+            collisionLayers = new String[] { "building_inferno", "lava_obstacle" };
         } else {
             collisionLayers = new String[] { "building_coklat", "building_hijau" };
         }
@@ -609,9 +694,18 @@ public class Main extends ApplicationAdapter {
     }
 
     private void restartGame() {
-        player.reset(playerSpawnPoint.x, playerSpawnPoint.y);
+        if (currentWorld == com.fernanda.finpro.enums.WorldType.ICE) {
+            setPlayerSpawn("spawn_ice_player");
+            player.reset(player.position.x, player.position.y); // Reset player stats & state at new position
+        } else if (currentWorld == com.fernanda.finpro.enums.WorldType.INFERNO) {
+            setPlayerSpawn("spawn_player_inferno");
+            player.reset(player.position.x, player.position.y);
+        } else {
+            player.reset(playerSpawnPoint.x, playerSpawnPoint.y);
+        }
+        
         monsters.clear();
-        groundItems. clear();
+        groundItems.clear();
         spawnManager.reset();
         isGameOver = false;
         isInventoryOpen = false;

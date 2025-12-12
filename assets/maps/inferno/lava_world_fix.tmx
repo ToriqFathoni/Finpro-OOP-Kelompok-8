@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="73" height="73" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="1">
+ <tileset firstgid="1" source="../mountain_medium.tsx"/>
+ <tileset firstgid="28" source="../tiles.tsx"/>
+ <tileset firstgid="212" source="../mountain_big.tsx"/>
+ <tileset firstgid="260" source="../lava.tsx"/>
+ <tileset firstgid="296" source="../lava2.tsx"/>
+ <layer id="1" name="floor_inferno" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJzt0bENACAQA7EM8uwJ2wOihd4FkSIPcJWkrdf3ac/ZdnyvCp10hU66QiddoZOu0ElX6KQrdNIVOukKnXSFTrpCJ12hk67QSVfopCt00hU66QqddIVOukInXaGTrtBJV+ikK3TSFTrpCp10hU66QiddoZOu0ElX6KQrdNIVOukKnXSFTrpCJ12hk67QSVfopCt00hU66QqddIVOukInXaGTrtBJV+ikK3TSFTrpCp10hU66QiddoZOu0ElX6KQrdNIVOukKnXSFTrpCJ12hk67QSVfopCt00hU66QqddIVOukInXaGTrtBJV+ikK3TSnTpXAXI=
+  </data>
+ </layer>
+ <layer id="3" name="building_inferno" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJztnMlu1EAURauTQGdgwRhI8gNh+IIw/fr7DYbABpJANsxsmE4DEVaT8i233YPa90hXsuLu0qvnOnaXFHmYUlonG2To4/+OR1wmV8hVH597nCbo6w7ZJXsLcp1L6txpOdYkfT1jEa5z6fVvM1Zd7887bvr5eR2PX8Omc8j1t+6+dUb182uDlC6Qi2RI1snGIM2cXB1t5pz7TNO1tk0dN8mtUT1kl+zNoUcldeTWVMmcS3qRux9RR1BPUFdQX1BnUG902wFNSR1NXWvTryqs52BdB+s7WOfBeo+1OfSoaR25a17iXcnaWQZK7lMl96zc2lk2Sp59Jb+Dlpmmz76+rJ0cJffpSfjZSXWLQe5+3Pe1kyPnoPlHl64tK3ZNY9dS2mc/d5vcIXfJvbH9nV1L6YCe3CcPyEPyiDyu9Mmu/e5H0JegP0Gfgn7FQWWPZ9f+gF+BZ4FvgXexX+mRXdPYNY1d09g1jV3T2DWNXdPYNY1d0yjX1H6vDyjX1H6vDyjX1H6vD5Q81+r2e33AzzWNn2sa/4bU2DWNXdPYNY1d09g1jV3T2DWNXdPYNY1d09g1jV3T2DWNXdPYNY1d09g1jV3T2DWNXdPYNY1d09g1jV3T2DWNXdPYNY1d08zatSfkKXlGnpND8oK8nNM4JczStVfkNTkix+SEvCFvySkZ/QvhClnNfL96vm6crpmla+/Ie/KBfCSfyGfyhXwlm2SLXMp8v3q+bpyuGe+LWsNtzn8j38mP9PddACyMAVkhq+Qaf7pObmRqrZ6vG2eac1AutD1f8t6pUnJjTXsOyoW257t8n0lurGnPQbnQ9nzd+9Kakhtr2nP4BfzOLUo=
+  </data>
+ </layer>
+ <layer id="5" name="batas_bos" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJztxyEOgEAQBMFzgAMc8P9/MnLNhaC3KulkZgwAAAAAAAAAAAAAgH+WtKat6a5/Zk9HOpvu+meudKen6a4fAAAAAAAAAAD49gKIYw1X
+  </data>
+ </layer>
+ <layer id="4" name="lava_obstacle" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJzt08ltAkEYBeE3GWCWBADDjX29ATYyS9IOjZqbhwQao/qkuree+k8kSZIkSZIkSZIkSZIkSZIkSZIkSZL+p0mVTGlGc1rQsir9qtdyYI8jneiLvunsRpIkFXWv8nujK13oh0q/6dXs2WRHW9rQmlbu1MAeYZewT9gp7FXvpifcV7izcG/h7ur7K2LM/x3RJw1pQH3/dEOPPbrUoTZ9UMuNGtgj7BL2CTuFverd9Ad3Fe4r3Fm4t3B39f1JkiTpjTwAKS8cKQ==
+  </data>
+ </layer>
+ <layer id="2" name="spawn_player_inferno" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJztw7ENAAAMAiDf7vddvMJAQgIAAAAAAAAAAAAAAAAAAAAAAAAArLiGNQ8FhQDz
+  </data>
+ </layer>
+ <layer id="6" name="exit_player_inferno" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJztzrEJAAAIwDDP1u91E3zAJYHujQAAAAAAAAAAAAAAAAAAAAAAAAAAgJVTfU8cDdy0API=
+  </data>
+ </layer>
+</map>
