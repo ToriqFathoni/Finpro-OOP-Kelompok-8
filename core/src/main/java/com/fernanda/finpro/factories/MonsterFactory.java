@@ -22,7 +22,8 @@ public class MonsterFactory {
     public enum Type {
         ORC,
         WEREWOLF,
-        YETI
+        YETI,
+        BOSS
     }
 
     // --- CONFIG AREA SPAWN ---

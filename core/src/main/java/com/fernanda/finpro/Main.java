@@ -519,10 +519,10 @@ public class Main extends ApplicationAdapter {
         spawnManager.setWorld(currentWorld);
         map = GameAssetManager.getInstance().getLavaMap();
         mapRenderer.setMap(map);
-        camera.zoom = 2.3f;
+        camera.zoom = 2.6f;
         setPlayerSpawn("spawn_player_inferno");
         resetWorldState();
-        spawnManager.spawnBoss(584, 690); 
+        spawnManager.spawnBoss(); 
         
         gameHud.setBoss(spawnManager.getBoss());
     }
@@ -608,7 +608,7 @@ public class Main extends ApplicationAdapter {
         if (currentWorld == WorldType.ICE) {
             collisionLayers = new String[] { "ice_building" };
         } else if (currentWorld == WorldType.INFERNO) {
-            collisionLayers = new String[] { "building_inferno", "lava_obstacle" };
+            collisionLayers = new String[] { "building_inferno", "lava_obstacle", "batas_bos" };
         } else {
             collisionLayers = new String[] { "building_coklat", "building_hijau" };
         }
@@ -642,7 +642,7 @@ public class Main extends ApplicationAdapter {
         
         // Jika restart di Inferno, spawn ulang boss
         if (currentWorld == WorldType.INFERNO) {
-            spawnManager.spawnBoss(584, 650);
+            spawnManager.spawnBoss();
         }
 
         isGameOver = false;
