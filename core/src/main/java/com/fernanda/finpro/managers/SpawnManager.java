@@ -117,12 +117,25 @@ public class SpawnManager {
     // --- METODE BARU UNTUK BOSS ---
 
     /**
-     * Memunculkan Boss di tengah layar.
+     * Memunculkan Boss di lokasi spawn yang ditentukan.
      */
-    public void spawnBoss(float centerX, float centerY) {
+    public void spawnBoss() {
         if (this.boss == null) {
-            this.boss = new Boss(centerX, centerY);
-            System.out.println("BOSS HAS SPAWNED!");
+            Vector2 pos = null;
+            
+            if (currentWorld == WorldType.INFERNO) {
+                 pos = MonsterFactory.getRandomSpawnPoint(
+                    GameAssetManager.getInstance().getLavaMap(), 
+                    new String[]{"boss_infernospawn"}
+                );
+            }
+            
+            if (pos != null) {
+                this.boss = new Boss(pos.x, pos.y);
+                System.out.println("BOSS HAS SPAWNED at " + pos.x + ", " + pos.y);
+            } else {
+                System.err.println("FAILED TO SPAWN BOSS: Spawn point not found!");
+            }
         }
     }
 
