@@ -43,6 +43,11 @@ public class GameAssetManager {
     public static final String YETI_ATTACK = "Yeti-Attack.png";
     public static final String YETI_HEART = "YetiHeart.png";
 
+    public static final String BOSS_IDLE = "Boss-Idle.png";
+    public static final String BOSS_ATTACK = "Boss-Attack.png";
+    public static final String BOSS_HITBOX = "Boss-Hitbox.png";
+    public static final String BOSS_RETRIEVE = "Boss-Retrieve.png";
+
     // Map Assets
     public static final String MAP_TMX = "maps/green_world_fix.tmx";
     public static final String ICE_MAP_TMX = "maps/ice_world_fix.tmx";
@@ -93,6 +98,12 @@ public class GameAssetManager {
         manager.load(YETI_ATTACK, Texture.class);
         manager.load(YETI_HEART, Texture.class);
 
+        // Boss
+        manager.load(BOSS_IDLE, Texture.class);
+        manager.load(BOSS_ATTACK, Texture.class);
+        manager.load(BOSS_HITBOX, Texture.class);
+        manager.load(BOSS_RETRIEVE, Texture.class);
+
         // Map
         manager.load(MAP_TMX, TiledMap.class);
         manager.load(ICE_MAP_TMX, TiledMap.class);
@@ -122,15 +133,17 @@ public class GameAssetManager {
         setFilter(WEREWOLF_IDLE);
         setFilter(WEREWOLF_ATTACK);
         setFilter(WEREWOLF_WALK);
+        setFilter(WEREWOLF_DEATH);
         setFilter(WEREWOLF_CLAW);
 
         setFilter(YETI_IDLE);
         setFilter(YETI_ATTACK);
         setFilter(YETI_HEART);
-        setFilter(WEREWOLF_DEATH);
 
-        setFilter(YETI_IDLE);
-        setFilter(YETI_ATTACK);
+        setFilter(BOSS_IDLE);
+        setFilter(BOSS_ATTACK);
+        setFilter(BOSS_HITBOX);
+        setFilter(BOSS_RETRIEVE);
     }
 
     private void setFilter(String fileName) {

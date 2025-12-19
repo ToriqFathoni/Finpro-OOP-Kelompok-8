@@ -65,7 +65,7 @@ public class Yeti extends Monster {
         if (isDead) return;
 
         float distToPlayer = position.dst(player.position);
-        
+
         // Update facing direction berdasarkan posisi player (kecuali saat wander)
         if (currentState != State.WANDER && currentState != State.DEAD) {
             float dx = player.position.x - position.x;
@@ -73,7 +73,7 @@ public class Yeti extends Monster {
                 facingRight = dx > 0;
             }
         }
-        
+
         // Logic Facing saat bergerak
         if (Math.abs(velocity.x) > 1.0f) {
             facingRight = velocity.x > 0;
@@ -173,7 +173,6 @@ public class Yeti extends Monster {
     }
 
     private void createAttackHitbox() {
-        // Hitbox Yeti Besar
         float atkWidth = 60f;
         float atkHeight = 50f;
         float offsetIn = 1f;
