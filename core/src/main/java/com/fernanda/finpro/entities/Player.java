@@ -61,6 +61,11 @@ public class Player {
     private final float INVINCIBILITY_DURATION = 1.0f;
 
     private Vector2 dodgeDirection = new Vector2();
+    
+    // --- DAMAGE BOOST BUFF (ORC ELIXIR) ---
+    private float damageBoostTimer = 0f;
+    private final float DAMAGE_BOOST_DURATION = 120f; // 2 minutes
+    private final float DAMAGE_BOOST_MULTIPLIER = 1.5f; // 50% damage increase
 
     // --- STATE MANAGEMENT ---
     private PlayerState currentState;
@@ -95,6 +100,15 @@ public class Player {
 
     public void update(float dt) {
         stats.update(dt);
+        
+        // Update damage boost timer
+        if (damageBoostTimer > 0) {
+            damageBoostTimer -= dt;
+            if (damageBoostTimer <= 0) {
+                damageBoostTimer = 0;
+                System.out.println("[BUFF] Damage Boost expired!");
+            }
+        }
 
         if (invincibilityTimer > 0) {
             invincibilityTimer -= dt;
@@ -261,10 +275,27 @@ public class Player {
     public float getWidth() { return LOGICAL_WIDTH; }
     public float getHeight() { return LOGICAL_HEIGHT; }
     public int getDamage() {
-        return attackDamage;
+        float finalDamage = attackDamage;
+        if (damageBoostTimer > 0) {
+            finalDamage *= DAMAGE_BOOST_MULTIPLIER;
+        }
+        return (int)finalDamage;
     }
     public void setDamage(int amount) {
         this.attackDamage = amount;
+    }
+    
+    public void activateDamageBoost() {
+        damageBoostTimer = DAMAGE_BOOST_DURATION;
+        System.out.println("[BUFF] Damage Boost activated! (2 minutes, +50% damage)");
+    }
+    
+    public float getDamageBoostTimer() {
+        return damageBoostTimer;
+    }
+    
+    public boolean hasDamageBoost() {
+        return damageBoostTimer > 0;
     }
 
     public void render(SpriteBatch batch) {

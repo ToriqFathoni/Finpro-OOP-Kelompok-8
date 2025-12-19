@@ -70,6 +70,26 @@ public class PlayerStats {
         }
         notifyHealthChanged();
     }
+    
+    public void heal(float amount) {
+        if (isDead) return;
+        currentHealth += amount;
+        if (currentHealth > maxHealth) {
+            currentHealth = maxHealth;
+        }
+        System.out.println("[HEAL] +" + (int)amount + " HP! Current: " + (int)currentHealth + "/" + (int)maxHealth);
+        notifyHealthChanged();
+    }
+    
+    public void restoreStamina(float amount) {
+        if (isDead) return;
+        currentStamina += amount;
+        if (currentStamina > maxStamina) {
+            currentStamina = maxStamina;
+        }
+        System.out.println("[STAMINA] +" + (int)amount + " Stamina! Current: " + (int)currentStamina + "/" + (int)maxStamina);
+        notifyStaminaChanged();
+    }
 
     public boolean useStamina(float amount) {
         if (currentStamina >= amount) {

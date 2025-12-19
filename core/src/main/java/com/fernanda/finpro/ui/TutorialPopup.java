@@ -137,6 +137,7 @@ public class TutorialPopup {
         font.getData().setScale(baseScale * 0.9f);
         String controls = "[CONTROLS]\n" +
                           "WASD: Move  |  CLICK: Attack\n" +
+                          "SHIFT: Dash  |  Q: Eat/Drink\n" +
                           "TAB: Inventory  |  C: Cook\n" +
                           "H: Help Menu";
                           

@@ -105,6 +105,9 @@ public class Orc extends Monster {
         float distToPlayer = Vector2.dst(orcCenterX, orcCenterY, playerCenterX, playerCenterY);
 
         switch (currentState) {
+            case IDLE:
+                break;
+
             case HURT:
                 if (stateTimer > 0.4f) currentState = State.CHASE;
                 break;
@@ -158,6 +161,9 @@ public class Orc extends Monster {
                 if (stateTimer >= RECOVERY_TIME) {
                     currentState = State.CHASE;
                 }
+                break;
+
+            case DEAD:
                 break;
         }
 

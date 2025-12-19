@@ -80,6 +80,9 @@ public class Yeti extends Monster {
         }
 
         switch (currentState) {
+            case IDLE:
+                break;
+
             case HURT:
                 if (stateTimer > 0.2f) currentState = State.CHASE;
                 break;
@@ -128,6 +131,9 @@ public class Yeti extends Monster {
                 if (stateTimer >= RECOVERY_TIME) {
                     currentState = State.CHASE;
                 }
+                break;
+
+            case DEAD:
                 break;
         }
 
@@ -202,6 +208,11 @@ public class Yeti extends Monster {
             case PREPARE_ATTACK: currentAnim = idleAnim; break;
             case HURT:
                 currentAnim = idleAnim;
+                break;
+            case CHASE:
+            case WANDER:
+            case COOLDOWN:
+            case DEAD:
                 break;
         }
 
