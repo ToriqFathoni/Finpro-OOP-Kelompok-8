@@ -19,9 +19,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fernanda.finpro.components.ItemType;
+import com.fernanda.finpro.entities.Boss; // <-- 1. IMPORT DITAMBAHKAN
 import com.fernanda.finpro.entities.GroundItem;
 import com.fernanda.finpro.entities.Monster;
-import com.fernanda.finpro.entities.Orc;
 import com.fernanda.finpro.entities.Player;
 import com.fernanda.finpro.managers.CollisionManager;
 import com.fernanda.finpro.managers.SpawnManager;
@@ -33,6 +33,7 @@ import com.fernanda.finpro.ui.CookingMenu;
 import com.fernanda.finpro.ui.TutorialPopup;
 import com.fernanda.finpro.ui.LoginUI;
 import com.fernanda.finpro.managers.NetworkManager;
+import com.fernanda.finpro.enums.WorldType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,7 +56,6 @@ public class Main extends ApplicationAdapter {
     List<GroundItem> groundItems;
     List<Renderable> renderQueue;
 
-    // Hardcore Cooking & Tutorial System
     Campfire campfire;
     TutorialPopup tutorialPopup;
 
@@ -71,16 +71,11 @@ public class Main extends ApplicationAdapter {
     boolean debugMode = true;
     BitmapFont font;
 
-    private static final float RADIUS_FIRE = 800f;
-    private static final float RADIUS_ICE = 2000f;
-    private static final float RADIUS_FOREST = 3500f;
-
-    private Vector2 tempVector = new Vector2();
     private SpawnManager spawnManager;
     private CollisionManager collisionManager;
     private Vector2 playerSpawnPoint = new Vector2(100, 100);
     private boolean isGameOver = false;
-    private com.fernanda.finpro.enums.WorldType currentWorld = com.fernanda.finpro.enums.WorldType.FOREST;
+    private WorldType currentWorld = WorldType.FOREST;
 
     @Override
     public void create() {
@@ -96,7 +91,6 @@ public class Main extends ApplicationAdapter {
         map = GameAssetManager.getInstance().getMap();
         mapRenderer = new OrthogonalTiledMapRenderer(map, 1.0f);
 
-        // Find Player Spawn Point
         MapLayer layer = map.getLayers().get("spawn_player");
         if (layer instanceof TiledMapTileLayer) {
             TiledMapTileLayer spawnLayer = (TiledMapTileLayer) layer;
@@ -145,7 +139,6 @@ public class Main extends ApplicationAdapter {
         groundItems = new ArrayList<>();
         renderQueue = new ArrayList<>();
 
-        // Find Campfire Position
         Vector2 campfirePos = new Vector2(playerSpawnPoint.x + 64, playerSpawnPoint.y);
         MapLayer campfireLayer = map.getLayers().get("campfire");
         if (campfireLayer instanceof TiledMapTileLayer) {
@@ -180,7 +173,6 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void render() {
-        // Render Login UI if visible
         if (loginUI.isVisible()) {
             Gdx.gl.glClearColor(0, 0, 0, 1);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -191,34 +183,25 @@ public class Main extends ApplicationAdapter {
         float dt = Gdx.graphics.getDeltaTime();
 
         if (!isGameOver) {
-            // ========== TUTORIAL POPUP INPUT (HIGHEST PRIORITY) ==========
             if (Gdx.input.isKeyJustPressed(Input.Keys.H)) {
                 tutorialPopup.toggle();
-                System.out.println("Tutorial Popup toggled: " + tutorialPopup.isVisible());
             }
 
             if (tutorialPopup.isVisible() && Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
                 tutorialPopup.hide();
-                System.out.println("Tutorial Popup closed via SPACE");
             }
 
-            // ========== PAUSE LOGIC: If tutorial is visible, skip game updates ==========
             if (!tutorialPopup.isVisible()) {
-                // Toggle Inventory
                 if (Gdx.input.isKeyJustPressed(Input.Keys.TAB)) {
                     if (!isCookingMenuOpen) {
                         isInventoryOpen = !isInventoryOpen;
                         gamePaused = isInventoryOpen;
-                        System.out.println("Inventory: " + (isInventoryOpen ? "OPEN (PAUSED)" : "CLOSED"));
-
-                        // Save inventory when closing
                         if (!isInventoryOpen) {
                             NetworkManager.getInstance().saveInventory(player);
                         }
                     }
                 }
 
-                // Toggle Cooking Menu
                 if (Gdx.input.isKeyJustPressed(Input.Keys.C)) {
                     if (!isInventoryOpen && campfire.isPlayerNearby(player)) {
                         isCookingMenuOpen = !isCookingMenuOpen;
@@ -227,7 +210,6 @@ public class Main extends ApplicationAdapter {
                     }
                 }
 
-                // Update Cooking Menu
                 if (isCookingMenuOpen) {
                     cookingMenu.update(player.inventory);
                     if (!cookingMenu.isVisible()) {
@@ -236,16 +218,13 @@ public class Main extends ApplicationAdapter {
                     }
                 }
 
-                // Update game (ONLY if not paused)
                 if (!gamePaused) {
                     player.update(dt);
                     handleMapCollision();
 
-                    // Keep player within map bounds
                     player.position.x = MathUtils.clamp(player.position.x, 0, 1168 - player.getWidth());
                     player.position.y = MathUtils.clamp(player.position.y, 0, 1168 - player.getHeight());
 
-                    // Item Pickup
                     Iterator<GroundItem> itemIterator = groundItems.iterator();
                     while (itemIterator.hasNext()) {
                         GroundItem item = itemIterator.next();
@@ -257,23 +236,27 @@ public class Main extends ApplicationAdapter {
                         }
                     }
 
-                    // Monster Cleanup & Drop (Universal System)
                     Iterator<Monster> monsterIterator = monsters.iterator();
                     while (monsterIterator.hasNext()) {
                         Monster m = monsterIterator.next();
                         if (m.canBeRemoved()) {
-                            // Semua monster sekarang punya rollDrop()
                             ItemType drop = m.rollDrop();
                             if (drop != null) {
                                 groundItems.add(new GroundItem(drop, m.position.x, m.position.y));
-                                System.out.println("[DROP] " + m.getClass().getSimpleName() + " dropped: " + drop.getDisplayName());
                             }
                             monsterIterator.remove();
                         }
                     }
 
-                    // Spawn
                     spawnManager.update(dt);
+                    
+                    // --- 4. UPDATE BOSS ---
+                    Boss boss = spawnManager.getBoss();
+                    if (boss != null) {
+                        boss.update(dt);
+                    }
+                    // ----------------------
+
                     for (Monster m : monsters) {
                         m.update(dt);
                         m.aiBehavior(dt, player);
@@ -281,17 +264,14 @@ public class Main extends ApplicationAdapter {
                     }
                     collisionManager.update(dt);
                 } else {
-                    // Handle inventory input
                     boolean shouldClose = inventoryUI.handleInput();
                     if (shouldClose) {
                         isInventoryOpen = false;
                         gamePaused = false;
-                        System.out.println("Inventory closed via UI button");
                     }
                 }
             }
 
-            // Death check
             if (player.stats.getCurrentHealth() <= 0) {
                 if (player.isDeathAnimationFinished()) {
                     isGameOver = true;
@@ -303,18 +283,15 @@ public class Main extends ApplicationAdapter {
             }
         }
 
-        // Camera
-        if (currentWorld == com.fernanda.finpro.enums.WorldType.INFERNO) {
+        if (currentWorld == WorldType.INFERNO) {
             camera.position.set(584, 584, 0);
         } else {
             float targetX = player.position.x + (player.getWidth() / 2);
             float targetY = player.position.y + (player.getHeight() / 2);
-
             float mapWidth = 1168f;
             float mapHeight = 1168f;
             float visibleWidth = camera.viewportWidth * camera.zoom;
             float visibleHeight = camera.viewportHeight * camera.zoom;
-
             float minX = visibleWidth / 2;
             float maxX = mapWidth - visibleWidth / 2;
             float minY = visibleHeight / 2;
@@ -334,7 +311,6 @@ public class Main extends ApplicationAdapter {
         }
         camera.update();
 
-        // RENDERING
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         viewport.apply();
@@ -345,7 +321,6 @@ public class Main extends ApplicationAdapter {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        // Prepare Render Queue
         renderQueue.clear();
         for (Monster m : monsters) {
             renderQueue.add(new Renderable(m.position.y, () -> m.render(batch)));
@@ -356,6 +331,13 @@ public class Main extends ApplicationAdapter {
         }
         renderQueue.add(new Renderable(campfire.getPosition().y, () -> campfire.render(batch)));
 
+        // --- RENDER BOSS ---
+        Boss boss = spawnManager.getBoss();
+        if (boss != null) {
+            renderQueue.add(new Renderable(boss.position.y, () -> boss.render(batch)));
+        }
+        // -------------------
+
         Collections.sort(renderQueue);
         for (Renderable r : renderQueue) {
             r.renderTask.run();
@@ -363,7 +345,6 @@ public class Main extends ApplicationAdapter {
 
         batch.end();
 
-        // Render Monster HP Bars
         worldRenderer.setProjectionMatrix(camera.combined);
         worldRenderer.begin(ShapeRenderer.ShapeType.Filled);
         for (Monster m : monsters) {
@@ -382,13 +363,20 @@ public class Main extends ApplicationAdapter {
         }
         worldRenderer.end();
 
-        // Debug
         Gdx.gl.glEnable(GL20.GL_BLEND);
         debugRenderer.setProjectionMatrix(camera.combined);
         debugRenderer.begin(ShapeRenderer.ShapeType.Line);
         for (Monster m : monsters) {
             m.renderDebug(debugRenderer);
         }
+        
+        // --- 4. RENDER BOSS ---
+        Boss bossDebug = spawnManager.getBoss();
+        if (bossDebug != null) {
+            // bossDebug.renderDebug(debugRenderer);
+        }
+        // --------------------
+
         debugRenderer.end();
 
         if (debugMode) {
@@ -411,7 +399,6 @@ public class Main extends ApplicationAdapter {
             inventoryUI.render(player.inventory);
         }
 
-        // Render Cooking Menu
         if (isCookingMenuOpen) {
             com.badlogic.gdx.math.Matrix4 uiMatrix = new com.badlogic.gdx.math.Matrix4();
             uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -420,7 +407,6 @@ public class Main extends ApplicationAdapter {
             cookingMenu.render(batch, worldRenderer, player.inventory);
         }
 
-        // Render Tutorial Popup
         if (tutorialPopup.isVisible()) {
             com.badlogic.gdx.math.Matrix4 uiMatrix = new com.badlogic.gdx.math.Matrix4();
             uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -452,14 +438,14 @@ public class Main extends ApplicationAdapter {
     }
 
     private void checkWorldTransition(Rectangle playerRect) {
-        TiledMapTileLayer transitionLayer = null;
+        TiledMapTileLayer transitionLayer;
 
-        if (currentWorld == com.fernanda.finpro.enums.WorldType.FOREST) {
+        if (currentWorld == WorldType.FOREST) {
             transitionLayer = (TiledMapTileLayer) map.getLayers().get("next_map");
             if (checkLayerCollision(playerRect, transitionLayer)) {
                 switchToIceWorld();
             }
-        } else if (currentWorld == com.fernanda.finpro.enums.WorldType.ICE) {
+        } else if (currentWorld == WorldType.ICE) {
             transitionLayer = (TiledMapTileLayer) map.getLayers().get("back_map_forest");
             if (checkLayerCollision(playerRect, transitionLayer)) {
                 switchToForestWorld();
@@ -470,7 +456,7 @@ public class Main extends ApplicationAdapter {
             if (checkLayerCollision(playerRect, transitionLayer)) {
                 switchToInfernoWorld();
             }
-        } else if (currentWorld == com.fernanda.finpro.enums.WorldType.INFERNO) {
+        } else if (currentWorld == WorldType.INFERNO) {
             transitionLayer = (TiledMapTileLayer) map.getLayers().get("exit_player_inferno");
             if (checkLayerCollision(playerRect, transitionLayer)) {
                 switchToIceWorldFromInferno();
@@ -490,8 +476,10 @@ public class Main extends ApplicationAdapter {
 
     private void switchToIceWorld() {
         System.out.println("Switching to Ice World!");
-        currentWorld = com.fernanda.finpro.enums.WorldType.ICE;
+        currentWorld = WorldType.ICE;
         spawnManager.setWorld(currentWorld);
+        spawnManager.despawnBoss(); 
+        gameHud.setBoss(null); 
         map = GameAssetManager.getInstance().getIceMap();
         mapRenderer.setMap(map);
         camera.zoom = 1.0f;
@@ -501,8 +489,10 @@ public class Main extends ApplicationAdapter {
 
     private void switchToIceWorldFromInferno() {
         System.out.println("Switching to Ice World (From Inferno)!");
-        currentWorld = com.fernanda.finpro.enums.WorldType.ICE;
+        currentWorld = WorldType.ICE;
         spawnManager.setWorld(currentWorld);
+        spawnManager.despawnBoss(); 
+        gameHud.setBoss(null); 
         map = GameAssetManager.getInstance().getIceMap();
         mapRenderer.setMap(map);
         camera.zoom = 1.0f;
@@ -512,8 +502,10 @@ public class Main extends ApplicationAdapter {
 
     private void switchToForestWorld() {
         System.out.println("Switching to Forest World!");
-        currentWorld = com.fernanda.finpro.enums.WorldType.FOREST;
+        currentWorld = WorldType.FOREST;
         spawnManager.setWorld(currentWorld);
+        spawnManager.despawnBoss(); 
+        gameHud.setBoss(null); 
         map = GameAssetManager.getInstance().getMap();
         mapRenderer.setMap(map);
         camera.zoom = 1.0f;
@@ -523,13 +515,16 @@ public class Main extends ApplicationAdapter {
 
     private void switchToInfernoWorld() {
         System.out.println("Switching to Inferno World!");
-        currentWorld = com.fernanda.finpro.enums.WorldType.INFERNO;
+        currentWorld = WorldType.INFERNO;
         spawnManager.setWorld(currentWorld);
         map = GameAssetManager.getInstance().getLavaMap();
         mapRenderer.setMap(map);
         camera.zoom = 2.3f;
         setPlayerSpawn("spawn_player_inferno");
         resetWorldState();
+        spawnManager.spawnBoss(584, 690); 
+        
+        gameHud.setBoss(spawnManager.getBoss());
     }
 
     private void setPlayerSpawn(String layerName) {
@@ -553,9 +548,10 @@ public class Main extends ApplicationAdapter {
     private void resetWorldState() {
         monsters.clear();
         groundItems.clear();
-        spawnManager.reset();
-
-        if (currentWorld == com.fernanda.finpro.enums.WorldType.FOREST) {
+        // spawnManager.reset() akan dipanggil dari restartGame() jika perlu
+        // Kita tidak ingin me-reset spawn monster saat ganti map
+        
+        if (currentWorld == WorldType.FOREST) {
             initForestEnvironment();
         } else {
             campfire = new Campfire(-1000, -1000);
@@ -609,9 +605,9 @@ public class Main extends ApplicationAdapter {
         if (tileX < 0 || tileX >= 73 || tileY < 0 || tileY >= 73) return true;
 
         String[] collisionLayers;
-        if (currentWorld == com.fernanda.finpro.enums.WorldType.ICE) {
+        if (currentWorld == WorldType.ICE) {
             collisionLayers = new String[] { "ice_building" };
-        } else if (currentWorld == com.fernanda.finpro.enums.WorldType.INFERNO) {
+        } else if (currentWorld == WorldType.INFERNO) {
             collisionLayers = new String[] { "building_inferno", "lava_obstacle" };
         } else {
             collisionLayers = new String[] { "building_coklat", "building_hijau" };
@@ -630,10 +626,10 @@ public class Main extends ApplicationAdapter {
     }
 
     private void restartGame() {
-        if (currentWorld == com.fernanda.finpro.enums.WorldType.ICE) {
+        if (currentWorld == WorldType.ICE) {
             setPlayerSpawn("spawn_ice_player");
             player.reset(player.position.x, player.position.y);
-        } else if (currentWorld == com.fernanda.finpro.enums.WorldType.INFERNO) {
+        } else if (currentWorld == WorldType.INFERNO) {
             setPlayerSpawn("spawn_player_inferno");
             player.reset(player.position.x, player.position.y);
         } else {
@@ -642,7 +638,13 @@ public class Main extends ApplicationAdapter {
 
         monsters.clear();
         groundItems.clear();
-        spawnManager.reset();
+        spawnManager.reset(); // Ini akan memanggil despawnBoss() dan spawn monster awal jika perlu
+        
+        // Jika restart di Inferno, spawn ulang boss
+        if (currentWorld == WorldType.INFERNO) {
+            spawnManager.spawnBoss(584, 650);
+        }
+
         isGameOver = false;
         isInventoryOpen = false;
         gamePaused = false;
