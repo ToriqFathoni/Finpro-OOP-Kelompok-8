@@ -26,6 +26,10 @@ public class GameAssetManager {
     public static final String ORC_SKULL = "orcskull.png";
     public static final String ORC_MEAT = "OrcMeat.png";
 
+    // Food Assets
+    public static final String STEAK = "Steak.png";
+    public static final String ORC_ELIXIR = "OrcElixir.png";
+
     //Campfire Assets
     public static final String CAMPFIRE = "Campfire.png";
 
@@ -79,6 +83,10 @@ public class GameAssetManager {
         manager.load(ORC_DEATH, Texture.class);
         manager.load(ORC_SKULL, Texture.class);
         manager.load(ORC_MEAT, Texture.class);
+        
+        // Food
+        manager.load(STEAK, Texture.class);
+        manager.load(ORC_ELIXIR, Texture.class);
 
         // Campfire
         manager.load(CAMPFIRE, Texture.class);
@@ -126,6 +134,8 @@ public class GameAssetManager {
         setFilter(ORC_DEATH);
         setFilter(ORC_SKULL);
         setFilter(ORC_MEAT);
+        setFilter(STEAK);
+        setFilter(ORC_ELIXIR);
 
         setFilter(CAMPFIRE);
         setFilter(NOTE);

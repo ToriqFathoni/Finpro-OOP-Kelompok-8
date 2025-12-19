@@ -199,10 +199,21 @@ public class InventoryUI {
             titleFont.getData().setScale(0.65f);
             titleFont.draw(batch, selectedItem.getDisplayName(), panelX + 14, panelY + 40);
             
-            // Item count
+            // Item count dan hint
             font.setColor(Color.LIGHT_GRAY);
             font.getData().setScale(0.5f);
             font.draw(batch, "Quantity: " + itemCount, panelX + 14, panelY + 27);
+            
+            // Food/Consumable hint
+            if (isFoodItem(selectedItem)) {
+                font.setColor(Color.GREEN);
+                if (selectedItem == ItemType.SKULL_ELIXIR) {
+                    font.draw(batch, "[Y] Drink (DMG +50% 2min)", panelX + 90, panelY + 27);
+                } else {
+                    font.draw(batch, "[Y] Eat (+" + (int)getFoodHealAmount(selectedItem) + " HP)", panelX + 90, panelY + 27);
+                }
+            }
+            
             font.getData().setScale(0.6f);
             titleFont.getData().setScale(0.8f);
         }
@@ -237,7 +248,7 @@ public class InventoryUI {
      * Handle input (keyboard + mouse clicks).
      * Return true if inventory should close.
      */
-    public boolean handleInput() {
+    public boolean handleInput(com.fernanda.finpro.entities.Player player, Inventory inventory) {
         // Keyboard navigation
         if (Gdx. input.isKeyJustPressed(Input.Keys.LEFT)) {
             selectedCol = Math.max(0, selectedCol - 1);
@@ -250,6 +261,33 @@ public class InventoryUI {
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) {
             selectedRow = Math.min(GRID_ROWS - 1, selectedRow + 1);
+        }
+        
+        // Q key - Eat/Drink selected food/potion
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+            InventorySlot selectedSlot = slots[selectedRow][selectedCol];
+            if (!selectedSlot.isEmpty()) {
+                ItemType selectedItem = selectedSlot.getItemType();
+                
+                // Check if item is food/consumable
+                if (isFoodItem(selectedItem)) {
+                    // Skull Elixir gives damage boost
+                    if (selectedItem == ItemType.SKULL_ELIXIR) {
+                        player.activateDamageBoost();
+                        System.out.println("[DRINK] Consumed " + selectedItem.getDisplayName() + " (Damage +50% for 2 min)");
+                    } else {
+                        // Other foods restore health
+                        float healAmount = getFoodHealAmount(selectedItem);
+                        player.stats.heal(healAmount);
+                        System.out.println("[EAT] Consumed " + selectedItem.getDisplayName() + " (+" + (int)healAmount + " HP)");
+                    }
+                    
+                    // Remove 1 item from inventory
+                    inventory.removeItem(selectedItem, 1);
+                } else {
+                    System.out.println("[CONSUME] Cannot consume " + selectedItem.getDisplayName());
+                }
+            }
         }
 
         // Mouse clicks
@@ -279,6 +317,39 @@ public class InventoryUI {
         return false; // Don't close inventory
     }
 
+    /**
+     * Check if item is food/consumable (can be eaten/drunk)
+     */
+    private boolean isFoodItem(ItemType item) {
+        switch (item) {
+            case ROASTED_MEAT:
+            case HERBAL_TEA:
+            case SPICY_SKEWER:
+            case FOREST_SOUP:
+            case SLIME_JELLY:
+            case GOURMET_BURGER:
+            case SKULL_ELIXIR:
+                return true;
+            default:
+                return false;
+        }
+    }
+    
+    /**
+     * Get heal amount for food items
+     */
+    private float getFoodHealAmount(ItemType item) {
+        switch (item) {
+            case ROASTED_MEAT: return 30f;
+            case HERBAL_TEA: return 20f;
+            case SPICY_SKEWER: return 40f;
+            case FOREST_SOUP: return 50f;
+            case SLIME_JELLY: return 25f;
+            case GOURMET_BURGER: return 100f;
+            default: return 0f;
+        }
+    }
+    
     /**
      * Check if mouse is hovering over a rectangle.
      */

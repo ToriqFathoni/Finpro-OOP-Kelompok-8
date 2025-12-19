@@ -20,9 +20,9 @@ public class RecipeManager {
     }
 
     private void initializeRecipes() {
-        // 1. "Roasted Meat" - Basic Survival Food
+        // 1. "Roasted Meat" (Steak) - Basic Survival Food
         Recipe roastedMeat = new Recipe("Roasted Meat", ItemType.ROASTED_MEAT);
-        roastedMeat.addRequirement(ItemType.RAW_MEAT, 2);
+        roastedMeat.addRequirement(ItemType.ORC_MEAT, 2);
         allRecipes.add(roastedMeat);
 
         // 2. "Herbal Tea" - Stamina Boost
@@ -54,9 +54,9 @@ public class RecipeManager {
         gourmetBurger.addRequirement(ItemType.SLIME_GEL, 2);
         allRecipes.add(gourmetBurger);
 
-        // 7. "Skull Elixir" - TEST RECIPE (Unique Orc-only craft)
+        // 7. "Skull Elixir" - Damage Boost Potion (Unique Orc-only craft)
         Recipe skullElixir = new Recipe("Skull Elixir", ItemType.SKULL_ELIXIR);
-        skullElixir.addRequirement(ItemType.ORC_SKULL, 2);
+        skullElixir.addRequirement(ItemType.ORC_SKULL, 10);
         allRecipes.add(skullElixir);
     }
 

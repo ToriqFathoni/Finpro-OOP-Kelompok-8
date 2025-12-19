@@ -84,6 +84,9 @@ public class Werewolf extends Monster {
         }
 
         switch (currentState) {
+            case IDLE:
+                break;
+
             case HURT:
                 if (stateTimer > 0.3f) currentState = State.CHASE;
                 break;
@@ -133,6 +136,9 @@ public class Werewolf extends Monster {
                 if (stateTimer >= RECOVERY_TIME) {
                     currentState = State.CHASE;
                 }
+                break;
+
+            case DEAD:
                 break;
         }
 
@@ -237,6 +243,9 @@ public class Werewolf extends Monster {
                 currentAnim = walkAnim;
                 break;
             case PREPARE_ATTACK:
+                currentAnim = idleAnim;
+                break;
+            case COOLDOWN:
                 currentAnim = idleAnim;
                 break;
             case ATTACKING:

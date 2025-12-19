@@ -3,16 +3,20 @@ package com.fernanda.finpro.ui;
 import com. badlogic.gdx. Gdx;
 import com.badlogic.gdx.graphics. Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx. graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fernanda.finpro.components.StatsListener;
 import com.fernanda.finpro.entities.Boss;
+import com.fernanda.finpro.entities.Player;
 
 public class GameHud implements StatsListener {
     private ShapeRenderer shapeRenderer;
     private Viewport hudViewport;
     private OrthographicCamera hudCamera;
+    private BitmapFont font;
 
     private float currentHp, maxHp;
     private float currentStamina, maxStamina;
@@ -30,6 +34,8 @@ public class GameHud implements StatsListener {
 
     public GameHud() {
         this.shapeRenderer = new ShapeRenderer();
+        this.font = new BitmapFont();
+        this.font.getData().setScale(0.6f);
         hudCamera = new OrthographicCamera();
         hudViewport = new FitViewport(480, 270, hudCamera);
 
@@ -39,7 +45,7 @@ public class GameHud implements StatsListener {
         this.maxStamina = 1;
     }
 
-    public void render() {
+    public void render(SpriteBatch batch, Player player) {
         hudViewport.apply();
         shapeRenderer.setProjectionMatrix(hudCamera.combined);
 
@@ -99,6 +105,27 @@ public class GameHud implements StatsListener {
         
         shapeRenderer.end();
         Gdx.gl.glLineWidth(1);
+        
+        // Render Damage Boost Timer
+        if (player != null && player.hasDamageBoost()) {
+            batch.setProjectionMatrix(hudCamera.combined);
+            batch.begin();
+            
+            float buffTimer = player.getDamageBoostTimer();
+            int minutes = (int)(buffTimer / 60);
+            int seconds = (int)(buffTimer % 60);
+            String timerText = String.format("Damage Boost: %02d:%02d", minutes, seconds);
+            
+            float buffX = MARGIN_LEFT;
+            float buffY = hudViewport.getWorldHeight() - MARGIN_TOP - (BAR_HEIGHT * 2) - 18;
+            
+            font.setColor(Color.ORANGE);
+            font.getData().setScale(0.5f);
+            font.draw(batch, timerText, buffX, buffY);
+            font.getData().setScale(0.6f);
+            
+            batch.end();
+        }
     }
 
     public void setBoss(Boss boss) {
@@ -111,6 +138,7 @@ public class GameHud implements StatsListener {
 
     public void dispose() {
         shapeRenderer.dispose();
+        font.dispose();
     }
 
     @Override

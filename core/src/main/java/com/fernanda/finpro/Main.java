@@ -264,7 +264,7 @@ public class Main extends ApplicationAdapter {
                     }
                     collisionManager.update(dt);
                 } else {
-                    boolean shouldClose = inventoryUI.handleInput();
+                    boolean shouldClose = inventoryUI.handleInput(player, player.inventory);
                     if (shouldClose) {
                         isInventoryOpen = false;
                         gamePaused = false;
@@ -393,7 +393,7 @@ public class Main extends ApplicationAdapter {
             debugRenderer.end();
         }
 
-        gameHud.render();
+        gameHud.render(batch, player);
 
         if (isInventoryOpen) {
             inventoryUI.render(player.inventory);

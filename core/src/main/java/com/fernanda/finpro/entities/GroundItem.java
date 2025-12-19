@@ -62,6 +62,10 @@ public class GroundItem {
                 return GameAssetManager.getInstance().getTexture(GameAssetManager.WEREWOLF_CLAW);
             case YETI_HEART:
                 return GameAssetManager.getInstance().getTexture(GameAssetManager.YETI_HEART);
+            case ROASTED_MEAT:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.STEAK);
+            case SKULL_ELIXIR:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.ORC_ELIXIR);
             default:
                 return null;
         }
