@@ -16,9 +16,8 @@ public class Yeti extends Monster {
     // --- CONFIG KHUSUS YETI ---
     private static final float YETI_SPEED = 40f;
     private static final int   YETI_HP = 150;
-    private static final int   YETI_DMG = 30;
+    private static final int   YETI_DMG = 50;
 
-    // Dimensi Fisik
     private static final float WIDTH = 40f;
     private static final float HEIGHT = 45f;
 
@@ -38,6 +37,7 @@ public class Yeti extends Monster {
 
     private Animation<TextureRegion> idleAnim;
     private Animation<TextureRegion> attackAnim;
+    private Animation<TextureRegion> walkAnim;
 
     private Vector2 wanderTarget = new Vector2();
     private float wanderWaitTimer = 0f;
@@ -55,9 +55,10 @@ public class Yeti extends Monster {
         // Init Animations
         // Load Yeti-Idle (Asumsi 4 frame, speed lambat 0.2f)
         idleAnim = createAnimation(GameAssetManager.YETI_IDLE, 4, 0.2f, Animation.PlayMode.LOOP);
+        walkAnim = createAnimation(GameAssetManager.YETI_WALK, 4, 0.15f, Animation.PlayMode.LOOP);
         attackAnim = createAnimation(GameAssetManager.YETI_ATTACK, 6, 0.12f, Animation.PlayMode.NORMAL);
 
-        this.deathDuration = 2.0f; // Mayat hilang lebih lama
+        this.deathDuration = 2.0f;
     }
 
     @Override
@@ -66,15 +67,13 @@ public class Yeti extends Monster {
 
         float distToPlayer = position.dst(player.position);
 
-        // Update facing direction berdasarkan posisi player (kecuali saat wander)
         if (currentState != State.WANDER && currentState != State.DEAD) {
             float dx = player.position.x - position.x;
-            if (Math.abs(dx) > 5f) { // Threshold untuk menghindari jitter
+            if (Math.abs(dx) > 5f) {
                 facingRight = dx > 0;
             }
         }
 
-        // Logic Facing saat bergerak
         if (Math.abs(velocity.x) > 1.0f) {
             facingRight = velocity.x > 0;
         }
@@ -195,44 +194,61 @@ public class Yeti extends Monster {
 
     @Override
     public void render(SpriteBatch batch) {
-        // Default animasi adalah Idle
         Animation<TextureRegion> currentAnim = idleAnim;
         boolean loop = true;
 
         switch (currentState) {
-            case IDLE: currentAnim = idleAnim; break;
+            case IDLE:
+            case PREPARE_ATTACK:
+                currentAnim = idleAnim;
+                break;
+
             case ATTACKING:
                 currentAnim = attackAnim;
                 loop = false;
                 break;
-            case PREPARE_ATTACK: currentAnim = idleAnim; break;
+
             case HURT:
                 currentAnim = idleAnim;
                 break;
+
             case CHASE:
             case WANDER:
+                // Update: Gunakan walkAnim saat bergerak
+                currentAnim = walkAnim;
+                break;
+
             case COOLDOWN:
+                currentAnim = idleAnim;
+                break;
+
             case DEAD:
+                currentAnim = idleAnim; // Frame mati (biasanya frame 1 idle atau khusus)
+                loop = false;
                 break;
         }
 
+        // Gunakan stateTimer untuk animasi normal
         TextureRegion currentFrame = currentAnim.getKeyFrame(stateTimer, loop);
 
         if (currentFrame != null) {
             if (currentState == State.HURT) {
-                batch.setColor(0.5f, 0.5f, 1f, 1f);
+                batch.setColor(0.5f, 0.5f, 1f, 1f); // Efek biru/putih saat sakit
             } else {
                 batch.setColor(Color.WHITE);
             }
 
             float width = currentFrame.getRegionWidth();
             float height = currentFrame.getRegionHeight();
+
+            // Logika centering gambar terhadap hitbox
             float drawX = position.x + (WIDTH - width) / 2f;
             float drawY = position.y + (HEIGHT - height) / 2f;
 
             if (facingRight) {
                 batch.draw(currentFrame, drawX, drawY, width, height);
             } else {
+                // Flip texture (negative width)
                 batch.draw(currentFrame, drawX + width, drawY, -width, height);
             }
             batch.setColor(Color.WHITE);

@@ -52,6 +52,7 @@ public class GameAssetManager {
 
     public static final String YETI_IDLE = "Yeti-Idle.png";
     public static final String YETI_ATTACK = "Yeti-Attack.png";
+    public static final String YETI_WALK = "Yeti-Walk.png";
     public static final String YETI_HEART = "YetiHeart.png";
 
     public static final String BOSS_IDLE = "Boss-Idle.png";
@@ -123,6 +124,7 @@ public class GameAssetManager {
         // Yeti
         manager.load(YETI_IDLE, Texture.class);
         manager.load(YETI_ATTACK, Texture.class);
+        manager.load(YETI_WALK, Texture.class);
         manager.load(YETI_HEART, Texture.class);
 
         // Boss
@@ -181,6 +183,7 @@ public class GameAssetManager {
 
         setFilter(YETI_IDLE);
         setFilter(YETI_ATTACK);
+        setFilter(YETI_WALK);
         setFilter(YETI_HEART);
 
         setFilter(BOSS_IDLE);
