@@ -214,6 +214,6 @@ public class MiniBoss extends Monster {
 
     @Override
     public ItemType rollDrop() {
-        return MathUtils.randomBoolean(0.5f) ? ItemType.ORC_SKULL : null;
+        return ItemType.ORC_SKULL ;
     }
 }
