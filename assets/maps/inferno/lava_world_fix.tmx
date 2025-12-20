@@ -13,7 +13,7 @@
  </layer>
  <layer id="7" name="inferno_lava" width="73" height="73">
   <data encoding="base64" compression="zlib">
-   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
+   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
   </data>
  </layer>
  <layer id="3" name="building_inferno" width="73" height="73">
@@ -38,7 +38,7 @@
  </layer>
  <layer id="8" name="boss_infernospawn" width="73" height="73">
   <data encoding="base64" compression="zlib">
-   eJztzjEBAAAIA6AZ0v5VjOEOSEACAAAAQIud7wEAAAAAAAAAAAAAAAAAAABApwNdnQBX
+   eJztzjEBAAAIA6DZ0f5ZjODpISQgAQAAAAAAAOCzrusBAAAAAAAAAAAAAAAAwG4A8T4AVg==
   </data>
  </layer>
  <layer id="6" name="exit_player_inferno" width="73" height="73">
