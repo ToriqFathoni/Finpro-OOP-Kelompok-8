@@ -94,7 +94,8 @@ public class Player {
         this.stateTime = 0f;
 
         // Inisialisasi Components
-        this.stats = new PlayerStats(50f, 100f, 1.0f, 15f);
+        // (maxHP=50, maxStamina=100, hpRegen=0, staminaRegen=10)
+        this.stats = new PlayerStats(50f, 100f, 0f, 10f);
         this.inventory = new Inventory();
     }
 
@@ -204,6 +205,12 @@ public class Player {
         if (attackTimer > 0) return;
         if (currentState == dodgeState) return;
 
+        // Check energy cost (10 stamina per attack)
+        if (stats.getCurrentStamina() < 10f) {
+            System.out.println("Not enough energy to attack! (Need 10)");
+            return;
+        }
+
         if (currentState != attackState) {
             performAttack();
         }
@@ -213,6 +220,8 @@ public class Player {
     }
 
     private void performAttack() {
+        // Consume 10 energy for attack
+        stats.useStamina(10f);
         changeState(attackState);
         attackTimer = ATTACK_COOLDOWN;
     }

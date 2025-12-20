@@ -43,14 +43,10 @@ public class PlayerStats {
     public void update(float dt) {
         if (isDead) return;
 
-        // Regen HP
-        if (currentHealth < maxHealth) {
-            currentHealth += healthRegenRate * dt;
-            if (currentHealth > maxHealth) currentHealth = maxHealth;
-            notifyHealthChanged();
-        }
+        // NO HP AUTO-REGEN (Removed!)
+        // Health regeneration is disabled per game design
 
-        // Regen Stamina
+        // Regen Stamina (Energy) ONLY
         if (currentStamina < maxStamina) {
             currentStamina += staminaRegenRate * dt;
             if (currentStamina > maxStamina) currentStamina = maxStamina;
