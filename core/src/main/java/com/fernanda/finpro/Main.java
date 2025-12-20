@@ -19,7 +19,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fernanda.finpro.components.ItemType;
-import com.fernanda.finpro.entities.Boss; // <-- 1. IMPORT DITAMBAHKAN
+import com.fernanda.finpro.entities.Boss;
 import com.fernanda.finpro.entities.GroundItem;
 import com.fernanda.finpro.entities.Monster;
 import com.fernanda.finpro.entities.Player;
@@ -249,11 +249,19 @@ public class Main extends ApplicationAdapter {
                     }
 
                     spawnManager.update(dt);
-                    
+
                     // --- 4. UPDATE BOSS ---
                     Boss boss = spawnManager.getBoss();
                     if (boss != null) {
-                        boss.update(dt);
+                        boss.update(dt, player);
+
+                        // 1. Cek Boss pukul Player
+                        boss.checkSmashCollision(player);
+
+                        // 2. Cek Player pukul Boss (Menggunakan Hitbox Player)
+                        if (player.isHitboxActive()) {
+                            boss.checkHitByPlayer(player.getAttackHitbox(), 25);
+                        }
                     }
                     // ----------------------
 
@@ -369,11 +377,11 @@ public class Main extends ApplicationAdapter {
         for (Monster m : monsters) {
             m.renderDebug(debugRenderer);
         }
-        
-        // --- 4. RENDER BOSS ---
+
+        // --- 4. RENDER DEBUG BOSS ---
         Boss bossDebug = spawnManager.getBoss();
         if (bossDebug != null) {
-            // bossDebug.renderDebug(debugRenderer);
+            bossDebug.renderDebug(debugRenderer);
         }
         // --------------------
 
@@ -478,8 +486,8 @@ public class Main extends ApplicationAdapter {
         System.out.println("Switching to Ice World!");
         currentWorld = WorldType.ICE;
         spawnManager.setWorld(currentWorld);
-        spawnManager.despawnBoss(); 
-        gameHud.setBoss(null); 
+        spawnManager.despawnBoss();
+        gameHud.setBoss(null);
         map = GameAssetManager.getInstance().getIceMap();
         mapRenderer.setMap(map);
         camera.zoom = 1.0f;
@@ -491,8 +499,8 @@ public class Main extends ApplicationAdapter {
         System.out.println("Switching to Ice World (From Inferno)!");
         currentWorld = WorldType.ICE;
         spawnManager.setWorld(currentWorld);
-        spawnManager.despawnBoss(); 
-        gameHud.setBoss(null); 
+        spawnManager.despawnBoss();
+        gameHud.setBoss(null);
         map = GameAssetManager.getInstance().getIceMap();
         mapRenderer.setMap(map);
         camera.zoom = 1.0f;
@@ -504,8 +512,8 @@ public class Main extends ApplicationAdapter {
         System.out.println("Switching to Forest World!");
         currentWorld = WorldType.FOREST;
         spawnManager.setWorld(currentWorld);
-        spawnManager.despawnBoss(); 
-        gameHud.setBoss(null); 
+        spawnManager.despawnBoss();
+        gameHud.setBoss(null);
         map = GameAssetManager.getInstance().getMap();
         mapRenderer.setMap(map);
         camera.zoom = 1.0f;
@@ -522,12 +530,11 @@ public class Main extends ApplicationAdapter {
         camera.zoom = 2.6f;
         setPlayerSpawn("spawn_player_inferno");
         resetWorldState();
-        spawnManager.spawnBoss(); 
-        
+        spawnManager.spawnBoss();
+
         gameHud.setBoss(spawnManager.getBoss());
     }
 
-    // biar kedetect github
     private void setPlayerSpawn(String layerName) {
         MapLayer layer = map.getLayers().get(layerName);
         if (layer instanceof TiledMapTileLayer) {
@@ -549,9 +556,7 @@ public class Main extends ApplicationAdapter {
     private void resetWorldState() {
         monsters.clear();
         groundItems.clear();
-        // spawnManager.reset() akan dipanggil dari restartGame() jika perlu
-        // Kita tidak ingin me-reset spawn monster saat ganti map
-        
+
         if (currentWorld == WorldType.FOREST) {
             initForestEnvironment();
         } else {
@@ -639,9 +644,8 @@ public class Main extends ApplicationAdapter {
 
         monsters.clear();
         groundItems.clear();
-        spawnManager.reset(); // Ini akan memanggil despawnBoss() dan spawn monster awal jika perlu
-        
-        // Jika restart di Inferno, spawn ulang boss
+        spawnManager.reset();
+
         if (currentWorld == WorldType.INFERNO) {
             spawnManager.spawnBoss();
         }
