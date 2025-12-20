@@ -8,6 +8,7 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.fernanda.finpro.entities.MiniBoss;
 import com.fernanda.finpro.entities.Monster;
 import com.fernanda.finpro.entities.Orc;
 import com.fernanda.finpro.entities.Werewolf;
@@ -23,6 +24,7 @@ public class MonsterFactory {
         ORC,
         WEREWOLF,
         YETI,
+        MINI_BOSS,
         BOSS
     }
 
@@ -37,6 +39,7 @@ public class MonsterFactory {
             case WEREWOLF:
                 return new Werewolf(x, y);
             case YETI: return new Yeti(x, y);
+            case MINI_BOSS: return new MiniBoss(x, y);
 
             default:
                 throw new IllegalArgumentException("Tipe Monster belum terdaftar: " + type);
