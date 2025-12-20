@@ -15,7 +15,7 @@ public class Werewolf extends Monster {
 
     private static final float WW_SPEED = 50f;
     private static final int   WW_HP = 90;
-    private static final int   WW_DMG = 20;
+    private static final int   WW_DMG = 25;
 
     // Dimensi Fisik
     private static final float WIDTH = 25f;
@@ -69,7 +69,7 @@ public class Werewolf extends Monster {
         if (isDead) return;
 
         float distToPlayer = position.dst(player.position);
-        
+
         // Update facing direction berdasarkan posisi player (kecuali saat wander)
         if (currentState != State.WANDER && currentState != State.DEAD) {
             float dx = player.position.x - position.x;
@@ -77,7 +77,7 @@ public class Werewolf extends Monster {
                 facingRight = dx > 0;
             }
         }
-        
+
         // Logic Facing saat bergerak
         if (Math.abs(velocity.x) > 1.0f) {
             facingRight = velocity.x > 0;
