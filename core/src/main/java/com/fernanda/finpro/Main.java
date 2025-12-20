@@ -527,6 +527,7 @@ public class Main extends ApplicationAdapter {
         gameHud.setBoss(spawnManager.getBoss());
     }
 
+    // biar kedetect github
     private void setPlayerSpawn(String layerName) {
         MapLayer layer = map.getLayers().get(layerName);
         if (layer instanceof TiledMapTileLayer) {
