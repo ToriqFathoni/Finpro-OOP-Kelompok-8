@@ -52,6 +52,11 @@ public class GameAssetManager {
     public static final String BOSS_HITBOX = "Boss-Hitbox.png";
     public static final String BOSS_RETRIEVE = "Boss-Retrieve.png";
 
+    // MiniBoss Assets
+    public static final String MINIBOSS_IDLE = "MiniBoss-Idle.png";
+    public static final String MINIBOSS_WALK = "MiniBoss-Walk.png";
+    public static final String MINIBOSS_ATTACK = "MiniBoss-Attack.png";
+
     // Map Assets
     public static final String MAP_TMX = "maps/green_world_fix.tmx";
     public static final String ICE_MAP_TMX = "maps/ice_world_fix.tmx";
@@ -83,7 +88,7 @@ public class GameAssetManager {
         manager.load(ORC_DEATH, Texture.class);
         manager.load(ORC_SKULL, Texture.class);
         manager.load(ORC_MEAT, Texture.class);
-        
+
         // Food
         manager.load(STEAK, Texture.class);
         manager.load(ORC_ELIXIR, Texture.class);
@@ -111,6 +116,11 @@ public class GameAssetManager {
         manager.load(BOSS_ATTACK, Texture.class);
         manager.load(BOSS_HITBOX, Texture.class);
         manager.load(BOSS_RETRIEVE, Texture.class);
+
+        // MiniBoss
+        manager.load(MINIBOSS_IDLE, Texture.class);
+        manager.load(MINIBOSS_WALK, Texture.class);
+        manager.load(MINIBOSS_ATTACK, Texture.class);
 
         // Map
         manager.load(MAP_TMX, TiledMap.class);
@@ -154,6 +164,10 @@ public class GameAssetManager {
         setFilter(BOSS_ATTACK);
         setFilter(BOSS_HITBOX);
         setFilter(BOSS_RETRIEVE);
+
+        setFilter(MINIBOSS_WALK);
+        setFilter(MINIBOSS_IDLE);
+        setFilter(MINIBOSS_ATTACK);
     }
 
     private void setFilter(String fileName) {

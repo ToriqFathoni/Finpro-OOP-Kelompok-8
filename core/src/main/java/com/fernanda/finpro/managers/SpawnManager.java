@@ -1,7 +1,9 @@
 package com.fernanda.finpro.managers;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.fernanda.finpro.entities.Boss; // <-- IMPORT DITAMBAHKAN
+import com.fernanda.finpro.entities.MiniBoss;
 import com.fernanda.finpro.entities.Monster;
 import com.fernanda.finpro.entities.Orc;
 import com.fernanda.finpro.entities.Werewolf;
@@ -47,6 +49,8 @@ public class SpawnManager {
         spawnRules.add(new SpawnRule(MonsterFactory.Type.WEREWOLF, Werewolf.class, 5, 15.0f));
         // Aturan Spawn: Max 5 Yeti, Interval 15 detik
         spawnRules.add(new SpawnRule(MonsterFactory.Type.YETI, Yeti.class, 5, 15.0f));
+        // Aturan Spawn: Max 1 MiniBoss, Interval 30 detik (hanya 1 di map)
+        spawnRules.add(new SpawnRule(MonsterFactory.Type.MINI_BOSS, MiniBoss.class, 1, 30.0f));
 
         System.out.println("Spawn Manager Initialized with " + spawnRules.size() + " rules.");
 
@@ -60,6 +64,7 @@ public class SpawnManager {
         for (SpawnRule rule : spawnRules) {
             // Hanya spawn monster yang sesuai dengan dunianya
             if ((rule.type == MonsterFactory.Type.YETI && currentWorld == WorldType.ICE) ||
+                (rule.type == MonsterFactory.Type.MINI_BOSS && currentWorld == WorldType.ICE) ||
                 ((rule.type == MonsterFactory.Type.ORC || rule.type == MonsterFactory.Type.WEREWOLF) && currentWorld == WorldType.FOREST)) {
                 for (int i = 0; i < rule.maxCount; i++) {
                     spawnMonster(rule.type);
@@ -93,7 +98,13 @@ public class SpawnManager {
     private void spawnMonster(MonsterFactory.Type type) {
         Vector2 pos;
         
-        if (type == MonsterFactory.Type.YETI) {
+        if (type == MonsterFactory.Type.MINI_BOSS) {
+            if (currentWorld != WorldType.ICE) return;
+            // Spawn di area kanan atas (800-1100)
+            float x = MathUtils.random(800f, 1100f);
+            float y = MathUtils.random(800f, 1100f);
+            pos = new Vector2(x, y);
+        } else if (type == MonsterFactory.Type.YETI) {
             if (currentWorld != WorldType.ICE) return; 
             pos = MonsterFactory.getRandomSpawnPoint(
                 GameAssetManager.getInstance().getIceMap(), 
