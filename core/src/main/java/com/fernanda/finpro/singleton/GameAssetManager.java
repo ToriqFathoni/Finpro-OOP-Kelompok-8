@@ -59,6 +59,10 @@ public class GameAssetManager {
     public static final String BOSS_ATTACK = "Boss-Attack.png";
     public static final String BOSS_HITBOX = "Boss-Hitbox.png";
     public static final String BOSS_RETRIEVE = "Boss-Retrieve.png";
+    public static final String BOSS_CASTING = "Boss-Casting.png";
+    public static final String FIREBALL = "Fireball.png";
+    public static final String EXPLOSION = "Explosion.png";
+    public static final String SHADOW = "Shadow.png";
 
     // MiniBoss Assets
     public static final String MINIBOSS_IDLE = "MiniBoss-Idle.png";
@@ -132,6 +136,10 @@ public class GameAssetManager {
         manager.load(BOSS_ATTACK, Texture.class);
         manager.load(BOSS_HITBOX, Texture.class);
         manager.load(BOSS_RETRIEVE, Texture.class);
+        manager.load(BOSS_CASTING, Texture.class);
+        manager.load(FIREBALL, Texture.class);
+        manager.load(EXPLOSION, Texture.class);
+        manager.load(SHADOW, Texture.class);
 
         // MiniBoss
         manager.load(MINIBOSS_IDLE, Texture.class);
@@ -190,6 +198,10 @@ public class GameAssetManager {
         setFilter(BOSS_ATTACK);
         setFilter(BOSS_HITBOX);
         setFilter(BOSS_RETRIEVE);
+        setFilter(BOSS_CASTING);
+        setFilter(FIREBALL);
+        setFilter(EXPLOSION);
+        setFilter(SHADOW);
 
         setFilter(MINIBOSS_WALK);
         setFilter(MINIBOSS_IDLE);

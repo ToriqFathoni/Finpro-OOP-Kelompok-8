@@ -1,0 +1,203 @@
+package com.fernanda.finpro.entities;
+
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.fernanda.finpro.singleton.GameAssetManager;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+public class MeteorController {
+
+    private class Meteor {
+        Vector2 position;
+        float targetY;
+        float startY;
+        float stateTimer;
+        boolean isExploding;
+        boolean shouldRemove;
+
+        Rectangle hitbox;
+
+        public Meteor(float x, float targetY) {
+            this.targetY = targetY;
+            this.startY = targetY + 600;
+            this.position = new Vector2(x, startY);
+
+            this.stateTimer = 0;
+            this.isExploding = false;
+            this.shouldRemove = false;
+
+            this.hitbox = new Rectangle(x - 15, startY, 30, 30);
+        }
+    }
+
+    private List<Meteor> activeMeteors;
+    private boolean isRaining;
+    private float rainDurationTimer;
+    private float spawnTimer;
+
+    private final float RAIN_DURATION = 3.0f;
+    private final float SPAWN_INTERVAL = 0.2f;
+    private final float FALL_SPEED = 700f;
+    private final int DAMAGE = 15;
+
+    private Animation<TextureRegion> fireballAnim;
+    private Animation<TextureRegion> explosionAnim;
+    private Texture shadowTexture;
+
+    public MeteorController() {
+        activeMeteors = new ArrayList<>();
+        isRaining = false;
+
+        Texture fireballTex = GameAssetManager.getInstance().getTexture("Fireball.png");
+        if (fireballTex != null) {
+            fireballAnim = createAnimation(fireballTex, 3, 0.1f, Animation.PlayMode.LOOP);
+        }
+
+        Texture explosionTex = GameAssetManager.getInstance().getTexture("Explosion.png");
+        if (explosionTex != null) {
+            explosionAnim = createAnimation(explosionTex, 5, 0.08f, Animation.PlayMode.NORMAL);
+        }
+
+        this.shadowTexture = GameAssetManager.getInstance().getTexture("Shadow.png");
+    }
+
+    private Animation<TextureRegion> createAnimation(Texture texture, int cols, float duration, Animation.PlayMode mode) {
+        TextureRegion[][] tmp = TextureRegion.split(texture, texture.getWidth() / cols, texture.getHeight());
+        TextureRegion[] frames = new TextureRegion[cols];
+        System.arraycopy(tmp[0], 0, frames, 0, cols);
+        Animation<TextureRegion> anim = new Animation<>(duration, frames);
+        anim.setPlayMode(mode);
+        return anim;
+    }
+
+    public void startRain() {
+        isRaining = true;
+        rainDurationTimer = 0;
+        spawnTimer = 0;
+    }
+
+    public void update(float dt, Player player) {
+        if (isRaining) {
+            rainDurationTimer += dt;
+            spawnTimer += dt;
+            if (spawnTimer >= SPAWN_INTERVAL) {
+                spawnMeteor(player);
+                spawnTimer = 0;
+            }
+            if (rainDurationTimer >= RAIN_DURATION) isRaining = false;
+        }
+
+        Iterator<Meteor> iter = activeMeteors.iterator();
+        while (iter.hasNext()) {
+            Meteor m = iter.next();
+            m.stateTimer += dt;
+
+            m.hitbox.setPosition(m.position.x - m.hitbox.width/2, m.position.y);
+
+            if (!m.isExploding) {
+                m.position.y -= FALL_SPEED * dt;
+
+                if (m.position.y <= m.targetY) {
+                    m.position.y = m.targetY;
+                    m.isExploding = true;
+                    m.stateTimer = 0;
+
+                    m.hitbox.setSize(50, 40);
+                    m.hitbox.setPosition(m.position.x - 25, m.position.y);
+
+                    checkDamage(m, player);
+                }
+            } else {
+                if (explosionAnim.isAnimationFinished(m.stateTimer)) {
+                    m.shouldRemove = true;
+                }
+            }
+
+            if (m.shouldRemove) iter.remove();
+        }
+    }
+
+    private void spawnMeteor(Player player) {
+        float randX = MathUtils.random(100, 1100);
+        float randY = MathUtils.random(100, 900);
+        if (MathUtils.randomBoolean(0.3f)) {
+            randX = player.position.x;
+            randY = player.position.y;
+        }
+        activeMeteors.add(new Meteor(randX, randY));
+    }
+
+    private void checkDamage(Meteor m, Player player) {
+        if (player.getHitbox().overlaps(m.hitbox)) {
+            player.takeDamage(DAMAGE);
+        }
+    }
+
+    public void render(SpriteBatch batch) {
+        for (Meteor m : activeMeteors) {
+
+            if (!m.isExploding && shadowTexture != null) {
+                float distTotal = m.startY - m.targetY;
+                float distCurrent = m.position.y - m.targetY;
+                float scale = 1.0f - (distCurrent / distTotal);
+                scale = MathUtils.clamp(scale, 0.2f, 1.0f);
+
+                float shadowW = 40 * scale;
+                float shadowH = 20 * scale;
+
+                batch.setColor(1, 1, 1, 0.5f);
+                batch.draw(shadowTexture, m.position.x - shadowW/2, m.targetY - shadowH/2, shadowW, shadowH);
+                batch.setColor(Color.WHITE);
+            }
+
+            TextureRegion currentFrame;
+            float w, h;
+            float drawOffsetY;
+
+            if (!m.isExploding) {
+                currentFrame = fireballAnim.getKeyFrame(m.stateTimer, true);
+                w = currentFrame.getRegionWidth() * 1.5f;
+                h = currentFrame.getRegionHeight() * 1.5f;
+                drawOffsetY = 0;
+            } else {
+                currentFrame = explosionAnim.getKeyFrame(m.stateTimer, false);
+                w = currentFrame.getRegionWidth() * 2.0f;
+                h = currentFrame.getRegionHeight() * 2.0f;
+                drawOffsetY = 0;
+            }
+
+            if (currentFrame != null) {
+                batch.draw(currentFrame,
+                    m.position.x - w/2,
+                    m.position.y + drawOffsetY,
+                    w, h);
+            }
+        }
+    }
+
+    public void renderDebug(ShapeRenderer shapeRenderer) {
+        for (Meteor m : activeMeteors) {
+            if (m.isExploding) {
+                shapeRenderer.setColor(Color.RED);
+            } else {
+                shapeRenderer.setColor(Color.YELLOW);
+            }
+            shapeRenderer.rect(m.hitbox.x, m.hitbox.y, m.hitbox.width, m.hitbox.height);
+
+            if (!m.isExploding) {
+                shapeRenderer.setColor(Color.GRAY);
+                shapeRenderer.line(m.position.x, m.position.y, m.position.x, m.targetY);
+            }
+        }
+    }
+}
