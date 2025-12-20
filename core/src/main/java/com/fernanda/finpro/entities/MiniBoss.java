@@ -12,28 +12,27 @@ import com.fernanda.finpro.singleton.GameAssetManager;
 
 public class MiniBoss extends Monster {
 
-    // --- CONFIG KHUSUS MINIBOSS ---
-    private static final float MINIBOSS_SPEED = 45f;
-    private static final int   MINIBOSS_HP = 300;
-    private static final int   MINIBOSS_DMG = 50;
+    private static final float BOSS_SPEED = 55f;
+    private static final int   BOSS_HP = 500;
+    private static final int   BOSS_DMG = 50;
 
-    // Dimensi Fisik
-    private static final float WIDTH = 30f;
-    private static final float HEIGHT = 60f;
+    private static final float WIDTH = 60f;
+    private static final float HEIGHT = 175f;
+    private static final float VISUAL_OFFSET_Y = -17f;
 
-    private static final float DETECT_RANGE = 300f;
-    private static final float ATTACK_RANGE = 50f;
+    private static final float DETECT_RANGE = 400f;
+    private static final float ATTACK_RANGE = 70f;
 
     private static final float HABITAT_MIN = 0f;
     private static final float HABITAT_MAX = 2000f;
 
-    private static final float WINDUP_TIME = 0.5f;
-    private static final float ACTIVE_TIME = 0.8f; // 8 frames * 0.1s
-    private static final float RECOVERY_TIME = 1.5f;
+    private static final float FRAME_DURATION = 0.15f;
+    private static final float WINDUP_TIME = 0.2f;
+    private static final float ACTIVE_TIME = 1.2f;
+    private static final float RECOVERY_TIME = 2.0f;
 
-    // Hitbox timing (Frame 6-7 -> 0.5s - 0.7s)
-    private static final float HIT_START_TIME = 0.5f;
-    private static final float HIT_END_TIME = 0.7f;
+    private static final float HIT_START_TIME = 0.75f;
+    private static final float HIT_END_TIME   = 1.2f;
 
     private Animation<TextureRegion> idleAnim;
     private Animation<TextureRegion> walkAnim;
@@ -44,22 +43,17 @@ public class MiniBoss extends Monster {
     private boolean isWanderWalking = false;
 
     public MiniBoss(float x, float y) {
-        super(x, y, MINIBOSS_SPEED, MINIBOSS_HP, MINIBOSS_DMG, WIDTH, HEIGHT, HABITAT_MIN, HABITAT_MAX);
+        super(x, y, BOSS_SPEED, BOSS_HP, BOSS_DMG, WIDTH, HEIGHT, HABITAT_MIN, HABITAT_MAX);
 
         this.detectionRadius = DETECT_RANGE;
         this.attackRadius = ATTACK_RANGE;
-        this.knockbackDistance = 0.8f;
+        this.knockbackDistance = 2.0f;
         this.wanderTarget.set(x, y);
-
-        // Init Animations
-        // Load MiniBoss-Idle (Asumsi 3 frame, speed lambat 0.2f)
-        idleAnim = createAnimation(GameAssetManager.MINIBOSS_IDLE, 3, 0.2f, Animation.PlayMode.LOOP);
-        // Load MiniBoss-Walk (4 frame)
-        walkAnim = createAnimation(GameAssetManager.MINIBOSS_WALK, 4, 0.15f, Animation.PlayMode.LOOP);
-        // Load MiniBoss-Attack (8 frame)
-        attackAnim = createAnimation(GameAssetManager.MINIBOSS_ATTACK, 8, 0.1f, Animation.PlayMode.NORMAL);
-
         this.deathDuration = 2.0f;
+
+        idleAnim = createAnimation(GameAssetManager.MINIBOSS_IDLE, 3, 0.2f, Animation.PlayMode.LOOP);
+        walkAnim = createAnimation(GameAssetManager.MINIBOSS_WALK, 4, 0.15f, Animation.PlayMode.LOOP);
+        attackAnim = createAnimation(GameAssetManager.MINIBOSS_ATTACK, 8, FRAME_DURATION, Animation.PlayMode.NORMAL);
     }
 
     @Override
@@ -68,33 +62,28 @@ public class MiniBoss extends Monster {
 
         float distToPlayer = position.dst(player.position);
 
-        if (currentState != State.WANDER && currentState != State.DEAD) {
+        if (currentState != State.WANDER && currentState != State.DEAD && currentState != State.ATTACKING) {
             float dx = player.position.x - position.x;
             if (Math.abs(dx) > 5f) {
                 facingRight = dx > 0;
             }
         }
 
-        if (Math.abs(velocity.x) > 1.0f) {
+        if (Math.abs(velocity.x) > 1.0f && currentState != State.ATTACKING) {
             facingRight = velocity.x > 0;
         }
 
-        // Update posisi manual jika tidak ada di Monster.java
-        position.mulAdd(velocity, dt);
-
         switch (currentState) {
             case IDLE:
-                break;
-
-            case HURT:
-                if (stateTimer > 0.2f) currentState = State.CHASE;
-                break;
-
             case WANDER:
                 handleWander(dt);
                 if (distToPlayer < detectionRadius) {
                     currentState = State.CHASE;
                 }
+                break;
+
+            case HURT:
+                if (stateTimer > 0.1f) currentState = State.CHASE;
                 break;
 
             case CHASE:
@@ -103,9 +92,8 @@ public class MiniBoss extends Monster {
                 if (distToPlayer <= attackRadius) {
                     currentState = State.PREPARE_ATTACK;
                     stateTimer = 0;
-                    velocity.setZero();
-                }
-                if (distToPlayer > detectionRadius * 1.5f) {
+                    velocity.set(0, 0);
+                } else if (distToPlayer > detectionRadius * 1.5f) {
                     currentState = State.WANDER;
                     wanderTarget.set(spawnPosition);
                 }
@@ -120,11 +108,7 @@ public class MiniBoss extends Monster {
 
             case ATTACKING:
                 if (stateTimer >= HIT_START_TIME && stateTimer <= HIT_END_TIME) {
-                    attackRect.set(
-                        facingRight ? position.x + bodyRect.width : position.x - ATTACK_RANGE,
-                        position.y,
-                        ATTACK_RANGE, bodyRect.height
-                    );
+                    createAttackHitbox();
                 } else {
                     attackRect.set(0, 0, 0, 0);
                 }
@@ -132,6 +116,7 @@ public class MiniBoss extends Monster {
                 if (stateTimer >= ACTIVE_TIME) {
                     currentState = State.COOLDOWN;
                     stateTimer = 0;
+                    attackRect.set(0, 0, 0, 0);
                 }
                 break;
 
@@ -142,26 +127,34 @@ public class MiniBoss extends Monster {
                 break;
 
             case DEAD:
+                velocity.set(0, 0);
                 break;
         }
+
+        position.mulAdd(velocity, dt);
     }
 
     private void handleWander(float dt) {
         if (isWanderWalking) {
-            Vector2 dir = new Vector2(wanderTarget).sub(position);
-            if (dir.len() < 5f || stateTimer > 5f) {
-                isWanderWalking = false;
-                wanderWaitTimer = MathUtils.random(1f, 3f);
-                velocity.setZero();
+            if (position.dst(wanderTarget) > 10f) {
+                moveTowards(wanderTarget);
+                if (stateTimer > 5.0f) {
+                    isWanderWalking = false;
+                    wanderWaitTimer = MathUtils.random(1.0f, 3.0f);
+                    velocity.set(0, 0);
+                }
             } else {
-                dir.nor();
-                velocity.set(dir).scl(speed * 0.5f);
+                isWanderWalking = false;
+                wanderWaitTimer = MathUtils.random(2.0f, 4.0f);
+                velocity.set(0, 0);
             }
         } else {
             wanderWaitTimer -= dt;
+            velocity.set(0, 0);
+
             if (wanderWaitTimer <= 0) {
-                float rx = spawnPosition.x + MathUtils.random(-wanderRadius, wanderRadius);
-                float ry = spawnPosition.y + MathUtils.random(-wanderRadius, wanderRadius);
+                float rx = spawnPosition.x + MathUtils.random(-300, 300);
+                float ry = spawnPosition.y + MathUtils.random(-300, 300);
                 wanderTarget.set(rx, ry);
                 isWanderWalking = true;
                 stateTimer = 0;
@@ -169,46 +162,95 @@ public class MiniBoss extends Monster {
         }
     }
 
-    @Override
-    public void render(SpriteBatch batch) {
-        TextureRegion currentFrame = idleAnim.getKeyFrame(stateTimer);
+    private void createAttackHitbox() {
+        float atkWidth = 100f;
+        float atkHeight = 80f;
 
-        if (currentState == State.WANDER || currentState == State.CHASE) {
-            currentFrame = walkAnim.getKeyFrame(stateTimer);
-        } else if (currentState == State.ATTACKING || currentState == State.PREPARE_ATTACK || currentState == State.COOLDOWN) {
-             currentFrame = attackAnim.getKeyFrame(stateTimer);
-        } else if (currentState == State.DEAD) {
-             currentFrame = idleAnim.getKeyFrame(0);
-        }
-
-        // Flip logic
-        if (facingRight && !currentFrame.isFlipX()) {
-            currentFrame.flip(true, false);
-        } else if (!facingRight && currentFrame.isFlipX()) {
-            currentFrame.flip(true, false);
-        }
-
-        if (currentState == State.HURT) {
-            batch.setColor(1, 0.5f, 0.5f, 1);
-        } else if (currentState == State.DEAD) {
-            batch.setColor(0.5f, 0.5f, 0.5f, 1f - (stateTimer / deathDuration));
+        float atkX;
+        if (facingRight) {
+            atkX = position.x + WIDTH;
         } else {
-            batch.setColor(1, 1, 1, 1);
+            atkX = position.x - atkWidth;
         }
 
-        // Draw lebih besar sesuai ukuran baru
-        batch.draw(currentFrame, position.x - 60, position.y - 40, WIDTH + 120, HEIGHT + 80);
-        batch.setColor(1, 1, 1, 1);
+        float atkY = position.y + (HEIGHT / 2) - (atkHeight / 2);
+
+        attackRect.set(atkX, atkY, atkWidth, atkHeight);
     }
 
     @Override
-    public void renderDebug(ShapeRenderer shapeRenderer) {
-        shapeRenderer.setColor(Color.PURPLE);
-        shapeRenderer.rect(bodyRect.x, bodyRect.y, bodyRect.width, bodyRect.height);
+    public void render(SpriteBatch batch) {
+        Animation<TextureRegion> currentAnim = idleAnim;
+        boolean loop = true;
 
-        if (currentState == State.ATTACKING) {
-            shapeRenderer.setColor(Color.RED);
-            shapeRenderer.rect(attackRect.x, attackRect.y, attackRect.width, attackRect.height);
+        switch (currentState) {
+            case IDLE:
+            case PREPARE_ATTACK:
+            case COOLDOWN:
+                currentAnim = idleAnim;
+                break;
+            case WANDER:
+            case CHASE:
+                currentAnim = walkAnim;
+                break;
+            case ATTACKING:
+                currentAnim = attackAnim;
+                loop = false;
+                break;
+            case DEAD:
+                currentAnim = idleAnim;
+                loop = false;
+                break;
+            default:
+                currentAnim = idleAnim;
+                break;
+        }
+
+        float animTime = stateTimer;
+        if (loop) animTime = stateTimer;
+
+        TextureRegion currentFrame = currentAnim.getKeyFrame(animTime, loop);
+
+        if (currentState == State.DEAD) {
+            currentFrame = idleAnim.getKeyFrame(0);
+        }
+
+        if (currentFrame != null) {
+            if (currentState == State.HURT) {
+                batch.setColor(1f, 0.5f, 0.5f, 1f);
+            } else if (currentState == State.DEAD) {
+                batch.setColor(0.5f, 0.5f, 0.5f, 1f - (stateTimer / deathDuration));
+            } else {
+                batch.setColor(Color.WHITE);
+            }
+
+            float scale = 1.5f;
+            float width = currentFrame.getRegionWidth() * scale;
+            float height = currentFrame.getRegionHeight() * scale;
+
+            float drawX = position.x + (WIDTH - width) / 2f;
+            float drawY = (position.y + (HEIGHT - height) / 2f) + VISUAL_OFFSET_Y;
+
+            if (facingRight) {
+                batch.draw(currentFrame, drawX, drawY, width, height);
+            } else {
+                batch.draw(currentFrame, drawX + width, drawY, -width, height);
+            }
+
+            batch.setColor(Color.WHITE);
+        }
+    }
+
+    @Override
+    public void renderDebug(ShapeRenderer sr) {
+        if (isDead) return;
+
+        sr.setColor(Color.PURPLE);
+        sr.rect(bodyRect.x, bodyRect.y, bodyRect.width, bodyRect.height);
+
+        if (currentState == State.ATTACKING && attackRect.width > 0) {
+            sr.setColor(Color.RED);
+            sr.rect(attackRect.x, attackRect.y, attackRect.width, attackRect.height);
         }
     }
 
