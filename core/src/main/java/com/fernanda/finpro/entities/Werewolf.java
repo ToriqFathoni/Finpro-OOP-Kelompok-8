@@ -161,17 +161,17 @@ public class Werewolf extends Monster {
                 float checkY = centerY + dir.y * checkDist;
 
                 if (isTileBlocked(checkX, checkY)) {
-                     // Nabrak Tembok!
-                     velocity.set(0, 0);
-                     isWanderWalking = false;
-                     wanderWaitTimer = MathUtils.random(0.5f, 1.0f); // Idle sebentar sebelum balik arah
-                     forceReverse = true; // Tandai untuk balik arah setelah tunggu
+                    // Nabrak Tembok!
+                    velocity.set(0, 0);
+                    isWanderWalking = false;
+                    wanderWaitTimer = MathUtils.random(0.5f, 1.0f); // Idle sebentar sebelum balik arah
+                    forceReverse = true; // Tandai untuk balik arah setelah tunggu
                 }
 
                 if (stateTimer > 5.0f) {
-                     isWanderWalking = false;
-                     wanderWaitTimer = MathUtils.random(1.0f, 3.0f);
-                     velocity.set(0, 0);
+                    isWanderWalking = false;
+                    wanderWaitTimer = MathUtils.random(1.0f, 3.0f);
+                    velocity.set(0, 0);
                 }
             } else {
                 isWanderWalking = false;
