@@ -20,44 +20,52 @@ public class RecipeManager {
     }
 
     private void initializeRecipes() {
-        // 1. "Roasted Meat" (Steak) - Basic Survival Food
+        allRecipes.clear(); // PURGE old dummy recipes
+        
+        // === FINAL 7 HARDCORE RECIPES ===
+        
+        // 1. Roasted Meat (Hardcore: 2 Meat + 1 Skull)
         Recipe roastedMeat = new Recipe("Roasted Meat", ItemType.ROASTED_MEAT);
         roastedMeat.addRequirement(ItemType.ORC_MEAT, 2);
+        roastedMeat.addRequirement(ItemType.ORC_SKULL, 1);
         allRecipes.add(roastedMeat);
 
-        // 2. "Herbal Tea" - Stamina Boost
-        Recipe herbalTea = new Recipe("Herbal Tea", ItemType.HERBAL_TEA);
-        herbalTea.addRequirement(ItemType.HERB, 3);
-        allRecipes.add(herbalTea);
+        // 2. Hunter's Stew (1 Meat + 1 Claw)
+        Recipe huntersStew = new Recipe("Hunter's Stew", ItemType.HUNTERS_STEW);
+        huntersStew.addRequirement(ItemType.ORC_MEAT, 1);
+        huntersStew.addRequirement(ItemType.WEREWOLF_CLAW, 1);
+        allRecipes.add(huntersStew);
 
-        // 3. "Spicy Skewer" - Attack Buff (Requires 2 Monster Types!)
-        Recipe spicySkewer = new Recipe("Spicy Skewer", ItemType.SPICY_SKEWER);
-        spicySkewer.addRequirement(ItemType.RAW_MEAT, 2);
-        spicySkewer.addRequirement(ItemType.SLIME_GEL, 1);
-        allRecipes.add(spicySkewer);
+        // 3. Bone Broth (2 Skulls)
+        Recipe boneBroth = new Recipe("Bone Broth", ItemType.BONE_BROTH);
+        boneBroth.addRequirement(ItemType.ORC_SKULL, 2);
+        allRecipes.add(boneBroth);
 
-        // 4. "Forest Soup" - Regeneration (Complete Balanced Meal)
-        Recipe forestSoup = new Recipe("Forest Soup", ItemType.FOREST_SOUP);
-        forestSoup.addRequirement(ItemType.RAW_MEAT, 2);
-        forestSoup.addRequirement(ItemType.HERB, 2);
-        allRecipes.add(forestSoup);
+        // 4. Yeti Soup (1 Heart + 1 Meat + 1 Claw)
+        Recipe yetiSoup = new Recipe("Yeti Soup", ItemType.YETI_SOUP);
+        yetiSoup.addRequirement(ItemType.YETI_HEART, 1);
+        yetiSoup.addRequirement(ItemType.ORC_MEAT, 1);
+        yetiSoup.addRequirement(ItemType.WEREWOLF_CLAW, 1);
+        allRecipes.add(yetiSoup);
 
-        // 5. "Slime Jelly" - Defense
-        Recipe slimeJelly = new Recipe("Slime Jelly", ItemType.SLIME_JELLY);
-        slimeJelly.addRequirement(ItemType.SLIME_GEL, 4);
-        allRecipes.add(slimeJelly);
+        // 5. Berserker's Elixir (5 Claws + 5 Skulls) - LEGENDARY
+        Recipe berserkerElixir = new Recipe("Berserker's Elixir", ItemType.BERSERKERS_ELIXIR);
+        berserkerElixir.addRequirement(ItemType.WEREWOLF_CLAW, 5);
+        berserkerElixir.addRequirement(ItemType.ORC_SKULL, 5);
+        allRecipes.add(berserkerElixir);
 
-        // 6. "GOURMET BURGER" - The Boss Key! (Ultimate Endgame Food)
-        Recipe gourmetBurger = new Recipe("GOURMET BURGER", ItemType.GOURMET_BURGER);
-        gourmetBurger.addRequirement(ItemType.RAW_MEAT, 5);
-        gourmetBurger.addRequirement(ItemType.HERB, 3);
-        gourmetBurger.addRequirement(ItemType.SLIME_GEL, 2);
-        allRecipes.add(gourmetBurger);
+        // 6. Heart of Mountain (3 Hearts + 3 Meat) - LEGENDARY
+        Recipe heartOfMountain = new Recipe("Heart of Mountain", ItemType.HEART_OF_MOUNTAIN);
+        heartOfMountain.addRequirement(ItemType.YETI_HEART, 3);
+        heartOfMountain.addRequirement(ItemType.ORC_MEAT, 3);
+        allRecipes.add(heartOfMountain);
 
-        // 7. "Skull Elixir" - Damage Boost Potion (Unique Orc-only craft)
-        Recipe skullElixir = new Recipe("Skull Elixir", ItemType.SKULL_ELIXIR);
-        skullElixir.addRequirement(ItemType.ORC_SKULL, 10);
-        allRecipes.add(skullElixir);
+        // 7. GOD SLAYER (1 Shard + 5 Hearts + 5 Claws) - ULTIMATE
+        Recipe godSlayer = new Recipe("GOD SLAYER ELIXIR", ItemType.GOD_SLAYER_ELIXIR);
+        godSlayer.addRequirement(ItemType.ETERNAL_ICE_SHARD, 1);
+        godSlayer.addRequirement(ItemType.YETI_HEART, 5);
+        godSlayer.addRequirement(ItemType.WEREWOLF_CLAW, 5);
+        allRecipes.add(godSlayer);
     }
 
     public List<Recipe> getAllRecipes() {
