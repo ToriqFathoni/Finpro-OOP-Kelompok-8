@@ -4,8 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic. gdx.graphics.g2d.TextureRegion;
 import com.badlogic. gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
-import com.fernanda.finpro.components.Inventory;
+import com.badlogic.gdx.math.Vector2;import com.fernanda.finpro.components.BuffManager;import com.fernanda.finpro.components.Inventory;
 import com.fernanda.finpro.components.PlayerStats;
 import com.fernanda. finpro.input.InputHandler;
 import com.fernanda. finpro.states.*;
@@ -19,9 +18,11 @@ public class Player {
     // --- COMPONENTS ---
     public PlayerStats stats;
     public Inventory inventory;
+    public BuffManager buffManager;
 
     // STATS
-    private int attackDamage = 15;
+    private int baseDamage = 15;
+    private int permanentDamageBonus = 0;
 
     // CONFIG BADAN (LOGIKA)
     private static final int LOGICAL_WIDTH = 15;
@@ -61,11 +62,6 @@ public class Player {
     private final float INVINCIBILITY_DURATION = 1.0f;
 
     private Vector2 dodgeDirection = new Vector2();
-    
-    // --- DAMAGE BOOST BUFF (ORC ELIXIR) ---
-    private float damageBoostTimer = 0f;
-    private final float DAMAGE_BOOST_DURATION = 120f; // 2 minutes
-    private final float DAMAGE_BOOST_MULTIPLIER = 1.5f; // 50% damage increase
 
     // --- STATE MANAGEMENT ---
     private PlayerState currentState;
@@ -97,19 +93,15 @@ public class Player {
         // (maxHP=50, maxStamina=100, hpRegen=0, staminaRegen=10)
         this.stats = new PlayerStats(50f, 100f, 0f, 10f);
         this.inventory = new Inventory();
+        this.buffManager = new BuffManager();
     }
 
     public void update(float dt) {
-        stats.update(dt);
+        buffManager.update(dt);
         
-        // Update damage boost timer
-        if (damageBoostTimer > 0) {
-            damageBoostTimer -= dt;
-            if (damageBoostTimer <= 0) {
-                damageBoostTimer = 0;
-                System.out.println("[BUFF] Damage Boost expired!");
-            }
-        }
+        // Pass energy regen boost to stats
+        float energyRegenBoost = buffManager.getEnergyRegenBoost();
+        stats.update(dt, energyRegenBoost);
 
         if (invincibilityTimer > 0) {
             invincibilityTimer -= dt;
@@ -283,28 +275,15 @@ public class Player {
 
     public float getWidth() { return LOGICAL_WIDTH; }
     public float getHeight() { return LOGICAL_HEIGHT; }
+    
     public int getDamage() {
-        float finalDamage = attackDamage;
-        if (damageBoostTimer > 0) {
-            finalDamage *= DAMAGE_BOOST_MULTIPLIER;
-        }
-        return (int)finalDamage;
-    }
-    public void setDamage(int amount) {
-        this.attackDamage = amount;
+        // Base damage + permanent bonus + temporary buff
+        return baseDamage + permanentDamageBonus + buffManager.getDamageBoost();
     }
     
-    public void activateDamageBoost() {
-        damageBoostTimer = DAMAGE_BOOST_DURATION;
-        System.out.println("[BUFF] Damage Boost activated! (2 minutes, +50% damage)");
-    }
-    
-    public float getDamageBoostTimer() {
-        return damageBoostTimer;
-    }
-    
-    public boolean hasDamageBoost() {
-        return damageBoostTimer > 0;
+    public void addPermanentDamage(int amount) {
+        this.permanentDamageBonus += amount;
+        System.out.println("[PERMANENT UPGRADE] Damage +" + amount + "! Total damage: " + getDamage());
     }
 
     public void render(SpriteBatch batch) {

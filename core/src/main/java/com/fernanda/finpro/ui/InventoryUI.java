@@ -10,9 +10,10 @@ import com.badlogic. gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com. badlogic.gdx.utils. viewport.Viewport;
-import com.fernanda.finpro. components. Inventory;
+import com.badlogic.gdx.utils.viewport.Viewport;
+import com.fernanda.finpro.components.Inventory;
 import com.fernanda.finpro.components.ItemType;
+import com.fernanda.finpro.entities.Player;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +55,10 @@ public class InventoryUI {
     // Panel position (untuk button hitbox calculation)
     private float panelX;
     private float panelY;
+
+    // Error popup system
+    private String errorMessage = null;
+    private float errorTimer = 0f;
 
     public InventoryUI() {
         this.shapeRenderer = new ShapeRenderer();
@@ -100,6 +105,12 @@ public class InventoryUI {
     }
 
     public void render(Inventory inventory) {
+        // Update error timer
+        if (errorTimer > 0) {
+            errorTimer -= Gdx.graphics.getDeltaTime();
+            if (errorTimer < 0) errorTimer = 0;
+        }
+        
         viewport.apply();
         camera.update();
 
@@ -189,7 +200,7 @@ public class InventoryUI {
 
         font.getData().setScale(0.6f);
 
-        // Item Info Display
+        // Item Info Display (DESCRIPTION PANEL)
         if (!selectedSlot.isEmpty()) {
             ItemType selectedItem = selectedSlot.getItemType();
             int itemCount = selectedSlot.getCount();
@@ -198,24 +209,53 @@ public class InventoryUI {
             titleFont.setColor(Color.WHITE);
             titleFont.getData().setScale(0.65f);
             titleFont.draw(batch, selectedItem.getDisplayName(), panelX + 14, panelY + 40);
+            titleFont.getData().setScale(0.8f);
             
-            // Item count dan hint
-            font.setColor(Color.LIGHT_GRAY);
-            font.getData().setScale(0.5f);
-            font.draw(batch, "Quantity: " + itemCount, panelX + 14, panelY + 27);
+            // Item description
+            font.setColor(Color.GRAY);
+            font.getData().setScale(0.45f);
+            font.draw(batch, selectedItem.getDescription(), panelX + 14, panelY + 27);
             
-            // Food/Consumable hint
-            if (isFoodItem(selectedItem)) {
-                font.setColor(Color.GREEN);
-                if (selectedItem == ItemType.SKULL_ELIXIR) {
-                    font.draw(batch, "[Y] Drink (DMG +50% 2min)", panelX + 90, panelY + 27);
-                } else {
-                    font.draw(batch, "[Y] Eat (+" + (int)getFoodHealAmount(selectedItem) + " HP)", panelX + 90, panelY + 27);
-                }
+            // Legendary indicator
+            if (selectedItem.isLegendary) {
+                font.setColor(Color.GOLD);
+                font.getData().setScale(0.5f);
+                font.draw(batch, "[LEGENDARY ITEM]", panelX + 14, panelY + 16);
             }
             
+            // Consumable hint
+            if (selectedItem.isConsumable) {
+                font.setColor(Color.GREEN);
+                font.getData().setScale(0.5f);
+                font.draw(batch, "[ENTER] to Consume", panelX + 120, panelY + 40);
+            } else {
+                font.setColor(Color.RED);
+                font.getData().setScale(0.45f);
+                font.draw(batch, "(Cannot consume raw)", panelX + 120, panelY + 40);
+            }
+            
+            // Quantity
+            font.setColor(Color.LIGHT_GRAY);
+            font.getData().setScale(0.45f);
+            font.draw(batch, "Qty: " + itemCount, panelX + 14, panelY + 52);
+            
             font.getData().setScale(0.6f);
-            titleFont.getData().setScale(0.8f);
+        }
+        
+        // ERROR POPUP (Red centered message)
+        if (errorTimer > 0) {
+            font.setColor(Color.RED);
+            font.getData().setScale(1.5f);
+            
+            // Calculate center position
+            com.badlogic.gdx.graphics.g2d.GlyphLayout layout = new com.badlogic.gdx.graphics.g2d.GlyphLayout();
+            layout.setText(font, errorMessage);
+            float textX = (480 - layout.width) / 2;
+            float textY = 270 / 2 + layout.height / 2;
+            
+            // Draw with background
+            font.draw(batch, errorMessage, textX, textY);
+            font.getData().setScale(0.6f);
         }
         
         batch.end();
@@ -263,7 +303,26 @@ public class InventoryUI {
             selectedRow = Math.min(GRID_ROWS - 1, selectedRow + 1);
         }
         
-        // Q key - Eat/Drink selected food/potion
+        // ENTER key - Consume selected item (NEW SYSTEM)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            InventorySlot selectedSlot = slots[selectedRow][selectedCol];
+            if (!selectedSlot.isEmpty()) {
+                ItemType selectedItem = selectedSlot.getItemType();
+                
+                if (selectedItem.isConsumable) {
+                    // Consumable item - apply effects
+                    applyFoodEffect(selectedItem, player);
+                    inventory.removeItem(selectedItem, 1);
+                } else {
+                    // Raw ingredient - SHOW ERROR
+                    errorMessage = "RAW INGREDIENT! CANNOT EAT!";
+                    errorTimer = 2.0f;
+                    System.out.println("[ERROR] Cannot consume raw ingredient: " + selectedItem.getDisplayName());
+                }
+            }
+        }
+        
+        // Q key - Eat/Drink selected food/potion (LEGACY SUPPORT)
         if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
             InventorySlot selectedSlot = slots[selectedRow][selectedCol];
             if (!selectedSlot.isEmpty()) {
@@ -271,20 +330,14 @@ public class InventoryUI {
                 
                 // Check if item is food/consumable
                 if (isFoodItem(selectedItem)) {
-                    // Skull Elixir gives damage boost
-                    if (selectedItem == ItemType.SKULL_ELIXIR) {
-                        player.activateDamageBoost();
-                        System.out.println("[DRINK] Consumed " + selectedItem.getDisplayName() + " (Damage +50% for 2 min)");
-                    } else {
-                        // Other foods restore health
-                        float healAmount = getFoodHealAmount(selectedItem);
-                        player.stats.heal(healAmount);
-                        System.out.println("[EAT] Consumed " + selectedItem.getDisplayName() + " (+" + (int)healAmount + " HP)");
-                    }
+                    // Apply food effects based on type
+                    applyFoodEffect(selectedItem, player);
                     
                     // Remove 1 item from inventory
                     inventory.removeItem(selectedItem, 1);
                 } else {
+                    errorMessage = "RAW INGREDIENT! CANNOT EAT!";
+                    errorTimer = 2.0f;
                     System.out.println("[CONSUME] Cannot consume " + selectedItem.getDisplayName());
                 }
             }
@@ -318,35 +371,83 @@ public class InventoryUI {
     }
 
     /**
-     * Check if item is food/consumable (can be eaten/drunk)
+     * Apply food effects to player
      */
-    private boolean isFoodItem(ItemType item) {
+    private void applyFoodEffect(ItemType item, Player player) {
+        System.out.println("[EAT] Consumed " + item.getDisplayName());
+        
         switch (item) {
+            // === SURVIVAL MEALS ===
             case ROASTED_MEAT:
-            case HERBAL_TEA:
-            case SPICY_SKEWER:
-            case FOREST_SOUP:
-            case SLIME_JELLY:
-            case GOURMET_BURGER:
-            case SKULL_ELIXIR:
-                return true;
+                // Heals 50% Max HP
+                player.stats.heal(player.stats.maxHealth * 0.5f);
+                break;
+                
+            case HUNTERS_STEW:
+                // Damage +5 for 60 seconds
+                player.buffManager.applyDamageBoost(5, 60f);
+                player.stats.heal(10f); // Small heal bonus
+                break;
+                
+            case BONE_BROTH:
+                // Energy Regen +20/s for 10 seconds
+                player.buffManager.applyEnergyRegenBoost(20f, 10f);
+                player.stats.heal(5f); // Small heal bonus
+                break;
+                
+            case YETI_SOUP:
+                // Heals 75% Max HP
+                player.stats.heal(player.stats.maxHealth * 0.75f);
+                break;
+                
+            // === LEGENDARY ELIXIRS (PERMANENT UPGRADES) ===
+            case BERSERKERS_ELIXIR:
+                // PERMANENT: Dmg+3, HP=100, Energy=120
+                player.addPermanentDamage(3);
+                player.stats.upgradeMaxHealth(100f);
+                player.stats.upgradeMaxStamina(120f);
+                System.out.println("[LEGENDARY] Berserker's Elixir consumed! You are now stronger!");
+                break;
+                
+            case HEART_OF_MOUNTAIN:
+                // PERMANENT: Dmg+3, HP=200, Energy=150
+                player.addPermanentDamage(3);
+                player.stats.upgradeMaxHealth(200f);
+                player.stats.upgradeMaxStamina(150f);
+                System.out.println("[LEGENDARY] Heart of Mountain consumed! You feel unstoppable!");
+                break;
+                
+            case GOD_SLAYER_ELIXIR:
+                // ULTIMATE: Dmg+5, HP=300, Energy=170
+                player.addPermanentDamage(5);
+                player.stats.upgradeMaxHealth(300f);
+                player.stats.upgradeMaxStamina(170f);
+                System.out.println("[LEGENDARY] God Slayer Elixir consumed! You have ascended!");
+                break;
+                
             default:
-                return false;
+                // Raw ingredients cannot be consumed
+                break;
         }
     }
     
     /**
-     * Get heal amount for food items
+     * Check if item is food/consumable (can be eaten/drunk)
      */
-    private float getFoodHealAmount(ItemType item) {
+    private boolean isFoodItem(ItemType item) {
         switch (item) {
-            case ROASTED_MEAT: return 30f;
-            case HERBAL_TEA: return 20f;
-            case SPICY_SKEWER: return 40f;
-            case FOREST_SOUP: return 50f;
-            case SLIME_JELLY: return 25f;
-            case GOURMET_BURGER: return 100f;
-            default: return 0f;
+            // Survival Meals
+            case ROASTED_MEAT:
+            case HUNTERS_STEW:
+            case BONE_BROTH:
+            case YETI_SOUP:
+            // Legendary Elixirs
+            case BERSERKERS_ELIXIR:
+            case HEART_OF_MOUNTAIN:
+            case GOD_SLAYER_ELIXIR:
+                return true;
+            default:
+                return false;
         }
     }
     

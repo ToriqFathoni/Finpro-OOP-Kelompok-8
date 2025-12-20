@@ -1,40 +1,56 @@
-package com. fernanda.finpro.components;
+package com.fernanda.finpro.components;
 
 public enum ItemType {
-    // Raw Materials
-    ORC_SKULL("Orc Skull", "💀"),
-    ORC_MEAT("Orc Meat", "🥩"),
-    WEREWOLF_CLAW("Werewolf Claw", "🦴"),
-    YETI_HEART("Yeti Heart", "🦷"),
-    RAW_MEAT("Raw Meat", "🥩"),
-    SLIME_GEL("Slime Gel", "💧"),
-    HERB("Healing Herb", "🌿"),
-    POTION("Health Potion", "🧪"),
+    // --- INGREDIENTS (Not Consumable) ---
+    ORC_MEAT("OrcMeat.png", "Orc Meat", "Raw meat. Needs cooking.", false, false),
+    ORC_SKULL("orcskull.png", "Orc Skull", "Bone material for energy brews.", false, false),
+    WEREWOLF_CLAW("WerewolfClaw.png", "Werewolf Claw", "Sharp claw from the forest.", false, false),
+    YETI_HEART("YetiHeart.png", "Yeti Heart", "Cold heart from the snow peaks.", false, false),
+    ETERNAL_ICE_SHARD("legend-3.png", "Eternal Ice Shard", "Rare drop from the Frost Boss.", false, false),
 
-    // Crafted Foods
-    ROASTED_MEAT("Roasted Meat", "🍖"),
-    HERBAL_TEA("Herbal Tea", "🍵"),
-    SPICY_SKEWER("Spicy Skewer", "🍢"),
-    FOREST_SOUP("Forest Soup", "🍲"),
-    SLIME_JELLY("Slime Jelly", "🟢"),
-    GOURMET_BURGER("Gourmet Burger", "🍔"),
+    // --- SURVIVAL MEALS (Consumable) ---
+    ROASTED_MEAT("roasted-meat.png", "Roasted Meat", "Effect: Heals 50% Max HP.", true, false),
+    HUNTERS_STEW("hunter-stew.png", "Hunter's Stew", "Effect: Damage +5 (60s).", true, false),
+    BONE_BROTH("bone-broth.png", "Bone Broth", "Effect: Energy Regen +20/s (10s).", true, false),
+    YETI_SOUP("yeti-soup.png", "Yeti Soup", "Effect: Heals 75% Max HP.", true, false),
 
-    // Special Crafted Items
-    SKULL_ELIXIR("Skull Elixir", "⚗️");
+    // --- LEGENDARY FEASTS (Consumable, Legendary) ---
+    BERSERKERS_ELIXIR("legend-1.png", "Berserker's Elixir", "PERMANENT: Dmg+3, HP=100, Energy=120.", true, true),
+    HEART_OF_MOUNTAIN("legend-2.png", "Heart of Mountain", "PERMANENT: Dmg+3, HP=200, Energy=150.", true, true),
+    GOD_SLAYER_ELIXIR("legend-3.png", "God Slayer Elixir", "ULTIMATE: Dmg+5, HP=300, Energy=170.", true, true);
 
-    private final String displayName;
-    private final String icon;
+    // Fields
+    public final String texturePath;
+    public final String displayName;
+    public final String description;
+    public final boolean isConsumable;
+    public final boolean isLegendary;
 
-    ItemType(String displayName, String icon) {
-        this.displayName = displayName;
-        this.icon = icon;
+    ItemType(String path, String name, String desc, boolean consumable, boolean legendary) {
+        this.texturePath = path;
+        this.displayName = name;
+        this.description = desc;
+        this.isConsumable = consumable;
+        this.isLegendary = legendary;
     }
 
     public String getDisplayName() {
         return displayName;
     }
 
+    public String getTexturePath() {
+        return texturePath;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    // Legacy method for backward compatibility
     public String getIcon() {
-        return icon;
+        // Return emoji based on type for console output
+        if (isLegendary) return "⚗️";
+        if (isConsumable) return "🍖";
+        return "💀";
     }
 }

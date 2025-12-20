@@ -95,9 +95,19 @@ public class InventorySlot {
             case YETI_HEART:
                 return GameAssetManager.getInstance().getTexture(GameAssetManager.YETI_HEART);
             case ROASTED_MEAT:
-                return GameAssetManager.getInstance().getTexture(GameAssetManager.STEAK);
-            case SKULL_ELIXIR:
-                return GameAssetManager.getInstance().getTexture(GameAssetManager.ORC_ELIXIR);
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.ROASTED_MEAT);
+            case HUNTERS_STEW:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.HUNTERS_STEW);
+            case BONE_BROTH:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.BONE_BROTH);
+            case YETI_SOUP:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.YETI_SOUP);
+            case BERSERKERS_ELIXIR:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.BERSERKERS_ELIXIR);
+            case HEART_OF_MOUNTAIN:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.HEART_OF_MOUNTAIN);
+            case GOD_SLAYER_ELIXIR:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.GOD_SLAYER_ELIXIR);
             default:
                 return null;
         }

@@ -106,24 +106,37 @@ public class GameHud implements StatsListener {
         shapeRenderer.end();
         Gdx.gl.glLineWidth(1);
         
-        // Render Damage Boost Timer
-        if (player != null && player.hasDamageBoost()) {
+        // Render Active Buffs
+        if (player != null && player.buffManager.hasActiveBuff()) {
             batch.setProjectionMatrix(hudCamera.combined);
             batch.begin();
             
-            float buffTimer = player.getDamageBoostTimer();
-            int minutes = (int)(buffTimer / 60);
-            int seconds = (int)(buffTimer % 60);
-            String timerText = String.format("Damage Boost: %02d:%02d", minutes, seconds);
-            
-            float buffX = MARGIN_LEFT;
             float buffY = hudViewport.getWorldHeight() - MARGIN_TOP - (BAR_HEIGHT * 2) - 18;
             
-            font.setColor(Color.ORANGE);
-            font.getData().setScale(0.5f);
-            font.draw(batch, timerText, buffX, buffY);
-            font.getData().setScale(0.6f);
+            // Show damage boost
+            if (player.buffManager.getDamageBoostTimeRemaining() > 0) {
+                float buffTimer = player.buffManager.getDamageBoostTimeRemaining();
+                int damageBoost = player.buffManager.getDamageBoost();
+                String timerText = String.format("DMG+%d: %.0fs", damageBoost, buffTimer);
+                
+                font.setColor(Color.ORANGE);
+                font.getData().setScale(0.5f);
+                font.draw(batch, timerText, MARGIN_LEFT, buffY);
+                buffY -= 12;
+            }
             
+            // Show energy regen boost
+            if (player.buffManager.getEnergyRegenBoostTimeRemaining() > 0) {
+                float buffTimer = player.buffManager.getEnergyRegenBoostTimeRemaining();
+                float regenBoost = player.buffManager.getEnergyRegenBoost();
+                String timerText = String.format("Energy+%.0f/s: %.0fs", regenBoost, buffTimer);
+                
+                font.setColor(Color.CYAN);
+                font.getData().setScale(0.5f);
+                font.draw(batch, timerText, MARGIN_LEFT, buffY);
+            }
+            
+            font.getData().setScale(0.6f);
             batch.end();
         }
     }

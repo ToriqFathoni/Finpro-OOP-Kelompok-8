@@ -40,18 +40,34 @@ public class PlayerStats {
         notifyStaminaChanged();
     }
 
-    public void update(float dt) {
+    public void update(float dt, float energyRegenBoost) {
         if (isDead) return;
 
         // NO HP AUTO-REGEN (Removed!)
         // Health regeneration is disabled per game design
 
-        // Regen Stamina (Energy) ONLY
+        // Regen Stamina (Energy) with buff support
         if (currentStamina < maxStamina) {
-            currentStamina += staminaRegenRate * dt;
+            float totalRegen = staminaRegenRate + energyRegenBoost;
+            currentStamina += totalRegen * dt;
             if (currentStamina > maxStamina) currentStamina = maxStamina;
             notifyStaminaChanged();
         }
+    }
+    
+    // Method to upgrade max stats permanently (for legendary elixirs)
+    public void upgradeMaxHealth(float newMaxHealth) {
+        this.maxHealth = newMaxHealth;
+        this.currentHealth = newMaxHealth; // Also restore to full
+        System.out.println("[PERMANENT UPGRADE] Max HP set to " + (int)newMaxHealth);
+        notifyHealthChanged();
+    }
+    
+    public void upgradeMaxStamina(float newMaxStamina) {
+        this.maxStamina = newMaxStamina;
+        this.currentStamina = newMaxStamina; // Also restore to full
+        System.out.println("[PERMANENT UPGRADE] Max Energy set to " + (int)newMaxStamina);
+        notifyStaminaChanged();
     }
 
     public void takeDamage(float amount) {

@@ -26,9 +26,16 @@ public class GameAssetManager {
     public static final String ORC_SKULL = "orcskull.png";
     public static final String ORC_MEAT = "OrcMeat.png";
 
-    // Food Assets
-    public static final String STEAK = "Steak.png";
-    public static final String ORC_ELIXIR = "OrcElixir.png";
+    // Food Assets (Cooked Meals)
+    public static final String ROASTED_MEAT = "roasted-meat.png";
+    public static final String HUNTERS_STEW = "hunter-stew.png";
+    public static final String BONE_BROTH = "bone-broth.png";
+    public static final String YETI_SOUP = "yeti-soup.png";
+    
+    // Legendary Elixirs
+    public static final String BERSERKERS_ELIXIR = "legend-1.png";
+    public static final String HEART_OF_MOUNTAIN = "legend-2.png";
+    public static final String GOD_SLAYER_ELIXIR = "legend-3.png";
 
     //Campfire Assets
     public static final String CAMPFIRE = "Campfire.png";
@@ -89,9 +96,16 @@ public class GameAssetManager {
         manager.load(ORC_SKULL, Texture.class);
         manager.load(ORC_MEAT, Texture.class);
 
-        // Food
-        manager.load(STEAK, Texture.class);
-        manager.load(ORC_ELIXIR, Texture.class);
+        // Food (Cooked Meals)
+        manager.load(ROASTED_MEAT, Texture.class);
+        manager.load(HUNTERS_STEW, Texture.class);
+        manager.load(BONE_BROTH, Texture.class);
+        manager.load(YETI_SOUP, Texture.class);
+        
+        // Legendary Elixirs
+        manager.load(BERSERKERS_ELIXIR, Texture.class);
+        manager.load(HEART_OF_MOUNTAIN, Texture.class);
+        manager.load(GOD_SLAYER_ELIXIR, Texture.class);
 
         // Campfire
         manager.load(CAMPFIRE, Texture.class);
@@ -144,8 +158,17 @@ public class GameAssetManager {
         setFilter(ORC_DEATH);
         setFilter(ORC_SKULL);
         setFilter(ORC_MEAT);
-        setFilter(STEAK);
-        setFilter(ORC_ELIXIR);
+        
+        // Food Assets
+        setFilter(ROASTED_MEAT);
+        setFilter(HUNTERS_STEW);
+        setFilter(BONE_BROTH);
+        setFilter(YETI_SOUP);
+        
+        // Legendary Elixirs
+        setFilter(BERSERKERS_ELIXIR);
+        setFilter(HEART_OF_MOUNTAIN);
+        setFilter(GOD_SLAYER_ELIXIR);
 
         setFilter(CAMPFIRE);
         setFilter(NOTE);
