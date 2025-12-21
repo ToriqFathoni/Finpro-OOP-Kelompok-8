@@ -645,9 +645,19 @@ public class Main extends ApplicationAdapter {
         monsters.clear();
         groundItems.clear();
         spawnManager.reset();
+        spawnManager.setWorld(currentWorld);
 
         if (currentWorld == WorldType.INFERNO) {
             spawnManager.spawnBoss();
+
+            Boss boss = spawnManager.getBoss();
+            if (boss != null) {
+                boss.reset();
+                System.out.println("Boss Respawned & Reset");
+            }
+            gameHud.setBoss(boss);
+        } else {
+            gameHud.setBoss(null);
         }
 
         isGameOver = false;
