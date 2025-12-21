@@ -2,6 +2,9 @@
 buildscript {
   repositories {
     gradlePluginPortal()
+    mavenCentral()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+    maven { url "https://s01.oss.sonatype.org/content/repositories/snapshots/" }
   }
   dependencies {
     classpath "io.github.fourlastor:construo:1.7.1"
