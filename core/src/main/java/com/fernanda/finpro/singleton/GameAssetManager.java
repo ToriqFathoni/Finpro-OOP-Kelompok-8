@@ -13,14 +13,12 @@ public class GameAssetManager {
     private static GameAssetManager instance;
     public final AssetManager manager;
 
-    // Player Assets
     public static final String SOLDIER_WALK = "Soldier-Walk.png";
     public static final String SOLDIER_IDLE = "Soldier-Idle.png";
     public static final String SOLDIER_ATTACK = "Soldier-Attack01.png";
     public static final String SOLDIER_HURT = "Soldier-Hurt.png";
     public static final String SOLDIER_DEATH = "Soldier-Death.png";
 
-    // Orc Assets
     public static final String ORC_IDLE = "Orc-Idle.png";
     public static final String ORC_WALK = "Orc-Walk.png";
     public static final String ORC_ATTACK = "Orc-Attack01.png";
@@ -29,24 +27,19 @@ public class GameAssetManager {
     public static final String ORC_SKULL = "orcskull.png";
     public static final String ORC_MEAT = "OrcMeat.png";
 
-    // Food Assets (Cooked Meals)
     public static final String ROASTED_MEAT = "roasted-meat.png";
     public static final String HUNTERS_STEW = "hunter-stew.png";
     public static final String BONE_BROTH = "bone-broth.png";
     public static final String YETI_SOUP = "yeti-soup.png";
     
-    // Legendary Elixirs
     public static final String BERSERKERS_ELIXIR = "legend-1.png";
     public static final String HEART_OF_MOUNTAIN = "legend-2.png";
     public static final String GOD_SLAYER_ELIXIR = "legend-3.png";
 
-    //Campfire Assets
     public static final String CAMPFIRE = "Campfire.png";
 
-    // UI Assets
     public static final String NOTE = "note.png";
 
-    // Werewolf Assets
     public static final String WEREWOLF_IDLE = "Werewolf-Idle.png";
     public static final String WEREWOLF_ATTACK = "Werewolf-Attack.png";
     public static final String WEREWOLF_WALK = "Werewolf-Walk.png";
@@ -69,26 +62,36 @@ public class GameAssetManager {
     public static final String EXPLOSION = "Explosion.png";
     public static final String SHADOW = "Shadow.png";
 
-    // MiniBoss Assets
     public static final String MINIBOSS_IDLE = "MiniBoss-Idle.png";
     public static final String MINIBOSS_WALK = "MiniBoss-Walk.png";
     public static final String MINIBOSS_ATTACK = "MiniBoss-Attack.png";
 
-    // Map Assets
     public static final String MAP_TMX = "maps/green_world_fix.tmx";
     public static final String ICE_MAP_TMX = "maps/ice_world_fix.tmx";
     public static final String LAVA_MAP_TMX = "maps/inferno/lava_world_fix.tmx";
 
-    // Music Assets
-    public static final String FOREST_MUSIC = "musics/forest_music.ogg";
+    public static final String LOBBY_MUSIC = "musics/lobby_music.ogg";
+    public static final String FOREST_MUSIC = "musics/forest_music.mp3";
     public static final String INFERNO_MUSIC = "musics/inferno_music.ogg";
 
-    // Sound Assets
     public static final String SWORD_SLASH = "musics/sword.wav";
+    public static final String MONSTER_HURT = "musics/monster-hurt.wav";
+    public static final String METEOR_CRASH = "musics/meteor_crash.mp3";
+    public static final String ICE_ATTACK = "musics/ice_attack.mp3";
+    public static final String BOSS_SMASH = "musics/boss_smash.mp3";
+    public static final String YETI_HIT = "musics/yeti_attack.mp3";
+    public static final String WEREWOLF_SCRATCH = "musics/werewolf_attack.mp3";
 
+    private Music lobbyMusic;
     private Music forestMusic;
     private Music infernoMusic;
     private Sound swordSlashSound;
+    private Sound monsterHurtSound;
+    private Sound meteorCrashSound;
+    private Sound iceAttackSound;
+    private Sound bossSmashSound;
+    private Sound yetiHitSound;
+    private Sound werewolfScratchSound;
 
     private GameAssetManager() {
         manager = new AssetManager();
@@ -234,6 +237,15 @@ public class GameAssetManager {
 
     public void loadMusic() {
         try {
+            lobbyMusic = Gdx.audio.newMusic(Gdx.files.internal(LOBBY_MUSIC));
+            lobbyMusic.setLooping(true);
+            lobbyMusic.setVolume(0.4f);
+            System.out.println("✅ Lobby music loaded");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load lobby music: " + e.getMessage());
+        }
+
+        try {
             forestMusic = Gdx.audio.newMusic(Gdx.files.internal(FOREST_MUSIC));
             forestMusic.setLooping(true);
             forestMusic.setVolume(0.4f);
@@ -259,10 +271,56 @@ public class GameAssetManager {
         } catch (Exception e) {
             System.err.println("❌ Failed to load sword slash sound: " + e.getMessage());
         }
+        
+        try {
+            monsterHurtSound = Gdx.audio.newSound(Gdx.files.internal(MONSTER_HURT));
+            System.out.println("✅ Monster hurt sound loaded");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load monster hurt sound: " + e.getMessage());
+        }
+        
+        try {
+            meteorCrashSound = Gdx.audio.newSound(Gdx.files.internal(METEOR_CRASH));
+            System.out.println("✅ Meteor crash sound loaded");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load meteor crash sound: " + e.getMessage());
+        }
+        
+        try {
+            iceAttackSound = Gdx.audio.newSound(Gdx.files.internal(ICE_ATTACK));
+            System.out.println("✅ Ice attack sound loaded");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load ice attack sound: " + e.getMessage());
+        }
+        
+        try {
+            bossSmashSound = Gdx.audio.newSound(Gdx.files.internal(BOSS_SMASH));
+            System.out.println("✅ Boss smash sound loaded");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load boss smash sound: " + e.getMessage());
+        }
+        
+        try {
+            yetiHitSound = Gdx.audio.newSound(Gdx.files.internal(YETI_HIT));
+            System.out.println("✅ Yeti hit sound loaded");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load yeti hit sound: " + e.getMessage());
+        }
+        
+        try {
+            werewolfScratchSound = Gdx.audio.newSound(Gdx.files.internal(WEREWOLF_SCRATCH));
+            System.out.println("✅ Werewolf scratch sound loaded");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load werewolf scratch sound: " + e.getMessage());
+        }
     }
 
     public void dispose() {
         manager.dispose();
+        if (lobbyMusic != null) {
+            lobbyMusic.stop();
+            lobbyMusic.dispose();
+        }
         if (forestMusic != null) {
             forestMusic.stop();
             forestMusic.dispose();
@@ -274,13 +332,38 @@ public class GameAssetManager {
         if (swordSlashSound != null) {
             swordSlashSound.dispose();
         }
+        if (monsterHurtSound != null) {
+            monsterHurtSound.dispose();
+        }
+        if (meteorCrashSound != null) {
+            meteorCrashSound.dispose();
+        }
+        if (iceAttackSound != null) {
+            iceAttackSound.dispose();
+        }
+        if (bossSmashSound != null) {
+            bossSmashSound.dispose();
+        }
+        if (yetiHitSound != null) {
+            yetiHitSound.dispose();
+        }
+        if (werewolfScratchSound != null) {
+            werewolfScratchSound.dispose();
+        }
     }
 
     public Texture getTexture(String name) { return manager.get(name, Texture.class); }
     public TiledMap getMap() { return manager.get(MAP_TMX, TiledMap.class); }
     public TiledMap getIceMap() { return manager.get(ICE_MAP_TMX, TiledMap.class); }
     public TiledMap getLavaMap() { return manager.get(LAVA_MAP_TMX, TiledMap.class); }
+    public Music getLobbyMusic() { return lobbyMusic; }
     public Music getForestMusic() { return forestMusic; }
     public Music getInfernoMusic() { return infernoMusic; }
     public Sound getSwordSlashSound() { return swordSlashSound; }
+    public Sound getMonsterHurtSound() { return monsterHurtSound; }
+    public Sound getMeteorCrashSound() { return meteorCrashSound; }
+    public Sound getIceAttackSound() { return iceAttackSound; }
+    public Sound getBossSmashSound() { return bossSmashSound; }
+    public Sound getYetiHitSound() { return yetiHitSound; }
+    public Sound getWerewolfScratchSound() { return werewolfScratchSound; }
 }

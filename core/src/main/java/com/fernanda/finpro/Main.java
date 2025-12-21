@@ -176,8 +176,10 @@ public class Main extends ApplicationAdapter {
         spawnManager = new SpawnManager(monsters);
         collisionManager = new CollisionManager(player, monsters);
 
-        // Start forest music (for FOREST and ICE worlds)
-        playMusic(WorldType.FOREST);
+        com.badlogic.gdx.audio.Music lobby = GameAssetManager.getInstance().getLobbyMusic();
+        if (lobby != null && !lobby.isPlaying()) {
+            lobby.play();
+        }
 
         System.out.println("✅ DEBUG: Game Started Successfully!");
     }
@@ -196,6 +198,14 @@ public class Main extends ApplicationAdapter {
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
             loginUI.render();
             return;
+        }
+
+        if (!loginUI.isVisible() && currentMusic == null) {
+            com.badlogic.gdx.audio.Music lobby = GameAssetManager.getInstance().getLobbyMusic();
+            if (lobby != null && lobby.isPlaying()) {
+                lobby.stop();
+            }
+            playMusic(currentWorld);
         }
 
         float dt = Gdx.graphics.getDeltaTime();

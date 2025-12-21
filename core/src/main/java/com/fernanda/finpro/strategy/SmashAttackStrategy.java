@@ -35,6 +35,11 @@ public class SmashAttackStrategy implements AttackStrategy {
                     currentPhase = Phase.HOLD;
                     phaseTimer = 0;
                     hasDealtDamage = false;
+                    
+                    com.badlogic.gdx.audio.Sound smashSound = com.fernanda.finpro.singleton.GameAssetManager.getInstance().getBossSmashSound();
+                    if (smashSound != null) {
+                        smashSound.play(0.7f);
+                    }
                 }
                 break;
                 

@@ -110,8 +110,11 @@ public abstract class Monster {
         if (isDead || immunityTimer > 0) return;
 
         currentHealth -= amount;
-        immunityTimer = 0.4f; // Jeda kebal visual
-
+        immunityTimer = 0.4f; // Jeda kebal visual        
+        com.badlogic.gdx.audio.Sound hurtSound = com.fernanda.finpro.singleton.GameAssetManager.getInstance().getMonsterHurtSound();
+        if (hurtSound != null) {
+            hurtSound.play(0.4f);
+        }
         if (currentHealth <= 0) {
             isDead = true;
             currentState = State.DEAD;

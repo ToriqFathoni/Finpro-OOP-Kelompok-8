@@ -61,7 +61,12 @@ public class MiniBoss extends Monster {
         if (isDead || immunityTimer > 0) return;
 
         currentHealth -= amount;
-        immunityTimer = 0.1f;
+        immunityTimer = 0.4f;
+        
+        com.badlogic.gdx.audio.Sound hurtSound = com.fernanda.finpro.singleton.GameAssetManager.getInstance().getMonsterHurtSound();
+        if (hurtSound != null) {
+            hurtSound.play(0.4f);
+        }
 
         if (currentHealth <= 0) {
             isDead = true;
@@ -121,6 +126,11 @@ public class MiniBoss extends Monster {
                 if (stateTimer >= WINDUP_TIME) {
                     currentState = State.ATTACKING;
                     stateTimer = 0;
+                    
+                    com.badlogic.gdx.audio.Sound attackSound = GameAssetManager.getInstance().getIceAttackSound();
+                    if (attackSound != null) {
+                        attackSound.play(0.5f);
+                    }
                 }
                 break;
 
