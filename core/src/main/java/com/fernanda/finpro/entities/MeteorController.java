@@ -241,7 +241,7 @@ public class MeteorController {
                 shapeRenderer.line(m.position.x, m.position.y, m.position.x, m.targetY);
             }
         }
-         */
+        */
     }
 
     public void reset() {

@@ -1,7 +1,10 @@
 package com.fernanda.finpro.singleton;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -75,6 +78,17 @@ public class GameAssetManager {
     public static final String MAP_TMX = "maps/green_world_fix.tmx";
     public static final String ICE_MAP_TMX = "maps/ice_world_fix.tmx";
     public static final String LAVA_MAP_TMX = "maps/inferno/lava_world_fix.tmx";
+
+    // Music Assets
+    public static final String FOREST_MUSIC = "musics/forest_music.ogg";
+    public static final String INFERNO_MUSIC = "musics/inferno_music.ogg";
+
+    // Sound Assets
+    public static final String SWORD_SLASH = "musics/sword.wav";
+
+    private Music forestMusic;
+    private Music infernoMusic;
+    private Sound swordSlashSound;
 
     private GameAssetManager() {
         manager = new AssetManager();
@@ -218,9 +232,55 @@ public class GameAssetManager {
         manager.get(fileName, Texture.class).setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
     }
 
-    public void dispose() { manager.dispose(); }
+    public void loadMusic() {
+        try {
+            forestMusic = Gdx.audio.newMusic(Gdx.files.internal(FOREST_MUSIC));
+            forestMusic.setLooping(true);
+            forestMusic.setVolume(0.4f);
+            System.out.println("✅ Forest music loaded");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load forest music: " + e.getMessage());
+        }
+
+        try {
+            infernoMusic = Gdx.audio.newMusic(Gdx.files.internal(INFERNO_MUSIC));
+            infernoMusic.setLooping(true);
+            infernoMusic.setVolume(0.5f);
+            System.out.println("✅ Inferno music loaded");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load inferno music: " + e.getMessage());
+        }
+    }
+
+    public void loadSounds() {
+        try {
+            swordSlashSound = Gdx.audio.newSound(Gdx.files.internal(SWORD_SLASH));
+            System.out.println("✅ Sword slash sound loaded");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load sword slash sound: " + e.getMessage());
+        }
+    }
+
+    public void dispose() {
+        manager.dispose();
+        if (forestMusic != null) {
+            forestMusic.stop();
+            forestMusic.dispose();
+        }
+        if (infernoMusic != null) {
+            infernoMusic.stop();
+            infernoMusic.dispose();
+        }
+        if (swordSlashSound != null) {
+            swordSlashSound.dispose();
+        }
+    }
+
     public Texture getTexture(String name) { return manager.get(name, Texture.class); }
     public TiledMap getMap() { return manager.get(MAP_TMX, TiledMap.class); }
     public TiledMap getIceMap() { return manager.get(ICE_MAP_TMX, TiledMap.class); }
     public TiledMap getLavaMap() { return manager.get(LAVA_MAP_TMX, TiledMap.class); }
+    public Music getForestMusic() { return forestMusic; }
+    public Music getInfernoMusic() { return infernoMusic; }
+    public Sound getSwordSlashSound() { return swordSlashSound; }
 }

@@ -81,6 +81,7 @@ public class Main extends ApplicationAdapter {
     private Vector2 playerSpawnPoint = new Vector2(100, 100);
     private boolean isGameOver = false;
     private WorldType currentWorld = WorldType.FOREST;
+    private com.badlogic.gdx.audio.Music currentMusic;
 
     @Override
     public void create() {
@@ -92,6 +93,8 @@ public class Main extends ApplicationAdapter {
 
         GameAssetManager.getInstance().loadImages();
         GameAssetManager.getInstance().finishLoading();
+        GameAssetManager.getInstance().loadMusic();
+        GameAssetManager.getInstance().loadSounds();
 
         map = GameAssetManager.getInstance().getMap();
         mapRenderer = new OrthogonalTiledMapRenderer(map, 1.0f);
@@ -172,6 +175,9 @@ public class Main extends ApplicationAdapter {
         tutorialPopup = new TutorialPopup();
         spawnManager = new SpawnManager(monsters);
         collisionManager = new CollisionManager(player, monsters);
+
+        // Start forest music (for FOREST and ICE worlds)
+        playMusic(WorldType.FOREST);
 
         System.out.println("✅ DEBUG: Game Started Successfully!");
     }
@@ -520,6 +526,7 @@ public class Main extends ApplicationAdapter {
         camera.zoom = 1.0f;
         setPlayerSpawn("spawn_ice_player");
         resetWorldState();
+        playMusic(WorldType.ICE);
     }
 
     private void switchToIceWorldFromInferno() {
@@ -533,6 +540,7 @@ public class Main extends ApplicationAdapter {
         camera.zoom = 1.0f;
         setPlayerSpawn("back_spawn_inferno");
         resetWorldState();
+        playMusic(WorldType.ICE);
     }
 
     private void switchToForestWorld() {
@@ -546,6 +554,7 @@ public class Main extends ApplicationAdapter {
         camera.zoom = 1.0f;
         setPlayerSpawn("spawn_player_back");
         resetWorldState();
+        playMusic(WorldType.FOREST);
     }
 
     private void switchToInfernoWorld() {
@@ -560,6 +569,7 @@ public class Main extends ApplicationAdapter {
         spawnManager.spawnBoss();
 
         gameHud.setBoss(spawnManager.getBoss());
+        playMusic(WorldType.INFERNO);
     }
 
     private void setPlayerSpawn(String layerName) {
@@ -725,7 +735,30 @@ public class Main extends ApplicationAdapter {
         isInventoryOpen = false;
         gamePaused = false;
         
+        // Resume appropriate music after restart
+        playMusic(currentWorld);
+        
         System.out.println("Game restarted in world: " + currentWorld);
+    }
+
+    private void playMusic(WorldType worldType) {
+        // Stop current music
+        if (currentMusic != null && currentMusic.isPlaying()) {
+            currentMusic.stop();
+        }
+
+        // Play appropriate music based on world
+        if (worldType == WorldType.INFERNO) {
+            currentMusic = GameAssetManager.getInstance().getInfernoMusic();
+        } else {
+            // FOREST and ICE use same music
+            currentMusic = GameAssetManager.getInstance().getForestMusic();
+        }
+
+        if (currentMusic != null && !currentMusic.isPlaying()) {
+            currentMusic.play();
+            System.out.println("🎵 Playing music for world: " + worldType);
+        }
     }
 
     @Override
