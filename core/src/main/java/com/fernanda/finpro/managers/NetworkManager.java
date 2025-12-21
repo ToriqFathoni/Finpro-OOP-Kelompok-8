@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.JsonWriter;
 import com.fernanda.finpro.components.ItemType;
 import com.fernanda.finpro.entities.Player;
 
@@ -27,8 +28,12 @@ public class NetworkManager {
         return instance;
     }
 
+    public String getCurrentUsername() {
+        return currentUsername;
+    }
+
     public interface LoginCallback {
-        void onSuccess(String username, Map<String, Integer> inventoryData, boolean miniBossDefeated);
+        void onSuccess(String username, Map<String, Integer> inventoryData, boolean miniBossDefeated, boolean bossKilled);
         void onFailure(Throwable t);
     }
 
@@ -76,8 +81,14 @@ public class NetworkManager {
                                 loadedMiniBossState = root.getBoolean("miniBossDefeated");
                             }
                             miniBossDefeated = loadedMiniBossState;
+
+                            // Load Boss Killed state
+                            boolean loadedBossKilled = false;
+                            if (root.has("bossKilled")) {
+                                loadedBossKilled = root.getBoolean("bossKilled");
+                            }
                             
-                            callback.onSuccess(user, inventoryData, loadedMiniBossState);
+                            callback.onSuccess(user, inventoryData, loadedMiniBossState, loadedBossKilled);
                         } catch (Exception e) {
                             callback.onFailure(e);
                         }
@@ -189,6 +200,99 @@ public class NetworkManager {
             @Override
             public void failed(Throwable t) {
                 System.err.println("Failed to save inventory: " + t.getMessage());
+            }
+
+            @Override
+            public void cancelled() {
+            }
+        });
+    }
+
+    public void updateScore(String username, int cookingScore, int monsterKillScore, boolean bossKilled, final Runnable onSuccess) {
+        if (username == null) {
+            System.err.println("Cannot update score: Username is null");
+            return;
+        }
+        String encodedUsername = username;
+        try {
+            encodedUsername = URLEncoder.encode(username, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            Gdx.app.error("NetworkManager", "Encoding error", e);
+        }
+
+        Net.HttpRequest request = new Net.HttpRequest(Net.HttpMethods.POST);
+        request.setUrl(BASE_URL + "/" + encodedUsername + "/score");
+        request.setHeader("Content-Type", "application/json");
+
+        JsonValue json = new JsonValue(JsonValue.ValueType.object);
+        json.addChild("cookingScore", new JsonValue(cookingScore));
+        json.addChild("monsterKillScore", new JsonValue(monsterKillScore));
+        json.addChild("bossKilled", new JsonValue(bossKilled));
+
+        request.setContent(json.toJson(JsonWriter.OutputType.json));
+
+        Gdx.net.sendHttpRequest(request, new Net.HttpResponseListener() {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
+                System.out.println("Score updated: " + httpResponse.getStatus().getStatusCode());
+                if (onSuccess != null) {
+                    Gdx.app.postRunnable(onSuccess);
+                }
+            }
+
+            @Override
+            public void failed(Throwable t) {
+                System.err.println("Failed to update score: " + t.getMessage());
+            }
+
+            @Override
+            public void cancelled() {
+            }
+        });
+    }
+
+    public interface LeaderboardCallback {
+        void onSuccess(java.util.List<LeaderboardEntry> entries);
+        void onFailure(Throwable t);
+    }
+
+    public static class LeaderboardEntry {
+        public String username;
+        public int cookingScore;
+        public int monsterKillScore;
+        public boolean bossKilled;
+    }
+
+    public void getLeaderboard(final LeaderboardCallback callback) {
+        Net.HttpRequest request = new Net.HttpRequest(Net.HttpMethods.GET);
+        request.setUrl(BASE_URL + "/leaderboard");
+
+        Gdx.net.sendHttpRequest(request, new Net.HttpResponseListener() {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
+                final String result = httpResponse.getResultAsString();
+                Gdx.app.postRunnable(() -> {
+                    try {
+                        JsonValue root = new JsonReader().parse(result);
+                        java.util.List<LeaderboardEntry> entries = new java.util.ArrayList<>();
+                        for (JsonValue entry : root) {
+                            LeaderboardEntry le = new LeaderboardEntry();
+                            le.username = entry.getString("username");
+                            le.cookingScore = entry.getInt("cookingScore", 0);
+                            le.monsterKillScore = entry.getInt("monsterKillScore", 0);
+                            le.bossKilled = entry.getBoolean("bossKilled", false);
+                            entries.add(le);
+                        }
+                        callback.onSuccess(entries);
+                    } catch (Exception e) {
+                        callback.onFailure(e);
+                    }
+                });
+            }
+
+            @Override
+            public void failed(Throwable t) {
+                Gdx.app.postRunnable(() -> callback.onFailure(t));
             }
 
             @Override

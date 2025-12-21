@@ -32,6 +32,7 @@ import com.fernanda.finpro.singleton.GameAssetManager;
 import com.fernanda.finpro.ui.GameHud;
 import com.fernanda.finpro.ui.InventoryUI;
 import com.fernanda.finpro.ui.CookingMenu;
+import com.fernanda.finpro.ui.LeaderboardUI;
 import com.fernanda.finpro.ui.TutorialPopup;
 import com.fernanda.finpro.ui.LoginUI;
 import com.fernanda.finpro.managers.NetworkManager;
@@ -51,6 +52,7 @@ public class Main extends ApplicationAdapter {
     GameHud gameHud;
     InventoryUI inventoryUI;
     CookingMenu cookingMenu;
+    LeaderboardUI leaderboardUI;
     LoginUI loginUI;
     TiledMap map;
     OrthogonalTiledMapRenderer mapRenderer;
@@ -124,10 +126,11 @@ public class Main extends ApplicationAdapter {
         gameHud = new GameHud();
         inventoryUI = new InventoryUI();
         cookingMenu = new CookingMenu();
+        leaderboardUI = new LeaderboardUI();
 
         loginUI = new LoginUI(viewport, new LoginUI.LoginListener() {
             @Override
-            public void onLoginSuccess(String username, Map<String, Integer> inventoryData, boolean miniBossDefeated) {
+            public void onLoginSuccess(String username, Map<String, Integer> inventoryData, boolean miniBossDefeated, boolean bossKilled) {
                 player.inventory.clear();
                 for (Map.Entry<String, Integer> entry : inventoryData.entrySet()) {
                     try {
@@ -140,7 +143,11 @@ public class Main extends ApplicationAdapter {
                 // Set MiniBoss defeated state
                 NetworkManager.getInstance().setMiniBossDefeated(miniBossDefeated);
                 spawnManager.setMiniBossDefeated(miniBossDefeated);
-                System.out.println("Logged in as: " + username + ", MiniBoss defeated: " + miniBossDefeated);
+                
+                // Set Boss Killed state
+                player.bossKilled = bossKilled;
+                
+                System.out.println("Logged in as: " + username + ", MiniBoss defeated: " + miniBossDefeated + ", Boss Killed: " + bossKilled);
             }
         });
 
@@ -279,6 +286,10 @@ public class Main extends ApplicationAdapter {
                                     groundItems.add(droppedItem);
                                 }
                             }
+                            
+                            // Update Score
+                            player.monsterKillScore += 10;
+                            
                             monsterIterator.remove();
                         }
                     }
@@ -293,6 +304,36 @@ public class Main extends ApplicationAdapter {
                         // Cek Player pukul Boss (Menggunakan Hitbox Player)
                         if (player.isHitboxActive()) {
                             boss.checkHitByPlayer(player.getAttackHitbox(), 25);
+                        }
+                        
+                        // Check Boss Death
+                        if (boss.isDead() && !player.bossKilled) {
+                            player.bossKilled = true;
+                            
+                            // Send Score
+                            NetworkManager.getInstance().updateScore(
+                                NetworkManager.getInstance().getCurrentUsername(),
+                                player.cookingScore,
+                                player.monsterKillScore,
+                                true,
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        // Fetch Leaderboard AFTER score update succeeds
+                                        NetworkManager.getInstance().getLeaderboard(new NetworkManager.LeaderboardCallback() {
+                                            @Override
+                                            public void onSuccess(java.util.List<NetworkManager.LeaderboardEntry> entries) {
+                                                leaderboardUI.show(entries);
+                                            }
+                                            
+                                            @Override
+                                            public void onFailure(Throwable t) {
+                                                System.err.println("Failed to fetch leaderboard: " + t.getMessage());
+                                            }
+                                        });
+                                    }
+                                }
+                            );
                         }
                     }
                     // ----------------------
@@ -466,6 +507,14 @@ public class Main extends ApplicationAdapter {
             cookingMenu.render(batch, worldRenderer, player.inventory);
         }
 
+        if (leaderboardUI.isVisible()) {
+            com.badlogic.gdx.math.Matrix4 uiMatrix = new com.badlogic.gdx.math.Matrix4();
+            uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.setProjectionMatrix(uiMatrix);
+            worldRenderer.setProjectionMatrix(uiMatrix);
+            leaderboardUI.render(batch, worldRenderer);
+        }
+
         if (tutorialPopup.isVisible()) {
             com.badlogic.gdx.math.Matrix4 uiMatrix = new com.badlogic.gdx.math.Matrix4();
             uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -624,9 +673,16 @@ public class Main extends ApplicationAdapter {
         camera.zoom = 2.6f;
         setPlayerSpawn("spawn_player_inferno");
         resetWorldState();
-        spawnManager.spawnBoss();
+        
+        // Only spawn boss if not already killed
+        if (!player.bossKilled) {
+            spawnManager.spawnBoss();
+            gameHud.setBoss(spawnManager.getBoss());
+        } else {
+            System.out.println("Boss already killed, not spawning.");
+            // Optionally show leaderboard immediately or just let player explore
+        }
 
-        gameHud.setBoss(spawnManager.getBoss());
         playMusic(WorldType.INFERNO);
     }
 
@@ -768,7 +824,7 @@ public class Main extends ApplicationAdapter {
         spawnManager.reset();
 
         // Setup boss jika di INFERNO
-        if (currentWorld == WorldType.INFERNO) {
+        if (currentWorld == WorldType.INFERNO && !player.bossKilled) {
             spawnManager.spawnBoss();
 
             Boss boss = spawnManager.getBoss();
