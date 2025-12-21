@@ -73,7 +73,7 @@ public class Yeti extends Monster {
             // Hapus logika dx manual
         }
 
-        if (Math.abs(velocity.x) > 0.1f) {
+        if (Math.abs(velocity.x) > 3.0f) {
             facingRight = velocity.x > 0;
         }
 
@@ -140,11 +140,10 @@ public class Yeti extends Monster {
 
     private void handleWander(float dt) {
         if (isWanderWalking) {
-            if (position.dst(wanderTarget) > 5f) {
-                // Panggil moveTowards dari Parent (Monster.java) agar menghindari tembok
-                moveTowards(wanderTarget);
+            if (position.dst(wanderTarget) > 10f) {
+                velocity.set(wanderTarget).sub(position).nor().scl(speed);
 
-                if (stateTimer > 8.0f) { // Yeti jalan lebih lama sebelum timeout
+                if (stateTimer > 8.0f) {
                     isWanderWalking = false;
                     wanderWaitTimer = MathUtils.random(1.0f, 3.0f);
                     velocity.set(0, 0);
@@ -198,6 +197,7 @@ public class Yeti extends Monster {
 
         switch (currentState) {
             case IDLE:
+                currentAnim = idleAnim; break;
             case PREPARE_ATTACK:
                 currentAnim = idleAnim;
                 break;
@@ -213,8 +213,12 @@ public class Yeti extends Monster {
 
             case CHASE:
             case WANDER:
-                // Update: Gunakan walkAnim saat bergerak
-                currentAnim = walkAnim;
+                // Cek apakah benar-benar bergerak
+                if (velocity.len2() > 0.1f) {
+                    currentAnim = walkAnim;
+                } else {
+                    currentAnim = idleAnim;
+                }
                 break;
 
             case COOLDOWN:
@@ -256,6 +260,7 @@ public class Yeti extends Monster {
 
     @Override
     public void renderDebug(ShapeRenderer sr) {
+        /*
         if (isDead) return;
 
         sr.setColor(Color.CYAN); // Warna Cyan khas Es
@@ -265,6 +270,8 @@ public class Yeti extends Monster {
             sr.setColor(Color.RED); // Serangan Yeti warna Merah (Bahaya)
             sr.rect(attackRect.x, attackRect.y, attackRect.width, attackRect.height);
         }
+
+         */
     }
 
     @Override

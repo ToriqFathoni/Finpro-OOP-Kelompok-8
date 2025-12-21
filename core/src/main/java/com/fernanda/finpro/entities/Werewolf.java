@@ -73,7 +73,7 @@ public class Werewolf extends Monster {
         float playerCenterY = player.position.y + (player.getHeight() / 2);
 
         float distToPlayer = Vector2.dst(myCenterX, myCenterY, playerCenterX, playerCenterY);
-        
+
         // Update facing direction berdasarkan posisi player (kecuali saat wander)
         if (currentState != State.WANDER && currentState != State.DEAD) {
             // Hapus logika dx manual
@@ -102,7 +102,6 @@ public class Werewolf extends Monster {
             case CHASE:
                 moveTowards(new Vector2(playerCenterX, playerCenterY));
 
-                // Jika dekat, serang
                 if (distToPlayer <= attackRadius) {
                     currentState = State.PREPARE_ATTACK;
                     stateTimer = 0;
@@ -233,16 +232,14 @@ public class Werewolf extends Monster {
             case IDLE:
                 currentAnim = idleAnim;
                 break;
+            case CHASE:
             case WANDER:
                 if (velocity.len2() > 0.1f) {
                     currentAnim = walkAnim;
                 } else {
                     currentAnim = idleAnim;
                 }
-                break;
-            case CHASE:
-                currentAnim = walkAnim;
-                break;
+    break;
             case PREPARE_ATTACK:
                 currentAnim = idleAnim;
                 break;
@@ -289,6 +286,7 @@ public class Werewolf extends Monster {
 
     @Override
     public void renderDebug(ShapeRenderer sr) {
+        /*
         if (isDead) return;
 
         sr.setColor(Color.BLUE);
@@ -303,6 +301,8 @@ public class Werewolf extends Monster {
             sr.setColor(Color.ORANGE);
             sr.circle(position.x + WIDTH/2, position.y + HEIGHT + 5, 3);
         }
+
+         */
     }
 
     @Override
