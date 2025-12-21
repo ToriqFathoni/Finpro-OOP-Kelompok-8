@@ -40,6 +40,12 @@ public class CookingMenu {
     private Viewport viewport;
     private OrthographicCamera camera;
     
+    // Dynamic Layout Variables
+    private float menuWidth, menuHeight, menuX, menuY;
+    private float nameX, ingredientX, effectX;
+    private float rowHeight;
+    private float relativeScale;
+    
     public CookingMenu() {
         this.visible = false;
         this.selectedIndex = 0;
@@ -53,6 +59,34 @@ public class CookingMenu {
         
         // Prevent pixelation when scaling font
         font.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        
+        // Initialize layout with default values
+        updateLayout(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    }
+    
+    /**
+     * Updates all layout calculations based on screen size.
+     * Call this in show() and resize() to adapt to any screen resolution.
+     */
+    private void updateLayout(float screenWidth, float screenHeight) {
+        // DYNAMIC MENU DIMENSIONS (90% width, 80% height, centered)
+        menuWidth = screenWidth * 0.9f;
+        menuHeight = screenHeight * 0.8f;
+        menuX = (screenWidth - menuWidth) / 2;
+        menuY = (screenHeight - menuHeight) / 2;
+        
+        // DYNAMIC FONT SCALING (Compact to fit all items)
+        // Base scale 1.6 for readable but compact layout
+        // Formula: (CurrentHeight / 1080) * BaseScale
+        relativeScale = (screenHeight / 1080f) * 1.6f;
+        
+        // Update Row Height proportionally (8% of screen height for compact layout)
+        rowHeight = screenHeight * 0.08f;
+        
+        // DYNAMIC COLUMN POSITIONS
+        nameX = menuX + (menuWidth * 0.05f);     // 5% padding
+        ingredientX = menuX + (menuWidth * 0.45f); // Start at 45% width
+        effectX = menuX + (menuWidth * 0.75f);    // Start at 75% width
     }
     
     public void update(Inventory playerInventory, Player player) {
@@ -72,13 +106,7 @@ public class CookingMenu {
             Vector3 touchPoint = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             viewport.unproject(touchPoint); // Convert to world coordinates
             
-            // B. Calculate menu dimensions
-            float screenW = Gdx.graphics.getWidth();
-            float screenH = Gdx.graphics.getHeight();
-            float menuWidth = screenW * 0.85f;
-            float menuHeight = screenH * 0.75f;
-            float menuX = (screenW - menuWidth) / 2;
-            float menuY = (screenH - menuHeight) / 2;
+            // B. Use dynamic menu dimensions from updateLayout
             
             // C. Define The VISUAL Button (Where the Red X is)
             float btnX = menuX + menuWidth - 50;
@@ -187,13 +215,10 @@ public class CookingMenu {
         
         List<Recipe> recipes = RecipeManager.getInstance().getAllRecipes();
         
-        // ===== A. CALCULATE DIMENSIONS =====
+        // ===== A. USE DYNAMIC DIMENSIONS =====
         float screenW = Gdx.graphics.getWidth();
         float screenH = Gdx.graphics.getHeight();
-        float menuWidth = screenW * 0.85f;
-        float menuHeight = screenH * 0.75f;
-        float menuX = (screenW - menuWidth) / 2;
-        float menuY = (screenH - menuHeight) / 2;
+        // menuWidth, menuHeight, menuX, menuY are now calculated in updateLayout()
         
         // Close button position
         float closeButtonSize = 40;
@@ -231,8 +256,14 @@ public class CookingMenu {
         // ===== D. DRAW TEXT CONTENT =====
         batch.begin();
         
+        // ===== DEFINE SAFETY MARGINS (Hard Boundaries) =====
+        float topBorder = menuY + menuHeight - 20;    // Absolute Top Limit
+        float bottomBorder = menuY + 20;              // Absolute Bottom Limit
+        float leftBorder = menuX + 20;
+        float rightBorder = menuX + menuWidth - 20;
+        
         // --- CLOSE BUTTON 'X' ---
-        font.getData().setScale(2.2f);
+        font.getData().setScale(relativeScale * 0.96f); // Scale based on screen
         font.setColor(Color.WHITE);
         layout.setText(font, "X");
         font.draw(batch, "X", 
@@ -241,38 +272,36 @@ public class CookingMenu {
         
         // Note: Hitbox calculations are in update() method for click detection
         
-        // --- TITLE ---
-        font.getData().setScale(2.8f);
+        // --- TITLE (Relative to Top Border) ---
+        float headerY = topBorder - 40; // Start slightly below top
+        font.getData().setScale(relativeScale * 1.22f); // Scale based on screen
         font.setColor(Color.ORANGE);
         String title = "=== COOKING MENU ===";
         layout.setText(font, title);
-        font.draw(batch, title, menuX + (menuWidth - layout.width) / 2, menuY + menuHeight - 35);
+        font.draw(batch, title, menuX + (menuWidth - layout.width) / 2, headerY);
         
-        // --- INSTRUCTIONS ---
-        font.getData().setScale(1.3f);
+        // --- INSTRUCTIONS (Below Header) ---
+        font.getData().setScale(relativeScale * 0.57f); // Scale based on screen
         font.setColor(Color.YELLOW);
         String instructions = "[UP/DOWN] Navigate  |  [ENTER] Cook  |  [C/ESC] Close";
         layout.setText(font, instructions);
-        font.draw(batch, instructions, menuX + (menuWidth - layout.width) / 2, menuY + menuHeight - 75);
+        font.draw(batch, instructions, menuX + (menuWidth - layout.width) / 2, headerY - 50);
         
         // ===== E. COLUMN LAYOUT (UNIFIED BIG FONTS) =====
-        // Define column positions
-        float nameColumnX = menuX + 80;                       // Left column
-        float ingredientColumnX = menuX + (menuWidth / 2) - 150; // Center column
-        float effectColumnX = menuX + menuWidth - 400;        // Right column
-        float effectColumnWidth = 380;
+        // Use dynamic column positions from updateLayout
+        float effectColumnWidth = menuWidth * 0.2f; // 20% of menu width
         
-        // Starting Y position for recipe list
-        float startY = menuY + menuHeight - 140;
+        // Starting Y position for recipe list (Lifted higher to use top space)
+        float startY = menuY + menuHeight - (screenH * 0.15f); // Start higher up
         float currentY = startY;
-        float rowHeight = 85; // Large spacing for big text
+        // rowHeight is now calculated dynamically in updateLayout
         
         // Draw column headers (BIG AND UNIFORM)
-        font.getData().setScale(2.0f);
+        font.getData().setScale(relativeScale * 0.87f); // Scale based on screen
         font.setColor(Color.GOLD);
-        font.draw(batch, "RECIPE", nameColumnX, currentY + 15);
-        font.draw(batch, "INGREDIENTS", ingredientColumnX, currentY + 15);
-        font.draw(batch, "[ EFFECT ]", effectColumnX, currentY + 15);
+        font.draw(batch, "RECIPE", nameX, currentY + 15);
+        font.draw(batch, "INGREDIENTS", ingredientX, currentY + 15);
+        font.draw(batch, "[ EFFECT ]", effectX, currentY + 15);
         
         currentY -= 10; // Extra space after headers
         
@@ -281,17 +310,28 @@ public class CookingMenu {
             Recipe recipe = recipes.get(i);
             boolean isConsumed = isRecipeConsumed(recipe);
             
+            // CRITICAL: CHECK BOTTOM BOUNDARY - Stop drawing if we're too close to bottom
+            if (currentY < bottomBorder + 40) {
+                break; // Stop loop to prevent overflow
+            }
+            
             // Check if this is first legendary recipe
             if (i == 4) {
-                currentY -= 40; // Extra padding before separator
-                font.getData().setScale(2.0f);
+                currentY -= rowHeight * 0.3f; // Smaller gap BEFORE header (compact)
+                
+                // Check boundary again after moving down
+                if (currentY < bottomBorder + 40) {
+                    break; // Stop if header would overflow
+                }
+                
+                font.getData().setScale(relativeScale * 0.87f); // Scale based on screen
                 font.setColor(Color.GOLD);
                 String separator = "=== LEGENDARY ARTIFACTS ===";
                 layout.setText(font, separator);
                 // PERFECTLY CENTER using GlyphLayout
                 float separatorX = menuX + (menuWidth - layout.width) / 2;
                 font.draw(batch, separator, separatorX, currentY);
-                currentY -= 60; // Extra padding after separator
+                currentY -= rowHeight * 0.5f; // Smaller gap AFTER header (compact)
             }
             
             // Check if player can cook
@@ -304,12 +344,12 @@ public class CookingMenu {
             }
             
             // === COLUMN 1: RECIPE NAME ===
-            font.getData().setScale(2.1f); // UNIFIED BIG FONT
+            font.getData().setScale(relativeScale * 0.91f); // UNIFIED BIG FONT with dynamic scaling
             
             // Selection indicator
             if (i == selectedIndex && !isConsumed) {
                 font.setColor(Color.YELLOW);
-                font.draw(batch, ">>", nameColumnX - 40, currentY);
+                font.draw(batch, ">>", nameX - 40, currentY);
             }
             
             // Recipe name with color coding
@@ -323,23 +363,23 @@ public class CookingMenu {
             }
             
             layout.setText(font, recipeName);
-            font.draw(batch, recipeName, nameColumnX, currentY);
+            font.draw(batch, recipeName, nameX, currentY);
             
             // Strikethrough for consumed
             if (isConsumed) {
                 batch.end();
                 sr.begin(ShapeRenderer.ShapeType.Filled);
                 sr.setColor(Color.RED);
-                sr.rect(nameColumnX, currentY - layout.height / 2 - 1, layout.width, 2);
+                sr.rect(nameX, currentY - layout.height / 2 - 1, layout.width, 2);
                 sr.end();
                 batch.begin();
             }
             
             // === COLUMN 2: INGREDIENTS (UNIFIED BIG FONT, CYAN) ===
-            font.getData().setScale(2.1f); // SAME SIZE AS NAME
+            font.getData().setScale(relativeScale * 0.91f); // SAME SIZE AS NAME with dynamic scaling
             font.setColor(isConsumed ? Color.DARK_GRAY : Color.CYAN);
             String ingredients = recipe.getRequirementsString();
-            font.draw(batch, ingredients, ingredientColumnX, currentY);
+            font.draw(batch, ingredients, ingredientX, currentY);
             
             // Move to next row
             currentY -= rowHeight;
@@ -350,7 +390,7 @@ public class CookingMenu {
             Recipe selectedRecipe = recipes.get(selectedIndex);
             String description = selectedRecipe.getEffectDescription();
             
-            font.getData().setScale(1.8f); // Slightly smaller for long text to fit
+            font.getData().setScale(relativeScale * 0.78f); // Slightly smaller for long text to fit
             if (selectedRecipe.isLegendary()) {
                 font.setColor(Color.GOLD);
             } else {
@@ -358,19 +398,19 @@ public class CookingMenu {
             }
             
             // Multi-line rendering with word wrap
-            font.draw(batch, description, effectColumnX, startY - 20, effectColumnWidth, Align.left, true);
+            font.draw(batch, description, effectX, startY - 20, effectColumnWidth, Align.left, true);
         }
         
         // --- FEEDBACK MESSAGE ---
         if (feedbackTimer > 0) {
-            font.getData().setScale(2.3f);
+            font.getData().setScale(relativeScale); // Scale based on screen
             font.setColor(feedbackColor);
             layout.setText(font, feedbackMessage);
             font.draw(batch, feedbackMessage, menuX + (menuWidth - layout.width) / 2, menuY + 95);
         }
         
         // --- FOOTER HINT ---
-        font.getData().setScale(1.1f);
+        font.getData().setScale(relativeScale * 0.48f); // Scale based on screen
         font.setColor(Color.CYAN);
         String hint = "Green=Ready | Gray=Missing | Strikethrough=Consumed";
         layout.setText(font, hint);
@@ -386,6 +426,7 @@ public class CookingMenu {
         this.visible = visible;
         if (visible) {
             selectedIndex = 0; // Reset selection when opening
+            updateLayout(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()); // Recalculate on show
             System.out.println("DEBUG: Cooking Menu OPENED");
         } else {
             System.out.println("DEBUG: Cooking Menu CLOSED");
@@ -398,6 +439,7 @@ public class CookingMenu {
     
     public void resize(int width, int height) {
         viewport.update(width, height, true);
+        updateLayout(width, height); // Recalculate layout on resize
     }
     
     public void dispose() {
