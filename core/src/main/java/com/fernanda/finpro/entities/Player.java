@@ -216,6 +216,12 @@ public class Player {
         stats.useStamina(10f);
         changeState(attackState);
         attackTimer = ATTACK_COOLDOWN;
+        
+        // Play sword slash sound
+        com.badlogic.gdx.audio.Sound sfx = com.fernanda.finpro.singleton.GameAssetManager.getInstance().getSwordSlashSound();
+        if (sfx != null) {
+            sfx.play(0.5f); // Volume 50%
+        }
     }
 
     public void takeDamage(float amount) {
