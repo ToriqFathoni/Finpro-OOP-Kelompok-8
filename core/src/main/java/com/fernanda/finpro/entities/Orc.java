@@ -99,7 +99,7 @@ public class Orc extends Monster {
                 break;
 
             case CHASE:
-                moveTowards(player.position);
+                moveTowards(new Vector2(playerCenterX, playerCenterY));
 
                 if (distToPlayer <= attackRadius) {
                     currentState = State.PREPARE_ATTACK;
@@ -147,7 +147,7 @@ public class Orc extends Monster {
 
         position.mulAdd(velocity, dt);
 
-        if (Math.abs(velocity.x) > 1.0f) {
+        if (Math.abs(velocity.x) > 0.1f) {
             facingRight = velocity.x > 0;
         }
     }

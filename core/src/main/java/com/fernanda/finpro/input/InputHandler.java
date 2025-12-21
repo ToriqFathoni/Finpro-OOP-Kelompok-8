@@ -8,7 +8,7 @@ public class InputHandler {
 
     public void handleInput(Player player) {
         // 0. CEK DODGE (PRIORITAS TERTINGGI)
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_RIGHT)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.CONTROL_LEFT)) {
             player.dodge();
         }
 

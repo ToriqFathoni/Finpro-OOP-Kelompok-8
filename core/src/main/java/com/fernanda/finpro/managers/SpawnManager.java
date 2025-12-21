@@ -18,11 +18,10 @@ import java.util.List;
 public class SpawnManager {
     private List<Monster> monsterList;
     private List<SpawnRule> spawnRules;
-    private Boss boss; // <-- VARIABEL BOSS DITAMBAHKAN
+    private Boss boss; 
     private WorldType currentWorld = WorldType.FOREST;
 
     private static class SpawnRule {
-        // ... (tidak ada perubahan di sini)
         MonsterFactory.Type type;
         Class<? extends Monster> classType;
         int maxCount;
@@ -41,14 +40,14 @@ public class SpawnManager {
     public SpawnManager(List<Monster> monsterList) {
         this.monsterList = monsterList;
         this.spawnRules = new ArrayList<>();
-        this.boss = null; // Pastikan boss null di awal
+        this.boss = null; 
 
         // Aturan Spawn: Max 10 Orc, Interval 15 detik
         spawnRules.add(new SpawnRule(MonsterFactory.Type.ORC, Orc.class, 10, 15.0f));
         // Aturan Spawn: Max 5 Werewolf, Interval 15 detik
         spawnRules.add(new SpawnRule(MonsterFactory.Type.WEREWOLF, Werewolf.class, 5, 15.0f));
-        // Aturan Spawn: Max 5 Yeti, Interval 15 detik
-        spawnRules.add(new SpawnRule(MonsterFactory.Type.YETI, Yeti.class, 5, 15.0f));
+        // Aturan Spawn: Max 15 Yeti, Interval 15 detik
+        spawnRules.add(new SpawnRule(MonsterFactory.Type.YETI, Yeti.class, 15, 15.0f));
         // Aturan Spawn: Max 1 MiniBoss, Interval 30 detik (hanya 1 di map)
         spawnRules.add(new SpawnRule(MonsterFactory.Type.MINI_BOSS, MiniBoss.class, 1, 30.0f));
 
@@ -125,11 +124,6 @@ public class SpawnManager {
         }
     }
 
-    // --- METODE BARU UNTUK BOSS ---
-
-    /**
-     * Memunculkan Boss di lokasi spawn yang ditentukan.
-     */
     public void spawnBoss() {
         if (this.boss == null) {
             Vector2 pos = null;
@@ -150,9 +144,6 @@ public class SpawnManager {
         }
     }
 
-    /**
-     * Menghilangkan Boss.
-     */
     public void despawnBoss() {
         if (this.boss != null) {
             this.boss = null;
@@ -160,15 +151,9 @@ public class SpawnManager {
         }
     }
 
-    /**
-     * Mengambil instance Boss yang sedang aktif.
-     * @return Objek Boss, atau null jika tidak ada.
-     */
     public Boss getBoss() {
         return this.boss;
     }
-
-    // --- METODE LAINNYA ---
 
     private int countMonsters(Class<?> type) {
         int count = 0;
@@ -184,7 +169,7 @@ public class SpawnManager {
         for (SpawnRule rule : spawnRules) {
             rule.timer = 0;
         }
-        despawnBoss(); // Pastikan boss juga hilang saat reset
+        despawnBoss();
         spawnInitialMonsters();
         System.out.println("Spawn Manager Reset.");
     }
