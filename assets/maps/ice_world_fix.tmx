@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="73" height="73" tilewidth="16" tileheight="16" infinite="0" nextlayerid="16" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="73" height="73" tilewidth="16" tileheight="16" infinite="0" nextlayerid="22" nextobjectid="1">
  <tileset firstgid="1" source="tanah_b.tsx"/>
  <tileset firstgid="78" source="tanah.tsx"/>
  <tileset firstgid="650" source="house.tsx"/>
@@ -37,17 +37,47 @@
  </layer>
  <layer id="8" name="ice_monster_spawn_1" width="73" height="73">
   <data encoding="base64" compression="zlib">
-   eJzt2EEKABAQBVC5kvvfzcJCioUS4b2yH79pmiYEAAAAXpNieQC8w1xnRG+cI3sA4Ad2npY81pMp1Ju+237f7fnM1nzjH4H9zAoAAAAAAAAAAAB+lgHUMAPw
+   eJzt0DENAAAIBLEPlvDvjRUUsLTJGbgEAAAAAAAAAACAD103Ln8AAAAAAAAAAAAAgG0AwboBqQ==
   </data>
  </layer>
  <layer id="14" name="ice_monster_spawn_2" width="73" height="73">
   <data encoding="base64" compression="zlib">
-   eJzt2zENAEAIBEHylvDvjbwBWiCZUUC2uYoIYEK+6Qt2+3006ukDAAAAAAAAAAAAAAAAAMA2fmABuMJmAQDATQW+lQE/
+   eJztzjERAAAIBKA/K9m/mx1cHIQEJAAAAAAAAAAAAAAAAAAAAAAA8EfX9QAAANgYxJwANg==
   </data>
  </layer>
  <layer id="15" name="ice_monster_spawn_3" width="73" height="73">
   <data encoding="base64" compression="zlib">
-   eJzt2YEJACAIBEBppfbfLVqgCAqF7iZ4REQ0AgC4qbfsBABAJrsAJ/QLAAAAAAAA7M2/mt/aWsUaVcsD/MHsAQAAAACow80WAIBXBlr9AhM=
+   eJzt0LEJAAAIwDDxJf//zcHZXTCBPtAIAAAAAAAAAAAAAICbKid2HgEAAAAAAAAAAF80mA0A1Q==
+  </data>
+ </layer>
+ <layer id="16" name="ice_monster_spawn_4" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJztzjERAAAIBKA/K9m/mxmcHIQEJAAAAAAAAAAAAAAAAAAAAL90XQ8AAAAAANga2goANg==
+  </data>
+ </layer>
+ <layer id="17" name="ice_monster_spawn_5" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJztzgEJAAAIA7BjJft3s4QgyJZgCQAAAAAAAAAAAAAAwK6u6wEAAAAAAAAAAN8MfE8ANg==
+  </data>
+ </layer>
+ <layer id="18" name="ice_monster_spawn_6" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJztzjERAAAIBKA/K9m/mxmcHIQEJAAAwCdd1wMAAAAAAAAAAAAAAAAAAAAAANgbFGMANg==
+  </data>
+ </layer>
+ <layer id="19" name="ice_monster_spawn_7" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJztzjENAAAIA7AFS/j3xj0FPK2CJgDQdr4HAAAAAAAAAAAAAAAAAAAAAAAAAO0ATXoANg==
+  </data>
+ </layer>
+ <layer id="20" name="ice_monster_spawn_8" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJztzjERAAAIBKA/K9m/mxXcHIQEJAAAAMBHXdcDAAAAAAAAAAAAAAAAAAAAANgbPQQANg==
+  </data>
+ </layer>
+ <layer id="21" name="ice_monster_spawn_9" width="73" height="73">
+  <data encoding="base64" compression="zlib">
+   eJztzjERADAIALE/LNW/NxQwd0kUpAAAAAAAAOrN7wEAAAAAAAAAAAAAAAAAANwWjkYANg==
   </data>
  </layer>
  <layer id="7" name="boss_ice_spawn" width="73" height="73">

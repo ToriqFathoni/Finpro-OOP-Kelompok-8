@@ -13,6 +13,8 @@ import com.fernanda.finpro.entities.Yeti;
 import com.fernanda.finpro.singleton.GameAssetManager;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class MonsterFactory {
@@ -50,10 +52,14 @@ public class MonsterFactory {
 
     // --- HELPER MATH ---
     public static Vector2 getRandomSpawnPoint(TiledMap map, String[] layerNames) {
-        List<Vector2> spawnTiles = new ArrayList<>();
+        // Acak urutan layer agar spawn tersebar merata antar layer
+        List<String> shuffledLayers = new ArrayList<>(Arrays.asList(layerNames));
+        Collections.shuffle(shuffledLayers);
 
-        for (String layerName : layerNames) {
+        for (String layerName : shuffledLayers) {
+            List<Vector2> spawnTiles = new ArrayList<>();
             MapLayer layer = map.getLayers().get(layerName);
+            
             if (layer instanceof TiledMapTileLayer) {
                 TiledMapTileLayer spawnLayer = (TiledMapTileLayer) layer;
                 for (int x = 0; x < spawnLayer.getWidth(); x++) {
@@ -64,14 +70,15 @@ public class MonsterFactory {
                     }
                 }
             }
+
+            // Jika layer ini punya spawn point, pilih satu dan kembalikan
+            if (!spawnTiles.isEmpty()) {
+                Vector2 tilePos = spawnTiles.get(MathUtils.random(0, spawnTiles.size() - 1));
+                return tilePos.add(MathUtils.random(0, 16), MathUtils.random(0, 16));
+            }
         }
 
-        if (!spawnTiles.isEmpty()) {
-            Vector2 tilePos = spawnTiles.get(MathUtils.random(0, spawnTiles.size() - 1));
-            return tilePos.add(MathUtils.random(0, 16), MathUtils.random(0, 16));
-        }
-
-        // Fallback if no spawn points found
+        // Fallback if no spawn points found in ANY layer
         return new Vector2(500, 500);
     }
 
