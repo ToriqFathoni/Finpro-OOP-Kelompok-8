@@ -51,8 +51,10 @@ public class CollisionManager {
                 }
             }
 
-            // TABRAKAN BADAN (Push back tanpa damage)
+            // TABRAKAN BADAN (Push back dengan damage)
             if (playerBody.overlaps(m.getBodyHitbox())) {
+                player.takeDamage(5);
+
                 if (!player.isDodging()) {
                     Vector2 pushDirection = new Vector2(player.position).sub(m.position).nor();
                     float pushForce = 150f * dt;
