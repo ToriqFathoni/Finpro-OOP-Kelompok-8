@@ -10,20 +10,27 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.fernanda.finpro.singleton.GameAssetManager;
+import com.fernanda.finpro.strategy.AttackStrategy;
+import com.fernanda.finpro.strategy.SmashAttackStrategy;
+import com.fernanda.finpro.strategy.MeteorAttackStrategy;
 
+/**
+ * Boss entity using Strategy Pattern for attacks
+ */
 public class Boss {
 
     public enum BossState { IDLE, ATTACKING, DYING }
-    public enum AttackType { SMASH, METEOR }
-    public enum SmashPhase { WINDUP, HOLD, RECOVER }
 
     private float width;
     private float height;
     public Vector2 position;
 
     private BossState currentState;
-    private AttackType currentAttack;
-    private SmashPhase smashPhase;
+    
+    // Strategy Pattern - Attack strategies
+    private AttackStrategy currentStrategy;
+    private SmashAttackStrategy smashStrategy;
+    private MeteorAttackStrategy meteorStrategy;
 
     private int maxHealth;
     private int currentHealth;
@@ -31,22 +38,18 @@ public class Boss {
     private int attackDamage = 100;
 
     private float stateTimer;
-    private float attackTimer;
     private float idleTimer;
     private float immunityTimer = 0;
 
     private Rectangle leftHandRect;
     private Rectangle rightHandRect;
-    private boolean hasDealtImpactDamage;
 
     private final float HAND_OFFSET_X = 220f;
     private final float HAND_OFFSET_Y = 200f;
     private final float HAND_WIDTH = 240f;
     private final float HAND_HEIGHT = 190f;
-    private final float IMPACT_DURATION = 0.25f;
 
     private MeteorController meteorController;
-    private boolean isCasting;
 
     private Animation<TextureRegion> idleAnim;
     private Animation<TextureRegion> attackAnim;
@@ -60,17 +63,19 @@ public class Boss {
         this.stateTimer = 0;
         this.currentState = BossState.IDLE;
         this.idleTimer = 0;
-        this.attackTimer = 0;
         this.maxHealth = 1500;
         this.currentHealth = this.maxHealth;
         this.isDead = false;
 
         this.leftHandRect = new Rectangle(0, 0, HAND_WIDTH, HAND_HEIGHT);
         this.rightHandRect = new Rectangle(0, 0, HAND_WIDTH, HAND_HEIGHT);
-        this.hasDealtImpactDamage = false;
 
         this.meteorController = new MeteorController();
-        this.isCasting = false;
+        
+        // Initialize attack strategies (Strategy Pattern)
+        this.smashStrategy = new SmashAttackStrategy();
+        this.meteorStrategy = new MeteorAttackStrategy(meteorController);
+        this.currentStrategy = null;
 
         initAnimation();
     }
@@ -137,22 +142,13 @@ public class Boss {
                 idleTimer = 0;
             }
         }
-        else if (currentState == BossState.ATTACKING) {
-
-            if (currentAttack == AttackType.SMASH) {
-                updateSmashAttack(dt);
-            }
-            else if (currentAttack == AttackType.METEOR) {
-                attackTimer += dt;
-
-                if (isCasting) {
-                    if (castingAnim.isAnimationFinished(attackTimer)) {
-                        meteorController.startRain();
-                        isCasting = false;
-                        currentState = BossState.IDLE;
-                        System.out.println("Boss Casting Selesai -> Hujan Meteor Dimulai");
-                    }
-                }
+        else if (currentState == BossState.ATTACKING && currentStrategy != null) {
+            // Strategy Pattern - Execute current attack strategy
+            currentStrategy.execute(this, player, dt);
+            
+            if (currentStrategy.isFinished()) {
+                currentState = BossState.IDLE;
+                currentStrategy = null;
             }
         }
     }
@@ -163,55 +159,32 @@ public class Boss {
         rightHandRect.setPosition(position.x + HAND_OFFSET_X - (HAND_WIDTH / 2), handY);
     }
 
+    /**
+     * Strategy Pattern - Pick and set random attack strategy
+     */
     private void pickRandomAttack() {
         int dice = MathUtils.random(1, 2);
 
         this.currentState = BossState.ATTACKING;
-        this.attackTimer = 0;
-        this.hasDealtImpactDamage = false;
 
         if (dice == 1) {
-            this.currentAttack = AttackType.SMASH;
-            this.smashPhase = SmashPhase.WINDUP;
+            // Use Smash Attack Strategy
+            smashStrategy.reset();
+            currentStrategy = smashStrategy;
+            System.out.println("Boss using: " + currentStrategy.getName());
         } else {
-            this.currentAttack = AttackType.METEOR;
-            this.isCasting = true;
-        }
-    }
-
-    private void updateSmashAttack(float dt) {
-        attackTimer += dt;
-        switch (smashPhase) {
-            case WINDUP:
-                if (attackAnim.isAnimationFinished(attackTimer)) {
-                    smashPhase = SmashPhase.HOLD;
-                    attackTimer = 0;
-                    hasDealtImpactDamage = false;
-                }
-                break;
-            case HOLD:
-                if (attackTimer > 5.0f) {
-                    smashPhase = SmashPhase.RECOVER;
-                    attackTimer = 0;
-                }
-                break;
-            case RECOVER:
-                if (retrieveAnim.isAnimationFinished(attackTimer)) {
-                    currentState = BossState.IDLE;
-                }
-                break;
+            // Use Meteor Attack Strategy
+            meteorStrategy.reset();
+            currentStrategy = meteorStrategy;
+            System.out.println("Boss using: " + currentStrategy.getName());
         }
     }
 
     public void checkSmashCollision(Player player) {
         if (isDead) return;
-        if (currentState == BossState.ATTACKING && smashPhase == SmashPhase.HOLD && attackTimer <= IMPACT_DURATION) {
-            if (!hasDealtImpactDamage) {
-                if (leftHandRect.overlaps(player.getHitbox()) || rightHandRect.overlaps(player.getHitbox())) {
-                    player.takeDamage(attackDamage);
-                    hasDealtImpactDamage = true;
-                }
-            }
+        if (leftHandRect.overlaps(player.getHitbox()) || rightHandRect.overlaps(player.getHitbox())) {
+            player.takeDamage(attackDamage);
+            System.out.println("Boss Smash Hit! Player took " + attackDamage + " damage");
         }
     }
 
@@ -219,11 +192,14 @@ public class Boss {
         if (isDead) return false;
         if (immunityTimer > 0) return false;
 
-        if (currentState == BossState.ATTACKING && smashPhase == SmashPhase.HOLD && attackTimer > IMPACT_DURATION) {
-            if (leftHandRect.overlaps(playerAttackBox) || rightHandRect.overlaps(playerAttackBox)) {
-                takeDamage(damage);
-                immunityTimer = 0.5f;
-                return true;
+        // Check if using smash strategy and in vulnerable phase
+        if (currentState == BossState.ATTACKING && currentStrategy == smashStrategy) {
+            if (smashStrategy.canBeHit()) {
+                if (leftHandRect.overlaps(playerAttackBox) || rightHandRect.overlaps(playerAttackBox)) {
+                    takeDamage(damage);
+                    immunityTimer = 0.5f;
+                    return true;
+                }
             }
         }
         return false;
@@ -262,21 +238,25 @@ public class Boss {
     public void render(SpriteBatch batch) {
         if (isDead) return;
         TextureRegion currentFrame = null;
+        
         if (currentState == BossState.IDLE) {
             currentFrame = idleAnim.getKeyFrame(stateTimer, true);
         } else if (currentState == BossState.DYING) {
             currentFrame = deathAnim.getKeyFrame(stateTimer, false);
-        }else if (currentState == BossState.ATTACKING) {
-            if (currentAttack == AttackType.SMASH) {
-                switch (smashPhase) {
-                    case WINDUP: currentFrame = attackAnim.getKeyFrame(attackTimer, false); break;
-                    case HOLD: currentFrame = hitboxAnim.getKeyFrame(attackTimer, true); break;
-                    case RECOVER: currentFrame = retrieveAnim.getKeyFrame(attackTimer, false); break;
+        } else if (currentState == BossState.ATTACKING && currentStrategy != null) {
+            // Strategy Pattern - Get animation based on current strategy
+            if (currentStrategy == smashStrategy) {
+                SmashAttackStrategy.Phase phase = smashStrategy.getCurrentPhase();
+                float timer = smashStrategy.getPhaseTimer();
+                
+                switch (phase) {
+                    case WINDUP: currentFrame = attackAnim.getKeyFrame(timer, false); break;
+                    case HOLD: currentFrame = hitboxAnim.getKeyFrame(timer, true); break;
+                    case RECOVER: currentFrame = retrieveAnim.getKeyFrame(timer, false); break;
                 }
-            }
-            else if (currentAttack == AttackType.METEOR) {
-                if (isCasting && castingAnim != null) {
-                    currentFrame = castingAnim.getKeyFrame(attackTimer, false);
+            } else if (currentStrategy == meteorStrategy) {
+                if (meteorStrategy.isCasting() && castingAnim != null) {
+                    currentFrame = castingAnim.getKeyFrame(meteorStrategy.getCastingTimer(), false);
                 } else {
                     currentFrame = idleAnim.getKeyFrame(stateTimer, true);
                 }
@@ -292,7 +272,7 @@ public class Boss {
 
     public boolean isHandSolid() {
         return !isDead && currentState == BossState.ATTACKING &&
-            currentAttack == AttackType.SMASH && smashPhase == SmashPhase.HOLD;
+            currentStrategy == smashStrategy && smashStrategy.getCurrentPhase() == SmashAttackStrategy.Phase.HOLD;
     }
 
     public void reset() {
@@ -301,14 +281,15 @@ public class Boss {
         this.currentState = BossState.IDLE;
 
         this.stateTimer = 0;
-        this.attackTimer = 0;
         this.idleTimer = 0;
         this.immunityTimer = 0;
+        
+        // Reset strategies
+        this.currentStrategy = null;
+        this.smashStrategy.reset();
+        this.meteorStrategy.reset();
 
-        this.hasDealtImpactDamage = false;
-        this.isCasting = false;
-
-        // Reset Meteor Controller juga
+        // Reset Meteor Controller
         if (this.meteorController != null) {
             this.meteorController.reset();
         }

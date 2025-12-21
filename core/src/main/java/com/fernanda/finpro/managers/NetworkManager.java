@@ -16,6 +16,7 @@ public class NetworkManager {
     private static final String BASE_URL = "http://localhost:8080/api/players";
     private static NetworkManager instance;
     private String currentUsername;
+    private boolean miniBossDefeated = false;
 
     private NetworkManager() {}
 
@@ -27,7 +28,7 @@ public class NetworkManager {
     }
 
     public interface LoginCallback {
-        void onSuccess(String username, Map<String, Integer> inventoryData);
+        void onSuccess(String username, Map<String, Integer> inventoryData, boolean miniBossDefeated);
         void onFailure(Throwable t);
     }
 
@@ -69,7 +70,14 @@ public class NetworkManager {
                                 }
                             }
                             
-                            callback.onSuccess(user, inventoryData);
+                            // Load MiniBoss defeated state
+                            boolean loadedMiniBossState = false;
+                            if (root.has("miniBossDefeated")) {
+                                loadedMiniBossState = root.getBoolean("miniBossDefeated");
+                            }
+                            miniBossDefeated = loadedMiniBossState;
+                            
+                            callback.onSuccess(user, inventoryData, loadedMiniBossState);
                         } catch (Exception e) {
                             callback.onFailure(e);
                         }
@@ -95,6 +103,50 @@ public class NetworkManager {
                         callback.onFailure(new RuntimeException("Request cancelled"));
                     }
                 });
+            }
+        });
+    }
+
+    public boolean isMiniBossDefeated() {
+        return miniBossDefeated;
+    }
+
+    public void setMiniBossDefeated(boolean defeated) {
+        this.miniBossDefeated = defeated;
+        saveMiniBossState();
+    }
+
+    private void saveMiniBossState() {
+        if (currentUsername == null) return;
+
+        String requestContent = "{\"miniBossDefeated\":" + miniBossDefeated + "}";
+        System.out.println("Saving MiniBoss State: " + requestContent);
+
+        String encodedUsername = currentUsername;
+        try {
+            encodedUsername = URLEncoder.encode(currentUsername, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            Gdx.app.error("NetworkManager", "Encoding error", e);
+        }
+
+        Net.HttpRequest request = new Net.HttpRequest(Net.HttpMethods.POST);
+        request.setUrl(BASE_URL + "/" + encodedUsername + "/miniboss");
+        request.setHeader("Content-Type", "application/json");
+        request.setContent(requestContent);
+
+        Gdx.net.sendHttpRequest(request, new Net.HttpResponseListener() {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
+                System.out.println("MiniBoss state saved. Status: " + httpResponse.getStatus().getStatusCode());
+            }
+
+            @Override
+            public void failed(Throwable t) {
+                System.err.println("Failed to save MiniBoss state: " + t.getMessage());
+            }
+
+            @Override
+            public void cancelled() {
             }
         });
     }

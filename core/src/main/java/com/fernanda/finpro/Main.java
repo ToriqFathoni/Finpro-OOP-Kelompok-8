@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapLayer;
@@ -26,6 +27,7 @@ import com.fernanda.finpro.entities.Player;
 import com.fernanda.finpro.managers.CollisionManager;
 import com.fernanda.finpro.managers.SpawnManager;
 import com.fernanda.finpro.objects.Campfire;
+import com.fernanda.finpro.pool.GroundItemPool;
 import com.fernanda.finpro.singleton.GameAssetManager;
 import com.fernanda.finpro.ui.GameHud;
 import com.fernanda.finpro.ui.InventoryUI;
@@ -55,6 +57,9 @@ public class Main extends ApplicationAdapter {
     List<Monster> monsters;
     List<GroundItem> groundItems;
     List<Renderable> renderQueue;
+
+    // Object Pool Pattern - Reuse GroundItems
+    GroundItemPool groundItemPool;
 
     Campfire campfire;
     TutorialPopup tutorialPopup;
@@ -117,7 +122,7 @@ public class Main extends ApplicationAdapter {
 
         loginUI = new LoginUI(viewport, new LoginUI.LoginListener() {
             @Override
-            public void onLoginSuccess(String username, Map<String, Integer> inventoryData) {
+            public void onLoginSuccess(String username, Map<String, Integer> inventoryData, boolean miniBossDefeated) {
                 player.inventory.clear();
                 for (Map.Entry<String, Integer> entry : inventoryData.entrySet()) {
                     try {
@@ -127,7 +132,10 @@ public class Main extends ApplicationAdapter {
                         System.err.println("Unknown item type: " + entry.getKey());
                     }
                 }
-                System.out.println("Logged in as: " + username);
+                // Set MiniBoss defeated state
+                NetworkManager.getInstance().setMiniBossDefeated(miniBossDefeated);
+                spawnManager.setMiniBossDefeated(miniBossDefeated);
+                System.out.println("Logged in as: " + username + ", MiniBoss defeated: " + miniBossDefeated);
             }
         });
 
@@ -138,6 +146,10 @@ public class Main extends ApplicationAdapter {
         monsters = new ArrayList<>();
         groundItems = new ArrayList<>();
         renderQueue = new ArrayList<>();
+
+        // Object Pool Pattern - Initialize with 50 initial, max 200
+        groundItemPool = new GroundItemPool(50, 200);
+        System.out.println("✅ GroundItemPool initialized (Object Pool Pattern)");
 
         Vector2 campfirePos = new Vector2(playerSpawnPoint.x + 64, playerSpawnPoint.y);
         MapLayer campfireLayer = map.getLayers().get("campfire");
@@ -232,6 +244,8 @@ public class Main extends ApplicationAdapter {
                         if (item.isActive() && item.getHitbox().overlaps(player.getHitbox())) {
                             player.inventory.addItem(item.getType(), 1);
                             itemIterator.remove();
+                            // Object Pool Pattern - Return to pool instead of garbage collection
+                            groundItemPool.free(item);
                             NetworkManager.getInstance().saveInventory(player);
                         }
                     }
@@ -240,9 +254,20 @@ public class Main extends ApplicationAdapter {
                     while (monsterIterator.hasNext()) {
                         Monster m = monsterIterator.next();
                         if (m.canBeRemoved()) {
+                            // Check if it's MiniBoss being removed
+                            if (m instanceof com.fernanda.finpro.entities.MiniBoss) {
+                                NetworkManager.getInstance().setMiniBossDefeated(true);
+                                spawnManager.setMiniBossDefeated(true);
+                                System.out.println("MiniBoss defeated! State saved.");
+                            }
+                            
                             ItemType drop = m.rollDrop();
                             if (drop != null) {
-                                groundItems.add(new GroundItem(drop, m.position.x, m.position.y));
+                                // Object Pool Pattern - Obtain from pool instead of new
+                                GroundItem droppedItem = groundItemPool.obtain(drop, m.position.x, m.position.y);
+                                if (droppedItem != null) {
+                                    groundItems.add(droppedItem);
+                                }
                             }
                             monsterIterator.remove();
                         }
@@ -255,10 +280,7 @@ public class Main extends ApplicationAdapter {
                     if (boss != null) {
                         boss.update(dt, player);
 
-                        // 1. Cek Boss pukul Player
-                        boss.checkSmashCollision(player);
-
-                        // 2. Cek Player pukul Boss (Menggunakan Hitbox Player)
+                        // Cek Player pukul Boss (Menggunakan Hitbox Player)
                         if (player.isHitboxActive()) {
                             boss.checkHitByPlayer(player.getAttackHitbox(), 25);
                         }
@@ -424,10 +446,15 @@ public class Main extends ApplicationAdapter {
         }
 
         if (isGameOver) {
-            batch.setProjectionMatrix(camera.combined);
+            com.badlogic.gdx.math.Matrix4 uiMatrix = new com.badlogic.gdx.math.Matrix4();
+            uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.setProjectionMatrix(uiMatrix);
             batch.begin();
             font.setColor(Color.RED);
-            font.draw(batch, "GAME OVER - Press R to Restart", player.position.x - 100, player.position.y + 50);
+            GlyphLayout layout = new GlyphLayout(font, "GAME OVER - Press R to Restart");
+            float textX = (Gdx.graphics.getWidth() - layout.width) / 2f;
+            float textY = Gdx.graphics.getHeight() / 2f;
+            font.draw(batch, "GAME OVER - Press R to Restart", textX, textY);
             batch.end();
 
             if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
@@ -556,6 +583,9 @@ public class Main extends ApplicationAdapter {
     private void resetWorldState() {
         monsters.clear();
         groundItems.clear();
+        
+        // Spawn monsters untuk world baru
+        spawnManager.reset();
 
         if (currentWorld == WorldType.FOREST) {
             initForestEnvironment();
@@ -632,21 +662,42 @@ public class Main extends ApplicationAdapter {
     }
 
     private void restartGame() {
-        if (currentWorld == WorldType.ICE) {
-            setPlayerSpawn("spawn_ice_player");
-            player.reset(player.position.x, player.position.y);
-        } else if (currentWorld == WorldType.INFERNO) {
-            setPlayerSpawn("spawn_player_inferno");
-            player.reset(player.position.x, player.position.y);
-        } else {
+        // Clear inventory hanya jika mati di INFERNO (oleh boss terakhir)
+        if (currentWorld == WorldType.INFERNO) {
+            System.out.println("Died in INFERNO - Clearing inventory, resetting permanent stats, and saving state");
+            player.inventory.clear();
+            // Reset permanent stats upgrades (HP/Stamina dari resep)
+            player.stats.resetPermanentStats(50f, 100f);
+            NetworkManager.getInstance().saveInventory(player);
+            
+            // Kembali ke FOREST world (spawn awal)
+            currentWorld = WorldType.FOREST;
+            map = GameAssetManager.getInstance().getMap();
+            mapRenderer.setMap(map);
+            camera.zoom = 1.0f; // Reset zoom dari INFERNO
+            setPlayerSpawn("spawn_player");
             player.reset(playerSpawnPoint.x, playerSpawnPoint.y);
+        } else {
+            // Mati di world lain (forest/ice) - inventory tetap disimpan
+            System.out.println("Died in " + currentWorld + " - Keeping inventory and permanent stats");
+            NetworkManager.getInstance().saveInventory(player);
+            
+            // Reset player di world saat ini
+            if (currentWorld == WorldType.ICE) {
+                setPlayerSpawn("spawn_ice_player");
+                player.reset(player.position.x, player.position.y);
+            } else {
+                player.reset(playerSpawnPoint.x, playerSpawnPoint.y);
+            }
         }
 
+        // Clear dan respawn monsters
         monsters.clear();
         groundItems.clear();
-        spawnManager.reset();
         spawnManager.setWorld(currentWorld);
+        spawnManager.reset();
 
+        // Setup boss jika di INFERNO
         if (currentWorld == WorldType.INFERNO) {
             spawnManager.spawnBoss();
 
@@ -660,9 +711,21 @@ public class Main extends ApplicationAdapter {
             gameHud.setBoss(null);
         }
 
+        // Force camera update berdasarkan world
+        if (currentWorld == WorldType.INFERNO) {
+            camera.position.set(584, 584, 0);
+        } else {
+            // Camera akan follow player (handled in render loop)
+            float targetX = player.position.x + (player.getWidth() / 2);
+            float targetY = player.position.y + (player.getHeight() / 2);
+            camera.position.set(targetX, targetY, 0);
+        }
+
         isGameOver = false;
         isInventoryOpen = false;
         gamePaused = false;
+        
+        System.out.println("Game restarted in world: " + currentWorld);
     }
 
     @Override

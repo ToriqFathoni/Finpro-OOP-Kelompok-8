@@ -327,7 +327,7 @@ public class Player {
         this.facingRight = true;
 
         this.stats.reset();
-        this.inventory.clear();
+        // Inventory tidak di-clear di sini, hanya clear ketika mati oleh boss terakhir
 
         this.invincibilityTimer = 0f;
         this.attackTimer = 0f;

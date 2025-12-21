@@ -28,7 +28,7 @@ public class LoginUI implements InputProcessor {
     private LoginListener listener;
 
     public interface LoginListener {
-        void onLoginSuccess(String username, Map<String, Integer> inventoryData);
+        void onLoginSuccess(String username, Map<String, Integer> inventoryData, boolean miniBossDefeated);
     }
 
     public LoginUI(Viewport viewport, LoginListener listener) {
@@ -109,11 +109,11 @@ public class LoginUI implements InputProcessor {
         
         NetworkManager.getInstance().login(username, new NetworkManager.LoginCallback() {
             @Override
-            public void onSuccess(String username, Map<String, Integer> inventoryData) {
+            public void onSuccess(String username, Map<String, Integer> inventoryData, boolean miniBossDefeated) {
                 isLoading = false;
                 isVisible = false;
                 Gdx.input.setInputProcessor(null); // Release input processor
-                listener.onLoginSuccess(username, inventoryData);
+                listener.onLoginSuccess(username, inventoryData, miniBossDefeated);
             }
 
             @Override

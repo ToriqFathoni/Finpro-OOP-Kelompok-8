@@ -40,6 +40,18 @@ public class PlayerStats {
         notifyStaminaChanged();
     }
 
+    // Reset permanent upgrades to default values
+    public void resetPermanentStats(float defaultMaxHealth, float defaultMaxStamina) {
+        this.maxHealth = defaultMaxHealth;
+        this.maxStamina = defaultMaxStamina;
+        this.currentHealth = defaultMaxHealth;
+        this.currentStamina = defaultMaxStamina;
+        this.isDead = false;
+        System.out.println("[PERMANENT STATS RESET] HP: " + (int)defaultMaxHealth + ", Stamina: " + (int)defaultMaxStamina);
+        notifyHealthChanged();
+        notifyStaminaChanged();
+    }
+
     public void update(float dt, float energyRegenBoost) {
         if (isDead) return;
 

@@ -81,8 +81,9 @@ public class MiniBoss extends Monster {
 
         float distToPlayer = Vector2.dst(myCenterX, myCenterY, playerCenterX, playerCenterY);
 
-        if (currentState != State.WANDER && currentState != State.DEAD && currentState != State.ATTACKING) {
-
+        // Stop velocity saat prepare attack atau attacking untuk mencegah jittery movement
+        if (currentState == State.PREPARE_ATTACK || currentState == State.ATTACKING) {
+            velocity.set(0, 0);
         }
 
         if (Math.abs(velocity.x) > 0.1f && currentState != State.ATTACKING) {
