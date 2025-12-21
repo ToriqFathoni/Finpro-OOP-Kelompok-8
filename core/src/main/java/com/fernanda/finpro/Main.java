@@ -60,7 +60,6 @@ public class Main extends ApplicationAdapter {
     List<GroundItem> groundItems;
     List<Renderable> renderQueue;
 
-    // Object Pool Pattern - Reuse GroundItems
     GroundItemPool groundItemPool;
 
     Campfire campfire;
@@ -159,9 +158,8 @@ public class Main extends ApplicationAdapter {
         groundItems = new ArrayList<>();
         renderQueue = new ArrayList<>();
 
-        // Object Pool Pattern - Initialize with 50 initial, max 200
         groundItemPool = new GroundItemPool(50, 200);
-        System.out.println("✅ GroundItemPool initialized (Object Pool Pattern)");
+        System.out.println("✅ GroundItemPool initialized");
 
         Vector2 campfirePos = new Vector2(playerSpawnPoint.x + 64, playerSpawnPoint.y);
         MapLayer campfireLayer = map.getLayers().get("campfire");
@@ -220,7 +218,6 @@ public class Main extends ApplicationAdapter {
 
         float dt = Gdx.graphics.getDeltaTime();
 
-        // Handle tutorial and menu inputs even when game over (for consistency)
         if (Gdx.input.isKeyJustPressed(Input.Keys.H) && !isGameOver) {
             tutorialPopup.toggle();
         }
@@ -271,7 +268,6 @@ public class Main extends ApplicationAdapter {
                         if (item.isActive() && item.getHitbox().overlaps(player.getHitbox())) {
                             player.inventory.addItem(item.getType(), 1);
                             itemIterator.remove();
-                            // Object Pool Pattern - Return to pool instead of garbage collection
                             groundItemPool.free(item);
                             NetworkManager.getInstance().saveInventory(player);
                         }
@@ -281,7 +277,6 @@ public class Main extends ApplicationAdapter {
                     while (monsterIterator.hasNext()) {
                         Monster m = monsterIterator.next();
                         if (m.canBeRemoved()) {
-                            // Check if it's MiniBoss being removed
                             if (m instanceof com.fernanda.finpro.entities.MiniBoss) {
                                 NetworkManager.getInstance().setMiniBossDefeated(true);
                                 spawnManager.setMiniBossDefeated(true);
@@ -290,14 +285,12 @@ public class Main extends ApplicationAdapter {
                             
                             ItemType drop = m.rollDrop();
                             if (drop != null) {
-                                // Object Pool Pattern - Obtain from pool instead of new
                                 GroundItem droppedItem = groundItemPool.obtain(drop, m.position.x, m.position.y);
                                 if (droppedItem != null) {
                                     groundItems.add(droppedItem);
                                 }
                             }
                             
-                            // Update Score
                             player.monsterKillScore += 10;
                             
                             monsterIterator.remove();
@@ -306,21 +299,17 @@ public class Main extends ApplicationAdapter {
 
                     spawnManager.update(dt);
 
-                    // --- 4. UPDATE BOSS ---
                     Boss boss = spawnManager.getBoss();
                     if (boss != null) {
                         boss.update(dt, player);
 
-                        // Cek Player pukul Boss (Menggunakan Hitbox Player)
                         if (player.isHitboxActive()) {
                             boss.checkHitByPlayer(player.getAttackHitbox(), 25);
                         }
                         
-                        // Check Boss Death
                         if (boss.isDead() && !player.bossKilled) {
                             player.bossKilled = true;
                             
-                            // Send Score
                             NetworkManager.getInstance().updateScore(
                                 NetworkManager.getInstance().getCurrentUsername(),
                                 player.cookingScore,
@@ -329,7 +318,6 @@ public class Main extends ApplicationAdapter {
                                 new Runnable() {
                                     @Override
                                     public void run() {
-                                        // Fetch Leaderboard AFTER score update succeeds
                                         NetworkManager.getInstance().getLeaderboard(new NetworkManager.LeaderboardCallback() {
                                             @Override
                                             public void onSuccess(java.util.List<NetworkManager.LeaderboardEntry> entries) {
@@ -346,7 +334,6 @@ public class Main extends ApplicationAdapter {
                             );
                         }
                     }
-                    // ----------------------
 
                     for (Monster m : monsters) {
                         m.update(dt);
@@ -366,28 +353,24 @@ public class Main extends ApplicationAdapter {
             if (player.stats.getCurrentHealth() <= 0) {
                 if (player.isDeathAnimationFinished()) {
                     isGameOver = true;
-                    gameOverTimer = 0f;  // Reset timer when first entering game over
+                    gameOverTimer = 0f;
                 }
             }
         }
 
-        // === GAME OVER STATE: Continue world animation but disable player control ===
         if (isGameOver) {
             gameOverTimer += dt;
             
-            // Keep monsters and world alive/animated
             for (Monster m : monsters) {
                 m.update(dt);
                 m.aiBehavior(dt, player);
             }
             
-            // Update boss if present
             Boss boss = spawnManager.getBoss();
             if (boss != null) {
                 boss.update(dt, player);
             }
             
-            // Handle restart input
             if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
                 restartGame();
             }
@@ -441,12 +424,10 @@ public class Main extends ApplicationAdapter {
         }
         renderQueue.add(new Renderable(campfire.getPosition().y, () -> campfire.render(batch)));
 
-        // --- RENDER BOSS ---
         Boss boss = spawnManager.getBoss();
         if (boss != null) {
             renderQueue.add(new Renderable(boss.position.y, () -> boss.render(batch)));
         }
-        // -------------------
 
         Collections.sort(renderQueue);
         for (Renderable r : renderQueue) {
@@ -480,12 +461,10 @@ public class Main extends ApplicationAdapter {
             m.renderDebug(debugRenderer);
         }
 
-        // --- 4. RENDER DEBUG BOSS ---
         Boss bossDebug = spawnManager.getBoss();
         if (bossDebug != null) {
             bossDebug.renderDebug(debugRenderer);
         }
-        // --------------------
 
         debugRenderer.end();
 
@@ -533,15 +512,12 @@ public class Main extends ApplicationAdapter {
             tutorialPopup.render(batch, debugRenderer);
         }
 
-        // === DRAMATIC DARK SOULS STYLE GAME OVER SCREEN ===
         if (isGameOver) {
             com.badlogic.gdx.math.Matrix4 uiMatrix = new com.badlogic.gdx.math.Matrix4();
             uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             
-            // Calculate fade alpha (gradually darken the screen)
             float fadeAlpha = Math.min(gameOverTimer / GAME_OVER_FADE_DURATION, 0.7f);
             
-            // A. DIM THE SCREEN with semi-transparent black overlay
             Gdx.gl.glEnable(GL20.GL_BLEND);
             Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
             worldRenderer.setProjectionMatrix(uiMatrix);
@@ -551,33 +527,28 @@ public class Main extends ApplicationAdapter {
             worldRenderer.end();
             Gdx.gl.glDisable(GL20.GL_BLEND);
 
-            // B. DRAW LARGE "YOU DIED" TEXT (only after fade is visible)
             if (gameOverTimer > 0.3f) {
                 batch.setProjectionMatrix(uiMatrix);
                 batch.begin();
                 
-                // Calculate text alpha (fade in the text after slight delay)
                 float textAlpha = Math.min((gameOverTimer - 0.3f) / 0.8f, 1.0f);
                 
-                // LARGE RED "YOU DIED" TEXT
-                font.getData().setScale(5.0f);  // Extra large
-                font.setColor(1f, 0f, 0f, textAlpha);  // Red with alpha
+                font.getData().setScale(5.0f);
+                font.setColor(1f, 0f, 0f, textAlpha);
                 
                 GlyphLayout youDiedLayout = new GlyphLayout(font, "YOU DIED");
                 float youDiedX = (Gdx.graphics.getWidth() - youDiedLayout.width) / 2f;
                 float youDiedY = (Gdx.graphics.getHeight() / 2f) + 60f;
                 font.draw(batch, youDiedLayout, youDiedX, youDiedY);
                 
-                // SMALLER "Press R to Restart" TEXT
                 font.getData().setScale(2.0f);
-                font.setColor(1f, 1f, 1f, textAlpha * 0.9f);  // White with alpha
+                font.setColor(1f, 1f, 1f, textAlpha * 0.9f);
                 
                 GlyphLayout restartLayout = new GlyphLayout(font, "Press R to Restart");
                 float restartX = (Gdx.graphics.getWidth() - restartLayout.width) / 2f;
                 float restartY = youDiedY - 100f;
                 font.draw(batch, restartLayout, restartX, restartY);
                 
-                // Reset font scale to normal
                 font.getData().setScale(0.8f);
                 
                 batch.end();
@@ -684,13 +655,11 @@ public class Main extends ApplicationAdapter {
         setPlayerSpawn("spawn_player_inferno");
         resetWorldState();
         
-        // Only spawn boss if not already killed
         if (!player.bossKilled) {
             spawnManager.spawnBoss();
             gameHud.setBoss(spawnManager.getBoss());
         } else {
             System.out.println("Boss already killed, not spawning.");
-            // Optionally show leaderboard immediately or just let player explore
         }
 
         playMusic(WorldType.INFERNO);
@@ -718,7 +687,6 @@ public class Main extends ApplicationAdapter {
         monsters.clear();
         groundItems.clear();
         
-        // Spawn monsters untuk world baru
         spawnManager.reset();
 
         if (currentWorld == WorldType.FOREST) {
@@ -796,29 +764,23 @@ public class Main extends ApplicationAdapter {
     }
 
     private void restartGame() {
-        // Clear inventory hanya jika mati di INFERNO (oleh boss terakhir)
         if (currentWorld == WorldType.INFERNO) {
             System.out.println("Died in INFERNO - Clearing inventory, resetting permanent stats, and saving state");
             player.inventory.clear();
-            // Reset permanent stats upgrades (HP/Stamina dari resep)
             player.stats.resetPermanentStats(50f, 100f);
-            // Clear consumed legendaries tracking
             player.clearConsumedLegendaries();
             NetworkManager.getInstance().saveInventory(player);
             
-            // Kembali ke FOREST world (spawn awal)
             currentWorld = WorldType.FOREST;
             map = GameAssetManager.getInstance().getMap();
             mapRenderer.setMap(map);
-            camera.zoom = 1.0f; // Reset zoom dari INFERNO
+            camera.zoom = 1.0f;
             setPlayerSpawn("spawn_player");
             player.reset(playerSpawnPoint.x, playerSpawnPoint.y);
         } else {
-            // Mati di world lain (forest/ice) - inventory tetap disimpan
             System.out.println("Died in " + currentWorld + " - Keeping inventory and permanent stats");
             NetworkManager.getInstance().saveInventory(player);
             
-            // Reset player di world saat ini
             if (currentWorld == WorldType.ICE) {
                 setPlayerSpawn("spawn_ice_player");
                 player.reset(player.position.x, player.position.y);
@@ -827,13 +789,11 @@ public class Main extends ApplicationAdapter {
             }
         }
 
-        // Clear dan respawn monsters
         monsters.clear();
         groundItems.clear();
         spawnManager.setWorld(currentWorld);
         spawnManager.reset();
 
-        // Setup boss jika di INFERNO
         if (currentWorld == WorldType.INFERNO && !player.bossKilled) {
             spawnManager.spawnBoss();
 
@@ -847,18 +807,15 @@ public class Main extends ApplicationAdapter {
             gameHud.setBoss(null);
         }
 
-        // Re-initialize campfire if in FOREST
         if (currentWorld == WorldType.FOREST) {
             initForestEnvironment();
         } else if (currentWorld == WorldType.ICE) {
-            campfire = new Campfire(-1000, -1000); // Hide campfire in ICE world
+            campfire = new Campfire(-1000, -1000);
         }
 
-        // Force camera update berdasarkan world
         if (currentWorld == WorldType.INFERNO) {
             camera.position.set(584, 584, 0);
         } else {
-            // Camera akan follow player (handled in render loop)
             float targetX = player.position.x + (player.getWidth() / 2);
             float targetY = player.position.y + (player.getHeight() / 2);
             camera.position.set(targetX, targetY, 0);
@@ -868,23 +825,19 @@ public class Main extends ApplicationAdapter {
         isInventoryOpen = false;
         gamePaused = false;
         
-        // Resume appropriate music after restart
         playMusic(currentWorld);
         
         System.out.println("Game restarted in world: " + currentWorld);
     }
 
     private void playMusic(WorldType worldType) {
-        // Stop current music
         if (currentMusic != null && currentMusic.isPlaying()) {
             currentMusic.stop();
         }
 
-        // Play appropriate music based on world
         if (worldType == WorldType.INFERNO) {
             currentMusic = GameAssetManager.getInstance().getInfernoMusic();
         } else {
-            // FOREST and ICE use same music
             currentMusic = GameAssetManager.getInstance().getForestMusic();
         }
 
