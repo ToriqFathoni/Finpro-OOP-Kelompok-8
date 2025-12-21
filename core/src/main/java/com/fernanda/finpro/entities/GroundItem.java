@@ -10,7 +10,7 @@ import com.fernanda.finpro.components.ItemType;
 import com.fernanda.finpro.singleton.GameAssetManager;
 
 public class GroundItem {
-    private final ItemType type;
+    private ItemType type; // Changed from final for pooling
     private final Vector2 position;
     private final Rectangle hitbox;
     private boolean active;
@@ -32,6 +32,21 @@ public class GroundItem {
             PICKUP_RADIUS
         );
         this.active = true;
+    }
+
+    /**
+     * Reset method for Object Pool Pattern
+     * Reuses this object with new values instead of creating a new instance
+     */
+    public void reset(ItemType newType, float x, float y) {
+        this.type = newType;
+        this.position.set(x, y);
+        this.hitbox.setPosition(
+            x - PICKUP_RADIUS / 2,
+            y - PICKUP_RADIUS / 2
+        );
+        this.active = true;
+        this.bobTimer = 0f;
     }
 
     public void update(float dt) {

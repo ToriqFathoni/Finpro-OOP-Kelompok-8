@@ -191,6 +191,32 @@ public class Yeti extends Monster {
     }
 
     @Override
+    public boolean isTileBlocked(float x, float y) {
+        com.badlogic.gdx.maps.tiled.TiledMap iceMap = GameAssetManager.getInstance().getIceMap();
+        if (iceMap == null) return false;
+
+        int tileX = (int) (x / 16);
+        int tileY = (int) (y / 16);
+
+        if (tileX < 0 || tileX >= 73 || tileY < 0 || tileY >= 73) return true;
+
+        // ICE world collision layers
+        String[] collisionLayers = { "ice_mountain", "ice_building" };
+
+        for (String layerName : collisionLayers) {
+            com.badlogic.gdx.maps.tiled.TiledMapTileLayer layer = 
+                (com.badlogic.gdx.maps.tiled.TiledMapTileLayer) iceMap.getLayers().get(layerName);
+            if (layer != null) {
+                com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell cell = layer.getCell(tileX, tileY);
+                if (cell != null && cell.getTile() != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
     public void render(SpriteBatch batch) {
         Animation<TextureRegion> currentAnim = idleAnim;
         boolean loop = true;

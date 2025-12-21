@@ -20,6 +20,7 @@ public class SpawnManager {
     private List<SpawnRule> spawnRules;
     private Boss boss; 
     private WorldType currentWorld = WorldType.FOREST;
+    private boolean miniBossDefeated = false;
 
     private static class SpawnRule {
         MonsterFactory.Type type;
@@ -61,6 +62,12 @@ public class SpawnManager {
         if (currentWorld == WorldType.INFERNO) return;
 
         for (SpawnRule rule : spawnRules) {
+            // Skip MiniBoss jika sudah pernah defeated
+            if (rule.type == MonsterFactory.Type.MINI_BOSS && miniBossDefeated) {
+                System.out.println("MiniBoss already defeated, skipping spawn.");
+                continue;
+            }
+            
             // Hanya spawn monster yang sesuai dengan dunianya
             if ((rule.type == MonsterFactory.Type.YETI && currentWorld == WorldType.ICE) ||
                 (rule.type == MonsterFactory.Type.MINI_BOSS && currentWorld == WorldType.ICE) ||
@@ -79,6 +86,11 @@ public class SpawnManager {
         }
 
         for (SpawnRule rule : spawnRules) {
+            // Skip MiniBoss jika sudah pernah defeated
+            if (rule.type == MonsterFactory.Type.MINI_BOSS && miniBossDefeated) {
+                continue;
+            }
+            
             int currentCount = countMonsters(rule.classType);
             if (currentCount < rule.maxCount) {
                 rule.timer += dt;
@@ -163,6 +175,14 @@ public class SpawnManager {
             }
         }
         return count;
+    }
+
+    public void setMiniBossDefeated(boolean defeated) {
+        this.miniBossDefeated = defeated;
+    }
+
+    public boolean isMiniBossDefeated() {
+        return miniBossDefeated;
     }
 
     public void reset() {
