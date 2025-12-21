@@ -14,9 +14,6 @@ import com.fernanda.finpro.strategy.AttackStrategy;
 import com.fernanda.finpro.strategy.SmashAttackStrategy;
 import com.fernanda.finpro.strategy.MeteorAttackStrategy;
 
-/**
- * Boss entity using Strategy Pattern for attacks
- */
 public class Boss {
 
     public enum BossState { IDLE, ATTACKING, DYING }
@@ -26,8 +23,7 @@ public class Boss {
     public Vector2 position;
 
     private BossState currentState;
-    
-    // Strategy Pattern - Attack strategies
+
     private AttackStrategy currentStrategy;
     private SmashAttackStrategy smashStrategy;
     private MeteorAttackStrategy meteorStrategy;
@@ -63,7 +59,7 @@ public class Boss {
         this.stateTimer = 0;
         this.currentState = BossState.IDLE;
         this.idleTimer = 0;
-        this.maxHealth = 1500;
+        this.maxHealth = 2000;
         this.currentHealth = this.maxHealth;
         this.isDead = false;
 
@@ -71,8 +67,7 @@ public class Boss {
         this.rightHandRect = new Rectangle(0, 0, HAND_WIDTH, HAND_HEIGHT);
 
         this.meteorController = new MeteorController();
-        
-        // Initialize attack strategies (Strategy Pattern)
+
         this.smashStrategy = new SmashAttackStrategy();
         this.meteorStrategy = new MeteorAttackStrategy(meteorController);
         this.currentStrategy = null;
@@ -143,9 +138,8 @@ public class Boss {
             }
         }
         else if (currentState == BossState.ATTACKING && currentStrategy != null) {
-            // Strategy Pattern - Execute current attack strategy
             currentStrategy.execute(this, player, dt);
-            
+
             if (currentStrategy.isFinished()) {
                 currentState = BossState.IDLE;
                 currentStrategy = null;
@@ -206,7 +200,7 @@ public class Boss {
     }
 
     public void takeDamage(int damage) {
-        if (isDead || currentState == BossState.DYING) return; // Cegah damage saat sudah mati/sekarat
+        if (isDead || currentState == BossState.DYING) return;
 
         this.currentHealth -= damage;
         if (this.currentHealth <= 0) {
@@ -222,23 +216,30 @@ public class Boss {
     public void renderDebug(ShapeRenderer shapeRenderer) {
         /*
         if (isDead) return;
-        if (currentState == BossState.ATTACKING && currentAttack == AttackType.SMASH && smashPhase == SmashPhase.HOLD) {
-            if (attackTimer <= IMPACT_DURATION) {
-                shapeRenderer.setColor(Color.RED);
-            } else {
-                shapeRenderer.setColor(Color.GREEN);
+
+        // Render hand hitboxes during smash attack
+        if (currentState == BossState.ATTACKING && currentStrategy == smashStrategy) {
+            SmashAttackStrategy.Phase phase = smashStrategy.getCurrentPhase();
+            if (phase == SmashAttackStrategy.Phase.HOLD) {
+                if (smashStrategy.canBeHit()) {
+                    shapeRenderer.setColor(Color.GREEN);
+                } else {
+                    shapeRenderer.setColor(Color.RED);
+                }
+                shapeRenderer.rect(leftHandRect.x, leftHandRect.y, leftHandRect.width, leftHandRect.height);
+                shapeRenderer.rect(rightHandRect.x, rightHandRect.y, rightHandRect.width, rightHandRect.height);
             }
-            shapeRenderer.rect(leftHandRect.x, leftHandRect.y, leftHandRect.width, leftHandRect.height);
-            shapeRenderer.rect(rightHandRect.x, rightHandRect.y, rightHandRect.width, rightHandRect.height);
         }
+
         meteorController.renderDebug(shapeRenderer);
+
          */
     }
 
     public void render(SpriteBatch batch) {
         if (isDead) return;
         TextureRegion currentFrame = null;
-        
+
         if (currentState == BossState.IDLE) {
             currentFrame = idleAnim.getKeyFrame(stateTimer, true);
         } else if (currentState == BossState.DYING) {
@@ -248,7 +249,7 @@ public class Boss {
             if (currentStrategy == smashStrategy) {
                 SmashAttackStrategy.Phase phase = smashStrategy.getCurrentPhase();
                 float timer = smashStrategy.getPhaseTimer();
-                
+
                 switch (phase) {
                     case WINDUP: currentFrame = attackAnim.getKeyFrame(timer, false); break;
                     case HOLD: currentFrame = hitboxAnim.getKeyFrame(timer, true); break;
@@ -283,7 +284,7 @@ public class Boss {
         this.stateTimer = 0;
         this.idleTimer = 0;
         this.immunityTimer = 0;
-        
+
         // Reset strategies
         this.currentStrategy = null;
         this.smashStrategy.reset();

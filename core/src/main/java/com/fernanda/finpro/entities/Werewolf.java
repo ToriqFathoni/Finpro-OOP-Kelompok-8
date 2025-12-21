@@ -1,6 +1,7 @@
 package com.fernanda.finpro.entities;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -21,8 +22,8 @@ public class Werewolf extends Monster {
     private static final float HEIGHT = 35f;
 
     // AI Range
-    private static final float DETECT_RANGE = 120f; // Sedikit lebih jauh dari Orc
-    private static final float ATTACK_RANGE = 35f;
+    private static final float DETECT_RANGE = 120f;
+    private static final float ATTACK_RANGE = 28f;
 
     // Habitat
     private static final float HABITAT_MIN = 2000f;
@@ -206,7 +207,7 @@ public class Werewolf extends Monster {
     }
 
     private void createAttackHitbox() {
-        float atkWidth = 25f;
+        float atkWidth = 28f;
         float atkHeight = 30f;
 
         float offsetIn = 5f;

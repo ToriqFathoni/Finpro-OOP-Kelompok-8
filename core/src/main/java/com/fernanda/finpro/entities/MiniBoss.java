@@ -20,7 +20,7 @@ public class MiniBoss extends Monster {
     private static final float HEIGHT = 175f;
     private static final float VISUAL_OFFSET_Y = -17f;
 
-    private static final float DETECT_RANGE = 80f;
+    private static final float DETECT_RANGE = 150f;
     private static final float ATTACK_RANGE = 70f;
 
     private static final float HABITAT_MIN = 0f;
@@ -81,9 +81,8 @@ public class MiniBoss extends Monster {
 
         float distToPlayer = Vector2.dst(myCenterX, myCenterY, playerCenterX, playerCenterY);
 
-        // Stop velocity saat prepare attack atau attacking untuk mencegah jittery movement
-        if (currentState == State.PREPARE_ATTACK || currentState == State.ATTACKING) {
-            velocity.set(0, 0);
+        if (currentState != State.WANDER && currentState != State.DEAD && currentState != State.ATTACKING) {
+
         }
 
         if (Math.abs(velocity.x) > 0.1f && currentState != State.ATTACKING) {
@@ -118,7 +117,7 @@ public class MiniBoss extends Monster {
 
             case PREPARE_ATTACK:
                 facingRight = playerCenterX > myCenterX;
-                
+
                 if (stateTimer >= WINDUP_TIME) {
                     currentState = State.ATTACKING;
                     stateTimer = 0;
@@ -282,6 +281,6 @@ public class MiniBoss extends Monster {
 
     @Override
     public ItemType rollDrop() {
-        return ItemType.ETERNAL_ICE_SHARD;
+        return ItemType.ORC_SKULL ;
     }
 }
