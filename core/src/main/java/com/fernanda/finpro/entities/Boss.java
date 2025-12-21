@@ -59,7 +59,7 @@ public class Boss {
         this.stateTimer = 0;
         this.currentState = BossState.IDLE;
         this.idleTimer = 0;
-        this.maxHealth = 1; // SEMENTARA: HP Boss jadi 1 untuk testing
+        this.maxHealth = 2000; // SEMENTARA: HP Boss jadi 1 untuk testing
         this.currentHealth = this.maxHealth;
         this.isDead = false;
 
