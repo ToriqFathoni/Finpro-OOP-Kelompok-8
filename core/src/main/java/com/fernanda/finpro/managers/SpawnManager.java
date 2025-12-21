@@ -82,7 +82,12 @@ public class SpawnManager {
             int currentCount = countMonsters(rule.classType);
             if (currentCount < rule.maxCount) {
                 rule.timer += dt;
-                if (rule.timer >= rule.spawnInterval) {
+                
+                // Cek apakah harus spawn (Ice World tidak ada delay untuk Yeti & MiniBoss)
+                boolean isIceMonster = (currentWorld == WorldType.ICE) && 
+                                     (rule.type == MonsterFactory.Type.YETI || rule.type == MonsterFactory.Type.MINI_BOSS);
+                
+                if (isIceMonster || rule.timer >= rule.spawnInterval) {
                     spawnMonster(rule.type);
                     rule.timer = 0;
                 }
@@ -107,13 +112,21 @@ public class SpawnManager {
             if (currentWorld != WorldType.ICE) return; 
             pos = MonsterFactory.getRandomSpawnPoint(
                 GameAssetManager.getInstance().getIceMap(), 
-                new String[]{"ice_monster_spawn_1", "ice_monster_spawn_2", "ice_monster_spawn_3"}
+                new String[]{
+                    "ice_monster_spawn_1", "ice_monster_spawn_2", "ice_monster_spawn_3",
+                    "ice_monster_spawn_4", "ice_monster_spawn_5", "ice_monster_spawn_6",
+                    "ice_monster_spawn_7", "ice_monster_spawn_8", "ice_monster_spawn_9"
+                }
             );
         } else { // Orc & Werewolf
             if (currentWorld != WorldType.FOREST) return;
             pos = MonsterFactory.getRandomSpawnPoint(
                 GameAssetManager.getInstance().getMap(), 
-                new String[]{"spawn_monster_1", "spawn_monster_2", "spawn_monster_3"}
+                new String[]{
+                    "spawn_monster_1", "spawn_monster_2", "spawn_monster_3", "spawn_monster_4",
+                    "spawn_monster_5", "spawn_monster_6", "spawn_monster_7", "spawn_monster_8",
+                    "spawn_monster_9", "spawn_monster_10", "spawn_monster_11", "spawn_monster_12"
+                }
             );
         }
 
