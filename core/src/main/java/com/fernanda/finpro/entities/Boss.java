@@ -13,8 +13,8 @@ import com.fernanda.finpro.singleton.GameAssetManager;
 
 public class Boss {
 
-    public enum BossState { IDLE, ATTACKING }
-    public enum AttackType { SMASH, METEOR, TYPE_C }
+    public enum BossState { IDLE, ATTACKING, DYING }
+    public enum AttackType { SMASH, METEOR }
     public enum SmashPhase { WINDUP, HOLD, RECOVER }
 
     private float width;
@@ -28,7 +28,7 @@ public class Boss {
     private int maxHealth;
     private int currentHealth;
     private boolean isDead;
-    private int attackDamage = 30;
+    private int attackDamage = 100;
 
     private float stateTimer;
     private float attackTimer;
@@ -52,7 +52,7 @@ public class Boss {
     private Animation<TextureRegion> attackAnim;
     private Animation<TextureRegion> hitboxAnim;
     private Animation<TextureRegion> retrieveAnim;
-
+    private Animation<TextureRegion> deathAnim;
     private Animation<TextureRegion> castingAnim;
 
     public Boss(float x, float y) {
@@ -61,7 +61,7 @@ public class Boss {
         this.currentState = BossState.IDLE;
         this.idleTimer = 0;
         this.attackTimer = 0;
-        this.maxHealth = 1500;
+        this.maxHealth = 15;
         this.currentHealth = this.maxHealth;
         this.isDead = false;
 
@@ -80,6 +80,7 @@ public class Boss {
         this.attackAnim = createAnimation(GameAssetManager.BOSS_ATTACK, 6, 0.1f, Animation.PlayMode.NORMAL);
         this.hitboxAnim = createAnimation(GameAssetManager.BOSS_HITBOX, 3, 0.15f, Animation.PlayMode.LOOP);
         this.retrieveAnim = createAnimation(GameAssetManager.BOSS_RETRIEVE, 6, 0.1f, Animation.PlayMode.NORMAL);
+        this.deathAnim = createAnimation(GameAssetManager.BOSS_DEATH, 8, 0.15f, Animation.PlayMode.NORMAL);
 
         try {
             this.castingAnim = createAnimation("Boss-Casting.png", 6, 0.15f, Animation.PlayMode.NORMAL);
@@ -118,13 +119,20 @@ public class Boss {
         stateTimer += dt;
         if (immunityTimer > 0) immunityTimer -= dt;
 
-        updateHitboxPositions();
+        if (currentState == BossState.DYING) {
+            if (deathAnim.isAnimationFinished(stateTimer)) {
+                isDead = true;
+                System.out.println("BOSS DEFEATED (Animation Finished)");
+            }
+            return;
+        }
 
+        updateHitboxPositions();
         meteorController.update(dt, player);
 
         if (currentState == BossState.IDLE) {
             idleTimer += dt;
-            if (idleTimer > 4.0f) {
+            if (idleTimer > 3.0f) {
                 pickRandomAttack();
                 idleTimer = 0;
             }
@@ -222,16 +230,21 @@ public class Boss {
     }
 
     public void takeDamage(int damage) {
-        if (isDead) return;
+        if (isDead || currentState == BossState.DYING) return; // Cegah damage saat sudah mati/sekarat
+
         this.currentHealth -= damage;
         if (this.currentHealth <= 0) {
             this.currentHealth = 0;
-            this.isDead = true;
-            System.out.println("BOSS DEFEATED");
+
+            this.currentState = BossState.DYING;
+            this.stateTimer = 0;
+
+            System.out.println("BOSS DYING...");
         }
     }
 
     public void renderDebug(ShapeRenderer shapeRenderer) {
+        /*
         if (isDead) return;
         if (currentState == BossState.ATTACKING && currentAttack == AttackType.SMASH && smashPhase == SmashPhase.HOLD) {
             if (attackTimer <= IMPACT_DURATION) {
@@ -243,13 +256,17 @@ public class Boss {
             shapeRenderer.rect(rightHandRect.x, rightHandRect.y, rightHandRect.width, rightHandRect.height);
         }
         meteorController.renderDebug(shapeRenderer);
+         */
     }
 
     public void render(SpriteBatch batch) {
+        if (isDead) return;
         TextureRegion currentFrame = null;
         if (currentState == BossState.IDLE) {
             currentFrame = idleAnim.getKeyFrame(stateTimer, true);
-        } else if (currentState == BossState.ATTACKING) {
+        } else if (currentState == BossState.DYING) {
+            currentFrame = deathAnim.getKeyFrame(stateTimer, false);
+        }else if (currentState == BossState.ATTACKING) {
             if (currentAttack == AttackType.SMASH) {
                 switch (smashPhase) {
                     case WINDUP: currentFrame = attackAnim.getKeyFrame(attackTimer, false); break;
@@ -276,6 +293,29 @@ public class Boss {
     public boolean isHandSolid() {
         return !isDead && currentState == BossState.ATTACKING &&
             currentAttack == AttackType.SMASH && smashPhase == SmashPhase.HOLD;
+    }
+
+    public void reset() {
+        this.currentHealth = this.maxHealth;
+        this.isDead = false;
+        this.currentState = BossState.IDLE;
+
+        this.stateTimer = 0;
+        this.attackTimer = 0;
+        this.idleTimer = 0;
+        this.immunityTimer = 0;
+
+        this.hasDealtImpactDamage = false;
+        this.isCasting = false;
+
+        // Reset Meteor Controller juga
+        if (this.meteorController != null) {
+            this.meteorController.reset();
+        }
+
+        updateHitboxPositions();
+
+        System.out.println("Boss Reset: HP Full, State IDLE");
     }
 
     public Rectangle getLeftHandRect() { return leftHandRect; }
