@@ -2,10 +2,8 @@ package com.fernanda.finpro.managers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net;
-import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
-import com.badlogic.gdx.utils.JsonWriter;
 import com.fernanda.finpro.components.ItemType;
 import com.fernanda.finpro.entities.Player;
 

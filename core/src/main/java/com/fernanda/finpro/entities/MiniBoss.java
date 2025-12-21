@@ -256,6 +256,6 @@ public class MiniBoss extends Monster {
 
     @Override
     public ItemType rollDrop() {
-        return ItemType.ORC_SKULL ;
+        return ItemType.ETERNAL_ICE_SHARD;
     }
 }

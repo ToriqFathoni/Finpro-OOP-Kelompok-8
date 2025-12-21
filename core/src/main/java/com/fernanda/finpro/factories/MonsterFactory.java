@@ -1,12 +1,9 @@
 package com.fernanda.finpro.factories;
 
 import com.badlogic.gdx.maps.MapLayer;
-import com.badlogic.gdx.maps.MapObject;
-import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.fernanda.finpro.entities.MiniBoss;
 import com.fernanda.finpro.entities.Monster;
@@ -27,10 +24,6 @@ public class MonsterFactory {
         MINI_BOSS,
         BOSS
     }
-
-    // --- CONFIG AREA SPAWN ---
-    private static final float MAP_WIDTH = 1168f;
-    private static final float MAP_HEIGHT = 1168f;
 
     public static Monster createMonster(Type type, float x, float y) {
         switch (type) {

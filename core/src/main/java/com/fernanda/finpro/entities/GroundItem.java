@@ -62,6 +62,8 @@ public class GroundItem {
                 return GameAssetManager.getInstance().getTexture(GameAssetManager.WEREWOLF_CLAW);
             case YETI_HEART:
                 return GameAssetManager.getInstance().getTexture(GameAssetManager.YETI_HEART);
+            case ETERNAL_ICE_SHARD:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.ETERNAL_ICE_SHARD);
             case ROASTED_MEAT:
                 return GameAssetManager.getInstance().getTexture(GameAssetManager.ROASTED_MEAT);
             case HUNTERS_STEW:
@@ -97,6 +99,9 @@ public class GroundItem {
                 break;
             case YETI_HEART:
                 sr.setColor(Color.CYAN);
+                break;
+            case ETERNAL_ICE_SHARD:
+                sr.setColor(Color.SKY);
                 break;
             default:
                 sr.setColor(Color.WHITE);

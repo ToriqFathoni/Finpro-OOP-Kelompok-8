@@ -1,13 +1,11 @@
 package com.fernanda.finpro.entities;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.fernanda.finpro.components.ItemType;
 import com.fernanda.finpro.singleton.GameAssetManager;
@@ -69,26 +67,6 @@ public class Orc extends Monster {
         deathAnim = createAnimation(GameAssetManager.ORC_DEATH, 4, 0.1f, Animation.PlayMode.NORMAL);
 
         this.deathDuration = 1.5f; // Body lingers for a while
-    }
-
-    private Rectangle getPredictedAttackHitbox() {
-        float atkWidth = 25f;
-        float atkHeight = 60f;
-
-        float offsetIn = 5f;
-        float offsetDown = 0f;
-
-        float atkX;
-        if (facingRight) {
-            atkX = (position.x + WIDTH) - offsetIn;
-        } else {
-            atkX = (position.x - atkWidth) + offsetIn;
-        }
-
-        float atkY = position.y + (HEIGHT / 2) - (atkHeight / 2) - offsetDown;
-
-        // Return rectangle baru (hanya untuk pengecekan)
-        return new Rectangle(atkX, atkY, atkWidth, atkHeight);
     }
 
     @Override
