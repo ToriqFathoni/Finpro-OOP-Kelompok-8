@@ -24,6 +24,11 @@ public class Player {
     private int baseDamage = 15;
     private int permanentDamageBonus = 0;
     
+    // SCORE TRACKING
+    public int cookingScore = 0;
+    public int monsterKillScore = 0;
+    public boolean bossKilled = false;
+
     // Track consumed legendary items (for UI strikethrough)
     private java.util.Set<com.fernanda.finpro.components.ItemType> consumedLegendaries = new java.util.HashSet<>();
 

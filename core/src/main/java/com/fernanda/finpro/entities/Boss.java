@@ -59,7 +59,7 @@ public class Boss {
         this.stateTimer = 0;
         this.currentState = BossState.IDLE;
         this.idleTimer = 0;
-        this.maxHealth = 2000;
+        this.maxHealth = 1; // SEMENTARA: HP Boss jadi 1 untuk testing
         this.currentHealth = this.maxHealth;
         this.isDead = false;
 
@@ -83,7 +83,7 @@ public class Boss {
         this.deathAnim = createAnimation(GameAssetManager.BOSS_DEATH, 8, 0.15f, Animation.PlayMode.NORMAL);
 
         try {
-            this.castingAnim = createAnimation("Boss-Casting.png", 6, 0.15f, Animation.PlayMode.NORMAL);
+            this.castingAnim = createAnimation(GameAssetManager.BOSS_CASTING, 6, 0.15f, Animation.PlayMode.NORMAL);
         } catch (Exception e) {
             System.err.println("Gagal load Boss-Casting, pastikan asset sudah di-load di GameAssetManager");
             this.castingAnim = this.attackAnim;
