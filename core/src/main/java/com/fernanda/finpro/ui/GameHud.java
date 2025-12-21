@@ -3,8 +3,7 @@ package com.fernanda.finpro.ui;
 import com. badlogic.gdx. Gdx;
 import com.badlogic.gdx.graphics. Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;import com.badlogic.gdx.graphics.g2d.GlyphLayout;import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx. graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -105,6 +104,27 @@ public class GameHud implements StatsListener {
         
         shapeRenderer.end();
         Gdx.gl.glLineWidth(1);
+        
+        // === NUMERIC HP INDICATOR (RIGHT-ALIGNED, CURRENT HP ONLY) ===
+        batch.setProjectionMatrix(hudCamera.combined);
+        batch.begin();
+        
+        // Format: Show only current HP (e.g., "75")
+        String hpText = String.format("%.0f", currentHp);
+        GlyphLayout hpLayout = new GlyphLayout(font, hpText);
+        
+        // Right-align text with 5px padding from right edge
+        float hpTextX = hpBarX + BAR_WIDTH - hpLayout.width - 5f;
+        float hpTextY = hpBarY + (BAR_HEIGHT + hpLayout.height) / 2f;
+        
+        // White text for readability
+        font.setColor(Color.WHITE);
+        font.getData().setScale(0.55f);
+        font.draw(batch, hpText, hpTextX, hpTextY);
+        font.getData().setScale(0.6f); // Reset to default
+        
+        batch.end();
+        // === END HP INDICATOR ===
         
         // Render Active Buffs
         if (player != null && player.buffManager.hasActiveBuff()) {

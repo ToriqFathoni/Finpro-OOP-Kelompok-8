@@ -40,4 +40,37 @@ public class Recipe {
         }
         return sb.toString();
     }
+    
+    /**
+     * Check if this recipe is a legendary item (permanent upgrade)
+     */
+    public boolean isLegendary() {
+        return resultItem == ItemType.BERSERKERS_ELIXIR ||
+               resultItem == ItemType.HEART_OF_MOUNTAIN ||
+               resultItem == ItemType.GOD_SLAYER_ELIXIR;
+    }
+    
+    /**
+     * Get buff/effect description for this recipe
+     */
+    public String getEffectDescription() {
+        switch (resultItem) {
+            case ROASTED_MEAT:
+                return "Heals 40 HP instantly.\nBasic recovery food.";
+            case HUNTERS_STEW:
+                return "Heals 10 HP + Damage +5\nfor 60 seconds.\nGood for combat boost.";
+            case BONE_BROTH:
+                return "Heals 5 HP + Energy Regen\n+20/s for 10 seconds.\nStamina recovery.";
+            case YETI_SOUP:
+                return "Heals 75% of Max HP.\nPowerful healing.";
+            case BERSERKERS_ELIXIR:
+                return "[LEGENDARY]\nPERMANENT UPGRADE:\n+3 Damage\nMax HP = 100\nMax Energy = 120\n(One-time use)";
+            case HEART_OF_MOUNTAIN:
+                return "[LEGENDARY]\nPERMANENT UPGRADE:\n+3 Damage\nMax HP = 200\nMax Energy = 150\n(One-time use)";
+            case GOD_SLAYER_ELIXIR:
+                return "[LEGENDARY]\nPERMANENT UPGRADE:\n+5 Damage\nMax HP = 300\nMax Energy = 170\n(One-time use)";
+            default:
+                return "Raw ingredient.\nCannot be consumed.";
+        }
+    }
 }

@@ -23,6 +23,9 @@ public class Player {
     // STATS
     private int baseDamage = 15;
     private int permanentDamageBonus = 0;
+    
+    // Track consumed legendary items (for UI strikethrough)
+    private java.util.Set<com.fernanda.finpro.components.ItemType> consumedLegendaries = new java.util.HashSet<>();
 
     // CONFIG BADAN (LOGIKA)
     private static final int LOGICAL_WIDTH = 15;
@@ -346,5 +349,26 @@ public class Player {
 
     public boolean isDeathAnimationFinished() {
         return currentState == deathState && stateTime > 1.0f;
+    }
+    
+    /**
+     * Mark a legendary item as consumed (for cooking menu UI)
+     */
+    public void markLegendaryConsumed(com.fernanda.finpro.components.ItemType legendaryItem) {
+        consumedLegendaries.add(legendaryItem);
+    }
+    
+    /**
+     * Check if a legendary item has been consumed
+     */
+    public boolean hasConsumedLegendary(com.fernanda.finpro.components.ItemType legendaryItem) {
+        return consumedLegendaries.contains(legendaryItem);
+    }
+    
+    /**
+     * Clear consumed legendaries (for game restart in INFERNO)
+     */
+    public void clearConsumedLegendaries() {
+        consumedLegendaries.clear();
     }
 }
