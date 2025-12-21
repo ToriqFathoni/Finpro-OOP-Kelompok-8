@@ -13,14 +13,14 @@ import com.fernanda.finpro.singleton.GameAssetManager;
 public class MiniBoss extends Monster {
 
     private static final float BOSS_SPEED = 55f;
-    private static final int   BOSS_HP = 500;
-    private static final int   BOSS_DMG = 50;
+    private static final int   BOSS_HP = 700;
+    private static final int   BOSS_DMG = 60;
 
     private static final float WIDTH = 60f;
     private static final float HEIGHT = 175f;
     private static final float VISUAL_OFFSET_Y = -17f;
 
-    private static final float DETECT_RANGE = 150f;
+    private static final float DETECT_RANGE = 80f;
     private static final float ATTACK_RANGE = 70f;
 
     private static final float HABITAT_MIN = 0f;
@@ -75,15 +75,14 @@ public class MiniBoss extends Monster {
 
         float myCenterX = position.x + (WIDTH / 2);
         float myCenterY = position.y + (HEIGHT / 2);
-        
+
         float playerCenterX = player.position.x + (player.getWidth() / 2);
         float playerCenterY = player.position.y + (player.getHeight() / 2);
 
-        // 2. Hitung jarak antar titik tengah
         float distToPlayer = Vector2.dst(myCenterX, myCenterY, playerCenterX, playerCenterY);
 
         if (currentState != State.WANDER && currentState != State.DEAD && currentState != State.ATTACKING) {
-            // Hapus logika dx manual
+
         }
 
         if (Math.abs(velocity.x) > 0.1f && currentState != State.ATTACKING) {
@@ -117,6 +116,8 @@ public class MiniBoss extends Monster {
                 break;
 
             case PREPARE_ATTACK:
+                facingRight = playerCenterX > myCenterX;
+                
                 if (stateTimer >= WINDUP_TIME) {
                     currentState = State.ATTACKING;
                     stateTimer = 0;
@@ -206,9 +207,13 @@ public class MiniBoss extends Monster {
             case COOLDOWN:
                 currentAnim = idleAnim;
                 break;
-            case WANDER:
             case CHASE:
-                currentAnim = walkAnim;
+            case WANDER:
+                if (velocity.len2() > 0.1f) {
+                    currentAnim = walkAnim;
+                } else {
+                    currentAnim = idleAnim;
+                }
                 break;
             case ATTACKING:
                 currentAnim = attackAnim;
@@ -260,6 +265,7 @@ public class MiniBoss extends Monster {
 
     @Override
     public void renderDebug(ShapeRenderer sr) {
+        /*
         if (isDead) return;
 
         sr.setColor(Color.PURPLE);
@@ -269,6 +275,8 @@ public class MiniBoss extends Monster {
             sr.setColor(Color.RED);
             sr.rect(attackRect.x, attackRect.y, attackRect.width, attackRect.height);
         }
+
+         */
     }
 
     @Override

@@ -311,6 +311,7 @@ public class Orc extends Monster {
 
     @Override
     public void renderDebug(ShapeRenderer sr) {
+        /*
         if (isDead) return;
 
         sr.setColor(Color.BLUE); // Set warna biru
@@ -326,6 +327,8 @@ public class Orc extends Monster {
             sr.setColor(Color.ORANGE);
             sr.circle(position.x + WIDTH/2, position.y + HEIGHT + 10, 5);
         }
+
+         */
     }
     @Override
     public ItemType rollDrop() {

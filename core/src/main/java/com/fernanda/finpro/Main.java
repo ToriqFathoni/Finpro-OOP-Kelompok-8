@@ -68,7 +68,7 @@ public class Main extends ApplicationAdapter {
 
     ShapeRenderer worldRenderer;
     ShapeRenderer debugRenderer;
-    boolean debugMode = true;
+    boolean debugMode = false;
     BitmapFont font;
 
     private SpawnManager spawnManager;
