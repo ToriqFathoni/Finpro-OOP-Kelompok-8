@@ -187,6 +187,12 @@ public class CookingMenu {
             // Add result
             inventory.addItem(recipe.getResultItem(), 1);
             
+            // Update Score
+            if (currentPlayer != null) {
+                int score = recipe.isLegendary() ? 10 : 5;
+                currentPlayer.cookingScore += score;
+            }
+
             // Set SUCCESS feedback
             feedbackMessage = "SUCCESS! COOKED " + recipe.getRecipeName().toUpperCase();
             feedbackColor = Color.GREEN;
