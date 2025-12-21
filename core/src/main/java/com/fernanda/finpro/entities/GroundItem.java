@@ -34,10 +34,6 @@ public class GroundItem {
         this.active = true;
     }
 
-    /**
-     * Reset method for Object Pool Pattern
-     * Reuses this object with new values instead of creating a new instance
-     */
     public void reset(ItemType newType, float x, float y) {
         this.type = newType;
         this.position.set(x, y);
