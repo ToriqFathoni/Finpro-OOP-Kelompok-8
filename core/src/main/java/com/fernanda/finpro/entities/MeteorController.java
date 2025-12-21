@@ -112,13 +112,16 @@ public class MeteorController {
                     m.isExploding = true;
                     m.stateTimer = 0;
 
-                    // CONTOH: Mengubah ukuran menjadi 150 (Lebar) x 100 (Tinggi)
+                    com.badlogic.gdx.audio.Sound crashSound = GameAssetManager.getInstance().getMeteorCrashSound();
+                    if (crashSound != null) {
+                        crashSound.play(0.6f);
+                    }
+
                     float newWidth = 200f;
                     float newHeight = 90f;
 
                     m.hitbox.setSize(newWidth, newHeight);
 
-                    // Geser X ke kiri sebesar setengah dari lebar baru agar pas di tengah
                     m.hitbox.setPosition(m.position.x - (newWidth / 2), m.position.y);
 
                     checkDamage(m, player);

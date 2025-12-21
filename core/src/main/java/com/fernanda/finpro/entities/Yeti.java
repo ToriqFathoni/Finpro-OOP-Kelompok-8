@@ -110,6 +110,11 @@ public class Yeti extends Monster {
                 if (stateTimer >= WINDUP_TIME) {
                     currentState = State.ATTACKING;
                     stateTimer = 0;
+                    
+                    com.badlogic.gdx.audio.Sound attackSound = com.fernanda.finpro.singleton.GameAssetManager.getInstance().getYetiHitSound();
+                    if (attackSound != null) {
+                        attackSound.play(0.5f);
+                    }
                 }
                 break;
 
