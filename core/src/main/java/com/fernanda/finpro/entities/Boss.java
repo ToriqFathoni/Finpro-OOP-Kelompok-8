@@ -61,7 +61,7 @@ public class Boss {
         this.currentState = BossState.IDLE;
         this.idleTimer = 0;
         this.attackTimer = 0;
-        this.maxHealth = 15;
+        this.maxHealth = 1500;
         this.currentHealth = this.maxHealth;
         this.isDead = false;
 
