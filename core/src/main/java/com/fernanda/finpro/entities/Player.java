@@ -179,7 +179,7 @@ public class Player {
     }
 
     public void dodge() {
-        if (currentState == dodgeState || currentState == attackState) return;
+        if (currentState == dodgeState) return;
 
         if (dodgeCooldownTimer > 0) {
             System.out.println("Gagal Dodge!  Sedang Cooldown.  Sisa: " + String.format("%.2f", dodgeCooldownTimer));

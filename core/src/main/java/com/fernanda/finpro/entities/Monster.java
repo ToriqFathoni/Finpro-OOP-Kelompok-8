@@ -138,8 +138,11 @@ public abstract class Monster {
     }
 
     protected void moveTowards(Vector2 target) {
-        // Arah ideal (Garis lurus ke player)
-        Vector2 direction = new Vector2(target).sub(position).nor();
+        float myCenterX = position.x + (bodyRect.width / 2);
+        float myCenterY = position.y + (bodyRect.height / 2);
+
+        // Arah ideal: Dari Tengah Monster ke Target (Target diasumsikan titik tengah Player)
+        Vector2 direction = new Vector2(target).sub(myCenterX, myCenterY).nor();
 
         // Jarak sensor (cek 32 pixel ke depan)
         float checkDist = 32f;

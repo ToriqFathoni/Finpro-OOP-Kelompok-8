@@ -52,8 +52,6 @@ public class Yeti extends Monster {
         this.knockbackDistance = 0.5f;
         this.wanderTarget.set(x, y);
 
-        // Init Animations
-        // Load Yeti-Idle (Asumsi 4 frame, speed lambat 0.2f)
         idleAnim = createAnimation(GameAssetManager.YETI_IDLE, 4, 0.2f, Animation.PlayMode.LOOP);
         walkAnim = createAnimation(GameAssetManager.YETI_WALK, 4, 0.15f, Animation.PlayMode.LOOP);
         attackAnim = createAnimation(GameAssetManager.YETI_ATTACK, 6, 0.12f, Animation.PlayMode.NORMAL);
@@ -65,16 +63,18 @@ public class Yeti extends Monster {
     public void aiBehavior(float dt, Player player) {
         if (isDead) return;
 
-        float distToPlayer = position.dst(player.position);
+        float myCenterX = position.x + (WIDTH / 2);
+        float myCenterY = position.y + (HEIGHT / 2);
+        float playerCenterX = player.position.x + (player.getWidth() / 2);
+        float playerCenterY = player.position.y + (player.getHeight() / 2);
+
+        float distToPlayer = Vector2.dst(myCenterX, myCenterY, playerCenterX, playerCenterY);
 
         if (currentState != State.WANDER && currentState != State.DEAD) {
-            float dx = player.position.x - position.x;
-            if (Math.abs(dx) > 5f) {
-                facingRight = dx > 0;
-            }
+            // Hapus logika dx manual
         }
 
-        if (Math.abs(velocity.x) > 1.0f) {
+        if (Math.abs(velocity.x) > 0.1f) {
             facingRight = velocity.x > 0;
         }
 
@@ -94,7 +94,7 @@ public class Yeti extends Monster {
                 break;
 
             case CHASE:
-                moveTowards(player.position);
+               moveTowards(new Vector2(playerCenterX, playerCenterY));
 
                 if (distToPlayer <= attackRadius) {
                     currentState = State.PREPARE_ATTACK;

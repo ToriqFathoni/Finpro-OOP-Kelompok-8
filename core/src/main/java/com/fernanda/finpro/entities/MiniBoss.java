@@ -20,7 +20,7 @@ public class MiniBoss extends Monster {
     private static final float HEIGHT = 175f;
     private static final float VISUAL_OFFSET_Y = -17f;
 
-    private static final float DETECT_RANGE = 400f;
+    private static final float DETECT_RANGE = 150f;
     private static final float ATTACK_RANGE = 70f;
 
     private static final float HABITAT_MIN = 0f;
@@ -47,7 +47,7 @@ public class MiniBoss extends Monster {
 
         this.detectionRadius = DETECT_RANGE;
         this.attackRadius = ATTACK_RANGE;
-        this.knockbackDistance = 2.0f;
+        this.knockbackDistance = 0f;
         this.wanderTarget.set(x, y);
         this.deathDuration = 2.0f;
 
@@ -57,19 +57,36 @@ public class MiniBoss extends Monster {
     }
 
     @Override
+    public void takeDamage(int amount) {
+        if (isDead || immunityTimer > 0) return;
+
+        currentHealth -= amount;
+        immunityTimer = 0.1f;
+
+        if (currentHealth <= 0) {
+            isDead = true;
+            currentState = State.DEAD;
+        }
+    }
+
+    @Override
     public void aiBehavior(float dt, Player player) {
         if (isDead) return;
 
-        float distToPlayer = position.dst(player.position);
+        float myCenterX = position.x + (WIDTH / 2);
+        float myCenterY = position.y + (HEIGHT / 2);
+        
+        float playerCenterX = player.position.x + (player.getWidth() / 2);
+        float playerCenterY = player.position.y + (player.getHeight() / 2);
+
+        // 2. Hitung jarak antar titik tengah
+        float distToPlayer = Vector2.dst(myCenterX, myCenterY, playerCenterX, playerCenterY);
 
         if (currentState != State.WANDER && currentState != State.DEAD && currentState != State.ATTACKING) {
-            float dx = player.position.x - position.x;
-            if (Math.abs(dx) > 5f) {
-                facingRight = dx > 0;
-            }
+            // Hapus logika dx manual
         }
 
-        if (Math.abs(velocity.x) > 1.0f && currentState != State.ATTACKING) {
+        if (Math.abs(velocity.x) > 0.1f && currentState != State.ATTACKING) {
             facingRight = velocity.x > 0;
         }
 
@@ -87,7 +104,7 @@ public class MiniBoss extends Monster {
                 break;
 
             case CHASE:
-                moveTowards(player.position);
+                moveTowards(new Vector2(playerCenterX, playerCenterY));
 
                 if (distToPlayer <= attackRadius) {
                     currentState = State.PREPARE_ATTACK;
@@ -163,8 +180,8 @@ public class MiniBoss extends Monster {
     }
 
     private void createAttackHitbox() {
-        float atkWidth = 100f;
-        float atkHeight = 80f;
+        float atkWidth = 125f;
+        float atkHeight = 200f;
 
         float atkX;
         if (facingRight) {
@@ -216,7 +233,7 @@ public class MiniBoss extends Monster {
         }
 
         if (currentFrame != null) {
-            if (currentState == State.HURT) {
+            if (immunityTimer > 0) {
                 batch.setColor(1f, 0.5f, 0.5f, 1f);
             } else if (currentState == State.DEAD) {
                 batch.setColor(0.5f, 0.5f, 0.5f, 1f - (stateTimer / deathDuration));

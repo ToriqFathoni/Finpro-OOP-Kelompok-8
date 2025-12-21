@@ -68,18 +68,20 @@ public class Werewolf extends Monster {
     public void aiBehavior(float dt, Player player) {
         if (isDead) return;
 
-        float distToPlayer = position.dst(player.position);
+        float myCenterX = position.x + (WIDTH / 2);
+        float myCenterY = position.y + (HEIGHT / 2);
+        float playerCenterX = player.position.x + (player.getWidth() / 2);
+        float playerCenterY = player.position.y + (player.getHeight() / 2);
 
+        float distToPlayer = Vector2.dst(myCenterX, myCenterY, playerCenterX, playerCenterY);
+        
         // Update facing direction berdasarkan posisi player (kecuali saat wander)
         if (currentState != State.WANDER && currentState != State.DEAD) {
-            float dx = player.position.x - position.x;
-            if (Math.abs(dx) > 5f) { // Threshold untuk menghindari jitter
-                facingRight = dx > 0;
-            }
+            // Hapus logika dx manual
         }
 
         // Logic Facing saat bergerak
-        if (Math.abs(velocity.x) > 1.0f) {
+        if (Math.abs(velocity.x) > 0.1f) {
             facingRight = velocity.x > 0;
         }
 
@@ -99,7 +101,7 @@ public class Werewolf extends Monster {
                 break;
 
             case CHASE:
-                moveTowards(player.position);
+                moveTowards(new Vector2(playerCenterX, playerCenterY));
 
                 // Jika dekat, serang
                 if (distToPlayer <= attackRadius) {
