@@ -70,12 +70,12 @@ public class InventorySlot {
             // 4. Count
             if (count > 1) {
                 font.setColor(Color.WHITE);
-                font.getData().setScale(0.45f);
+                font.getData().setScale(0.6f);
                 font.draw(batch, "" + count,
                     bounds.x + SLOT_SIZE - 11,
                     bounds.y + 9
                 );
-                font.getData().setScale(0.6f);
+                font.getData().setScale(1.0f);
             }
 
             batch.end();
@@ -94,6 +94,8 @@ public class InventorySlot {
                 return GameAssetManager.getInstance().getTexture(GameAssetManager.WEREWOLF_CLAW);
             case YETI_HEART:
                 return GameAssetManager.getInstance().getTexture(GameAssetManager.YETI_HEART);
+            case ETERNAL_ICE_SHARD:
+                return GameAssetManager.getInstance().getTexture(GameAssetManager.ETERNAL_ICE_SHARD);
             case ROASTED_MEAT:
                 return GameAssetManager.getInstance().getTexture(GameAssetManager.ROASTED_MEAT);
             case HUNTERS_STEW:

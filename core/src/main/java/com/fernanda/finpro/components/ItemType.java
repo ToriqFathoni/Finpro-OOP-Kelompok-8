@@ -6,7 +6,7 @@ public enum ItemType {
     ORC_SKULL("orcskull.png", "Orc Skull", "Bone material for energy brews.", false, false),
     WEREWOLF_CLAW("WerewolfClaw.png", "Werewolf Claw", "Sharp claw from the forest.", false, false),
     YETI_HEART("YetiHeart.png", "Yeti Heart", "Cold heart from the snow peaks.", false, false),
-    ETERNAL_ICE_SHARD("legend-3.png", "Eternal Ice Shard", "Rare drop from the Frost Boss.", false, false),
+    ETERNAL_ICE_SHARD("ice-shard.png", "Eternal Ice Shard", "Rare drop from the Frost Boss.", false, false),
 
     // --- SURVIVAL MEALS (Consumable) ---
     ROASTED_MEAT("roasted-meat.png", "Roasted Meat", "Effect: Heals 50% Max HP.", true, false),

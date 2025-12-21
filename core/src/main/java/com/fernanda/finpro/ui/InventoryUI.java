@@ -36,7 +36,6 @@ public class InventoryUI {
     private static final float PANEL_WIDTH = 240f;
     private static final float PANEL_HEIGHT = 230f;
     private static final float HEADER_HEIGHT = 24f;
-    private static final float INFO_BOX_HEIGHT = 30f;
 
     // Colors
     private static final Color HEADER_COLOR = new Color(0.2f, 0.5f, 0.3f, 1f);
@@ -64,11 +63,18 @@ public class InventoryUI {
         this.shapeRenderer = new ShapeRenderer();
         this.batch = new SpriteBatch();
 
+        // Font setup - sama seperti CookingMenu untuk konsistensi
         this.font = new BitmapFont();
-        this.font.getData().setScale(0.6f);
+        this.font.getRegion().getTexture().setFilter(
+            com.badlogic.gdx.graphics.Texture.TextureFilter.Linear,
+            com.badlogic.gdx.graphics.Texture.TextureFilter.Linear
+        );
 
         this.titleFont = new BitmapFont();
-        this.titleFont.getData().setScale(0.8f);
+        this.titleFont.getRegion().getTexture().setFilter(
+            com.badlogic.gdx.graphics.Texture.TextureFilter.Linear,
+            com.badlogic.gdx.graphics.Texture.TextureFilter.Linear
+        );
 
         camera = new OrthographicCamera();
         viewport = new FitViewport(480, 270, camera);
@@ -159,18 +165,19 @@ public class InventoryUI {
         // 5.5. Info box untuk item yang dipilih
         InventorySlot selectedSlot = slots[selectedRow][selectedCol];
         if (!selectedSlot.isEmpty()) {
-            // Background info box
-            float infoBoxY = panelY + 18;
+            // Background info box - EXTENDED untuk cover semua text
+            float infoBoxY = panelY + 10;
+            float infoBoxHeight = 48; // Lebih tinggi
             shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(0.15f, 0.35f, 0.2f, 0.9f); // Dark green semi-transparent
-            shapeRenderer.rect(panelX + 8, infoBoxY, PANEL_WIDTH - 16, INFO_BOX_HEIGHT);
+            shapeRenderer.setColor(0.15f, 0.35f, 0.2f, 0.95f); // Dark green
+            shapeRenderer.rect(panelX + 8, infoBoxY, PANEL_WIDTH - 16, infoBoxHeight);
             shapeRenderer.end();
             
             // Border info box
             shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-            shapeRenderer.setColor(0.85f, 0.75f, 0.5f, 1f); // Light border
-            Gdx.gl.glLineWidth(1.5f);
-            shapeRenderer.rect(panelX + 8, infoBoxY, PANEL_WIDTH - 16, INFO_BOX_HEIGHT);
+            shapeRenderer.setColor(0.3f, 0.6f, 0.4f, 1f); // Green border
+            Gdx.gl.glLineWidth(2f);
+            shapeRenderer.rect(panelX + 8, infoBoxY, PANEL_WIDTH - 16, infoBoxHeight);
             shapeRenderer.end();
             Gdx.gl.glLineWidth(1);
         }
@@ -180,66 +187,55 @@ public class InventoryUI {
 
         // Title
         titleFont.setColor(Color.WHITE);
+        titleFont.getData().setScale(1.2f);
         titleFont.draw(batch, "INVENTORY", panelX + 12, panelY + PANEL_HEIGHT - 6);
 
         // Close button (X) - with hover effect
         boolean hoverClose = isMouseOver(closeButtonRect);
         titleFont.setColor(hoverClose ? Color.RED : Color.WHITE);
+        titleFont.getData().setScale(1.0f);
         titleFont.draw(batch, "X", panelX + PANEL_WIDTH - 20, panelY + PANEL_HEIGHT - 6);
 
-        // Navigation arrows - with hover effect
-        font.getData().setScale(1.2f);
-
-        boolean hoverLeft = isMouseOver(leftArrowRect);
-        font.setColor(hoverLeft ?  Color. YELLOW : Color.WHITE);
-        font.draw(batch, "<", panelX + 8, panelY + PANEL_HEIGHT / 2 + 5);
-
-        boolean hoverRight = isMouseOver(rightArrowRect);
-        font.setColor(hoverRight ?  Color.YELLOW : Color.WHITE);
-        font.draw(batch, ">", panelX + PANEL_WIDTH - 18, panelY + PANEL_HEIGHT / 2 + 5);
-
-        font.getData().setScale(0.6f);
-
-        // Item Info Display (DESCRIPTION PANEL)
+        // Item Info Display (DESCRIPTION PANEL) - ALL TEXT INSIDE GREEN BOX
         if (!selectedSlot.isEmpty()) {
             ItemType selectedItem = selectedSlot.getItemType();
             int itemCount = selectedSlot.getCount();
             
-            // Item name dengan font yang lebih besar dan jelas
-            titleFont.setColor(Color.WHITE);
-            titleFont.getData().setScale(0.65f);
-            titleFont.draw(batch, selectedItem.getDisplayName(), panelX + 14, panelY + 40);
-            titleFont.getData().setScale(0.8f);
+            // Item name - clean font
+            font.setColor(Color.WHITE);
+            font.getData().setScale(0.8f);
+            font.draw(batch, selectedItem.getDisplayName(), panelX + 14, panelY + 52);
             
             // Item description
-            font.setColor(Color.GRAY);
-            font.getData().setScale(0.45f);
-            font.draw(batch, selectedItem.getDescription(), panelX + 14, panelY + 27);
+            font.setColor(Color.LIGHT_GRAY);
+            font.getData().setScale(0.6f);
+            font.draw(batch, selectedItem.getDescription(), panelX + 14, panelY + 42);
+            
+            // Quantity
+            font.setColor(Color.YELLOW);
+            font.getData().setScale(0.6f);
+            font.draw(batch, "Qty: " + itemCount, panelX + 14, panelY + 32);
             
             // Legendary indicator
             if (selectedItem.isLegendary) {
                 font.setColor(Color.GOLD);
-                font.getData().setScale(0.5f);
-                font.draw(batch, "[LEGENDARY ITEM]", panelX + 14, panelY + 16);
+                font.getData().setScale(0.6f);
+                font.draw(batch, "[LEGENDARY]", panelX + 14, panelY + 22);
             }
             
             // Consumable hint
             if (selectedItem.isConsumable) {
                 font.setColor(Color.GREEN);
-                font.getData().setScale(0.5f);
-                font.draw(batch, "[ENTER] to Consume", panelX + 120, panelY + 40);
+                font.getData().setScale(0.6f);
+                font.draw(batch, "[ENTER] Consume", panelX + 140, panelY + 52);
             } else {
                 font.setColor(Color.RED);
-                font.getData().setScale(0.45f);
-                font.draw(batch, "(Cannot consume raw)", panelX + 120, panelY + 40);
+                font.getData().setScale(0.55f);
+                font.draw(batch, "(Cannot consume raw)", panelX + 130, panelY + 52);
             }
             
-            // Quantity
-            font.setColor(Color.LIGHT_GRAY);
-            font.getData().setScale(0.45f);
-            font.draw(batch, "Qty: " + itemCount, panelX + 14, panelY + 52);
-            
-            font.getData().setScale(0.6f);
+            // Reset scale
+            font.getData().setScale(1.0f);
         }
         
         // ERROR POPUP (Red centered message)

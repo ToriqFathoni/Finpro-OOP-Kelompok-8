@@ -54,14 +54,25 @@ public class CookingMenu {
         
         // Mouse Click Detection for Close Button
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-            // Convert mouse Y (top-down) to OpenGL Y (bottom-up)
+            // Get mouse coordinates
             int mouseX = Gdx.input.getX();
-            int mouseY = Gdx.graphics.getHeight() - Gdx.input.getY();
+            int mouseY = Gdx.input.getY();
             
-            if (closeButtonBounds.contains(mouseX, mouseY)) {
+            // Debug logging
+            System.out.println("DEBUG: Mouse clicked at (" + mouseX + ", " + mouseY + ")");
+            System.out.println("DEBUG: Close button bounds: " + closeButtonBounds);
+            
+            // Check if mouse is inside close button
+            // Note: Gdx.input.getY() is top-down, but bounds.y is bottom-up
+            // Need to convert coordinate system
+            float screenMouseY = Gdx.graphics.getHeight() - mouseY;
+            
+            if (closeButtonBounds.contains(mouseX, screenMouseY)) {
                 visible = false;
-                System.out.println("DEBUG: Cooking Menu closed via mouse click");
+                System.out.println("DEBUG: Cooking Menu closed via mouse click!");
                 return;
+            } else {
+                System.out.println("DEBUG: Click outside close button");
             }
         }
         
@@ -144,6 +155,7 @@ public class CookingMenu {
         float closeButtonSize = 40;
         float closeButtonX = menuX + menuWidth - closeButtonSize - 10;
         float closeButtonY = menuY + menuHeight - closeButtonSize - 10;
+        // FIX: Update bounds dengan koordinat yang tepat untuk mouse click detection
         closeButtonBounds.set(closeButtonX, closeButtonY, closeButtonSize, closeButtonSize);
         
         // ===== B. DRAW FULL SCREEN DIMMER (Background Overlay) =====
