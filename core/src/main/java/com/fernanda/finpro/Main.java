@@ -847,6 +847,13 @@ public class Main extends ApplicationAdapter {
             gameHud.setBoss(null);
         }
 
+        // Re-initialize campfire if in FOREST
+        if (currentWorld == WorldType.FOREST) {
+            initForestEnvironment();
+        } else if (currentWorld == WorldType.ICE) {
+            campfire = new Campfire(-1000, -1000); // Hide campfire in ICE world
+        }
+
         // Force camera update berdasarkan world
         if (currentWorld == WorldType.INFERNO) {
             camera.position.set(584, 584, 0);
