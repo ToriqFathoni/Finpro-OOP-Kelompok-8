@@ -81,6 +81,8 @@ public class Main extends ApplicationAdapter {
     private Vector2 playerSpawnPoint = new Vector2(100, 100);
     private boolean isGameOver = false;
     private WorldType currentWorld = WorldType.FOREST;
+    private float gameOverTimer = 0f;
+    private static final float GAME_OVER_FADE_DURATION = 1.5f;
     private com.badlogic.gdx.audio.Music currentMusic;
 
     @Override
@@ -187,6 +189,7 @@ public class Main extends ApplicationAdapter {
         viewport.update(width, height, true);
         gameHud.resize(width, height);
         inventoryUI.resize(width, height);
+        cookingMenu.resize(width, height);
     }
 
     @Override
@@ -200,15 +203,16 @@ public class Main extends ApplicationAdapter {
 
         float dt = Gdx.graphics.getDeltaTime();
 
+        // Handle tutorial and menu inputs even when game over (for consistency)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.H) && !isGameOver) {
+            tutorialPopup.toggle();
+        }
+
+        if (tutorialPopup.isVisible() && Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            tutorialPopup.hide();
+        }
+
         if (!isGameOver) {
-            if (Gdx.input.isKeyJustPressed(Input.Keys.H)) {
-                tutorialPopup.toggle();
-            }
-
-            if (tutorialPopup.isVisible() && Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-                tutorialPopup.hide();
-            }
-
             if (!tutorialPopup.isVisible()) {
                 if (Gdx.input.isKeyJustPressed(Input.Keys.TAB)) {
                     if (!isCookingMenuOpen) {
@@ -229,7 +233,7 @@ public class Main extends ApplicationAdapter {
                 }
 
                 if (isCookingMenuOpen) {
-                    cookingMenu.update(player.inventory);
+                    cookingMenu.update(player.inventory, player);
                     if (!cookingMenu.isVisible()) {
                         isCookingMenuOpen = false;
                         gamePaused = false;
@@ -311,9 +315,28 @@ public class Main extends ApplicationAdapter {
             if (player.stats.getCurrentHealth() <= 0) {
                 if (player.isDeathAnimationFinished()) {
                     isGameOver = true;
+                    gameOverTimer = 0f;  // Reset timer when first entering game over
                 }
             }
-        } else {
+        }
+
+        // === GAME OVER STATE: Continue world animation but disable player control ===
+        if (isGameOver) {
+            gameOverTimer += dt;
+            
+            // Keep monsters and world alive/animated
+            for (Monster m : monsters) {
+                m.update(dt);
+                m.aiBehavior(dt, player);
+            }
+            
+            // Update boss if present
+            Boss boss = spawnManager.getBoss();
+            if (boss != null) {
+                boss.update(dt, player);
+            }
+            
+            // Handle restart input
             if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
                 restartGame();
             }
@@ -451,21 +474,56 @@ public class Main extends ApplicationAdapter {
             tutorialPopup.render(batch, debugRenderer);
         }
 
+        // === DRAMATIC DARK SOULS STYLE GAME OVER SCREEN ===
         if (isGameOver) {
             com.badlogic.gdx.math.Matrix4 uiMatrix = new com.badlogic.gdx.math.Matrix4();
             uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            batch.setProjectionMatrix(uiMatrix);
-            batch.begin();
-            font.setColor(Color.RED);
-            GlyphLayout layout = new GlyphLayout(font, "GAME OVER - Press R to Restart");
-            float textX = (Gdx.graphics.getWidth() - layout.width) / 2f;
-            float textY = Gdx.graphics.getHeight() / 2f;
-            font.draw(batch, "GAME OVER - Press R to Restart", textX, textY);
-            batch.end();
+            
+            // Calculate fade alpha (gradually darken the screen)
+            float fadeAlpha = Math.min(gameOverTimer / GAME_OVER_FADE_DURATION, 0.7f);
+            
+            // A. DIM THE SCREEN with semi-transparent black overlay
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+            worldRenderer.setProjectionMatrix(uiMatrix);
+            worldRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            worldRenderer.setColor(0, 0, 0, fadeAlpha);
+            worldRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            worldRenderer.end();
+            Gdx.gl.glDisable(GL20.GL_BLEND);
 
-            if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
-                restartGame();
+            // B. DRAW LARGE "YOU DIED" TEXT (only after fade is visible)
+            if (gameOverTimer > 0.3f) {
+                batch.setProjectionMatrix(uiMatrix);
+                batch.begin();
+                
+                // Calculate text alpha (fade in the text after slight delay)
+                float textAlpha = Math.min((gameOverTimer - 0.3f) / 0.8f, 1.0f);
+                
+                // LARGE RED "YOU DIED" TEXT
+                font.getData().setScale(5.0f);  // Extra large
+                font.setColor(1f, 0f, 0f, textAlpha);  // Red with alpha
+                
+                GlyphLayout youDiedLayout = new GlyphLayout(font, "YOU DIED");
+                float youDiedX = (Gdx.graphics.getWidth() - youDiedLayout.width) / 2f;
+                float youDiedY = (Gdx.graphics.getHeight() / 2f) + 60f;
+                font.draw(batch, youDiedLayout, youDiedX, youDiedY);
+                
+                // SMALLER "Press R to Restart" TEXT
+                font.getData().setScale(2.0f);
+                font.setColor(1f, 1f, 1f, textAlpha * 0.9f);  // White with alpha
+                
+                GlyphLayout restartLayout = new GlyphLayout(font, "Press R to Restart");
+                float restartX = (Gdx.graphics.getWidth() - restartLayout.width) / 2f;
+                float restartY = youDiedY - 100f;
+                font.draw(batch, restartLayout, restartX, restartY);
+                
+                // Reset font scale to normal
+                font.getData().setScale(0.8f);
+                
+                batch.end();
             }
+
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
                 Gdx.app.exit();
             }
@@ -678,6 +736,8 @@ public class Main extends ApplicationAdapter {
             player.inventory.clear();
             // Reset permanent stats upgrades (HP/Stamina dari resep)
             player.stats.resetPermanentStats(50f, 100f);
+            // Clear consumed legendaries tracking
+            player.clearConsumedLegendaries();
             NetworkManager.getInstance().saveInventory(player);
             
             // Kembali ke FOREST world (spawn awal)

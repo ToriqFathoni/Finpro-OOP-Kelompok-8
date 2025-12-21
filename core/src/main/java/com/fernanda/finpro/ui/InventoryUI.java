@@ -402,6 +402,7 @@ public class InventoryUI {
                 player.addPermanentDamage(3);
                 player.stats.upgradeMaxHealth(100f);
                 player.stats.upgradeMaxStamina(120f);
+                player.markLegendaryConsumed(ItemType.BERSERKERS_ELIXIR);
                 System.out.println("[LEGENDARY] Berserker's Elixir consumed! You are now stronger!");
                 break;
                 
@@ -410,6 +411,7 @@ public class InventoryUI {
                 player.addPermanentDamage(3);
                 player.stats.upgradeMaxHealth(200f);
                 player.stats.upgradeMaxStamina(150f);
+                player.markLegendaryConsumed(ItemType.HEART_OF_MOUNTAIN);
                 System.out.println("[LEGENDARY] Heart of Mountain consumed! You feel unstoppable!");
                 break;
                 
@@ -418,6 +420,7 @@ public class InventoryUI {
                 player.addPermanentDamage(5);
                 player.stats.upgradeMaxHealth(300f);
                 player.stats.upgradeMaxStamina(170f);
+                player.markLegendaryConsumed(ItemType.GOD_SLAYER_ELIXIR);
                 System.out.println("[LEGENDARY] God Slayer Elixir consumed! You have ascended!");
                 break;
                 
