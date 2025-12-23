@@ -4,10 +4,7 @@ import com.fernanda.finpro.entities.Boss;
 import com.fernanda.finpro.entities.MeteorController;
 import com.fernanda.finpro.entities.Player;
 
-/**
- * Strategy Pattern - Meteor Rain Attack Implementation
- * Boss casts a spell to summon meteor rain
- */
+
 public class MeteorAttackStrategy implements AttackStrategy {
     
     private float castingTimer;
@@ -28,7 +25,6 @@ public class MeteorAttackStrategy implements AttackStrategy {
             castingTimer += dt;
             
             if (castingTimer >= CASTING_DURATION) {
-                // Casting complete, start meteor rain
                 meteorController.startRain();
                 isCasting = false;
                 finished = true;

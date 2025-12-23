@@ -3,10 +3,6 @@ package com.fernanda.finpro.strategy;
 import com.fernanda.finpro.entities.Boss;
 import com.fernanda.finpro.entities.Player;
 
-/**
- * Strategy Pattern - Smash Attack Implementation
- * Boss smashes hands down dealing massive damage in close range
- */
 public class SmashAttackStrategy implements AttackStrategy {
     
     public enum Phase { WINDUP, HOLD, RECOVER }
@@ -16,10 +12,10 @@ public class SmashAttackStrategy implements AttackStrategy {
     private boolean hasDealtDamage;
     private boolean finished;
     
-    private static final float WINDUP_DURATION = 0.6f;  // Attack animation
-    private static final float HOLD_DURATION = 5.0f;     // Hands on ground
-    private static final float RECOVER_DURATION = 0.6f;  // Retrieve animation
-    private static final float IMPACT_DURATION = 0.25f;  // Damage window
+    private static final float WINDUP_DURATION = 0.6f;  
+    private static final float HOLD_DURATION = 5.0f;    
+    private static final float RECOVER_DURATION = 0.6f;  
+    private static final float IMPACT_DURATION = 0.25f; 
     
     public SmashAttackStrategy() {
         reset();
@@ -91,7 +87,6 @@ public class SmashAttackStrategy implements AttackStrategy {
     }
     
     public boolean canBeHit() {
-        // Boss can be hit when hands are on ground (HOLD phase) after impact
         return currentPhase == Phase.HOLD && phaseTimer > IMPACT_DURATION;
     }
 }
