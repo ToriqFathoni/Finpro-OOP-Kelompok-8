@@ -59,7 +59,7 @@ public class Boss {
         this.stateTimer = 0;
         this.currentState = BossState.IDLE;
         this.idleTimer = 0;
-        this.maxHealth = 2000; // SEMENTARA: HP Boss jadi 1 untuk testing
+        this.maxHealth = 2000;
         this.currentHealth = this.maxHealth;
         this.isDead = false;
 
@@ -153,21 +153,17 @@ public class Boss {
         rightHandRect.setPosition(position.x + HAND_OFFSET_X - (HAND_WIDTH / 2), handY);
     }
 
-    /**
-     * Strategy Pattern - Pick and set random attack strategy
-     */
+
     private void pickRandomAttack() {
         int dice = MathUtils.random(1, 2);
 
         this.currentState = BossState.ATTACKING;
 
         if (dice == 1) {
-            // Use Smash Attack Strategy
             smashStrategy.reset();
             currentStrategy = smashStrategy;
             System.out.println("Boss using: " + currentStrategy.getName());
         } else {
-            // Use Meteor Attack Strategy
             meteorStrategy.reset();
             currentStrategy = meteorStrategy;
             System.out.println("Boss using: " + currentStrategy.getName());
@@ -186,7 +182,6 @@ public class Boss {
         if (isDead) return false;
         if (immunityTimer > 0) return false;
 
-        // Check if using smash strategy and in vulnerable phase
         if (currentState == BossState.ATTACKING && currentStrategy == smashStrategy) {
             if (smashStrategy.canBeHit()) {
                 if (leftHandRect.overlaps(playerAttackBox) || rightHandRect.overlaps(playerAttackBox)) {
@@ -285,12 +280,10 @@ public class Boss {
         this.idleTimer = 0;
         this.immunityTimer = 0;
 
-        // Reset strategies
         this.currentStrategy = null;
         this.smashStrategy.reset();
         this.meteorStrategy.reset();
 
-        // Reset Meteor Controller
         if (this.meteorController != null) {
             this.meteorController.reset();
         }

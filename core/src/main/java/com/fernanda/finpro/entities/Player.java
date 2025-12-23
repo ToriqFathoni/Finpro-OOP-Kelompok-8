@@ -10,52 +10,41 @@ import com.fernanda. finpro.input.InputHandler;
 import com.fernanda. finpro.states.*;
 
 public class Player {
-    // --- FISIKA & POSISI ---
     public Vector2 position;
     public Vector2 velocity;
     public boolean facingRight = true;
 
-    // --- COMPONENTS ---
     public PlayerStats stats;
     public Inventory inventory;
     public BuffManager buffManager;
 
-    // STATS
     private int baseDamage = 15;
     private int permanentDamageBonus = 0;
-    
-    // SCORE TRACKING
+
     public int cookingScore = 0;
     public int monsterKillScore = 0;
     public boolean bossKilled = false;
 
-    // Track consumed legendary items (for UI strikethrough)
     private java.util.Set<com.fernanda.finpro.components.ItemType> consumedLegendaries = new java.util.HashSet<>();
 
-    // CONFIG BADAN (LOGIKA)
     private static final int LOGICAL_WIDTH = 15;
     private static final int LOGICAL_HEIGHT = 20;
 
-    // --- CONFIG VISUAL (GAMBAR) ---
     private static final float DRAW_OFFSET_X = 0f;
     private static final float DRAW_OFFSET_Y = 0f;
 
-    // --- CONFIG HITBOX SERANGAN ---
     private static final float ATTACK_WIDTH = 18f;
     private static final float ATTACK_HEIGHT = 25f;
     private static final float ATTACK_OFFSET_Y = 0f;
 
-    // Timing Hitbox Serangan
     private static final float DAMAGE_START_TIME = 0.2f;
     private static final float DAMAGE_END_TIME   = 0.4f;
 
     private Rectangle attackRect = new Rectangle();
 
-    // --- COOLDOWN & TIMERS ---
     private float attackTimer = 0f;
     private final float ATTACK_COOLDOWN = 0.5f;
 
-    // --- DODGE CONFIG ---
     private DodgeState dodgeState;
     private float dodgeTimer = 0f;
     private float dodgeCooldownTimer = 0f;
@@ -65,13 +54,11 @@ public class Player {
     private final float DODGE_COST = 20f;
     private final float DODGE_WAIT_TIME = 0.3f;
 
-    // Timer invincibility setelah kena hit
     private float invincibilityTimer = 0f;
     private final float INVINCIBILITY_DURATION = 1.0f;
 
     private Vector2 dodgeDirection = new Vector2();
 
-    // --- STATE MANAGEMENT ---
     private PlayerState currentState;
     private PlayerState idleState;
     private PlayerState walkState;
@@ -97,8 +84,6 @@ public class Player {
         this.currentState = idleState;
         this.stateTime = 0f;
 
-        // Inisialisasi Components
-        // (maxHP=50, maxStamina=100, hpRegen=0, staminaRegen=10)
         this.stats = new PlayerStats(50f, 100f, 0f, 10f);
         this.inventory = new Inventory();
         this.buffManager = new BuffManager();
@@ -106,8 +91,7 @@ public class Player {
 
     public void update(float dt) {
         buffManager.update(dt);
-        
-        // Pass energy regen boost to stats
+
         float energyRegenBoost = buffManager.getEnergyRegenBoost();
         stats.update(dt, energyRegenBoost);
 
@@ -149,7 +133,6 @@ public class Player {
         }
 
         if (currentState == dodgeState) {
-            // Tunggu logika di atas
         }
         else if (currentState == attackState) {
             if (attackState.isFinished(stateTime)) {
@@ -224,7 +207,7 @@ public class Player {
         stats.useStamina(10f);
         changeState(attackState);
         attackTimer = ATTACK_COOLDOWN;
-        
+
         // Play sword slash sound
         com.badlogic.gdx.audio.Sound sfx = com.fernanda.finpro.singleton.GameAssetManager.getInstance().getSwordSlashSound();
         if (sfx != null) {
@@ -289,12 +272,12 @@ public class Player {
 
     public float getWidth() { return LOGICAL_WIDTH; }
     public float getHeight() { return LOGICAL_HEIGHT; }
-    
+
     public int getDamage() {
         // Base damage + permanent bonus + temporary buff
         return baseDamage + permanentDamageBonus + buffManager.getDamageBoost();
     }
-    
+
     public void addPermanentDamage(int amount) {
         this.permanentDamageBonus += amount;
         System.out.println("[PERMANENT UPGRADE] Damage +" + amount + "! Total damage: " + getDamage());
@@ -355,21 +338,21 @@ public class Player {
     public boolean isDeathAnimationFinished() {
         return currentState == deathState && stateTime > 1.0f;
     }
-    
+
     /**
      * Mark a legendary item as consumed (for cooking menu UI)
      */
     public void markLegendaryConsumed(com.fernanda.finpro.components.ItemType legendaryItem) {
         consumedLegendaries.add(legendaryItem);
     }
-    
+
     /**
      * Check if a legendary item has been consumed
      */
     public boolean hasConsumedLegendary(com.fernanda.finpro.components.ItemType legendaryItem) {
         return consumedLegendaries.contains(legendaryItem);
     }
-    
+
     /**
      * Clear consumed legendaries (for game restart in INFERNO)
      */

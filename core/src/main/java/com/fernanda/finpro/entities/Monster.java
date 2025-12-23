@@ -110,7 +110,7 @@ public abstract class Monster {
         if (isDead || immunityTimer > 0) return;
 
         currentHealth -= amount;
-        immunityTimer = 0.4f; // Jeda kebal visual        
+        immunityTimer = 0.4f; // Jeda kebal visual
         com.badlogic.gdx.audio.Sound hurtSound = com.fernanda.finpro.singleton.GameAssetManager.getInstance().getMonsterHurtSound();
         if (hurtSound != null) {
             hurtSound.play(0.4f);
@@ -144,28 +144,21 @@ public abstract class Monster {
         float myCenterX = position.x + (bodyRect.width / 2);
         float myCenterY = position.y + (bodyRect.height / 2);
 
-        // Arah ideal: Dari Tengah Monster ke Target (Target diasumsikan titik tengah Player)
         Vector2 direction = new Vector2(target).sub(myCenterX, myCenterY).nor();
 
-        // Jarak sensor (cek 32 pixel ke depan)
         float checkDist = 32f;
 
-        // Titik tengah badan monster
         float centerX = position.x + (bodyRect.width / 2);
         float centerY = position.y + (bodyRect.height / 2);
 
-        // Posisi ujung sensor
         float feelerX = centerX + (direction.x * checkDist);
         float feelerY = centerY + (direction.y * checkDist);
 
-        // Jika sensor menabrak tembok
         if (isTileBlocked(feelerX, feelerY)) {
-            // Coba cari jalan ke KANAN (serong 45 derajat)
             Vector2 rightDir = new Vector2(direction).rotateDeg(-45);
             if (!isTileBlocked(centerX + rightDir.x * checkDist, centerY + rightDir.y * checkDist)) {
                 direction = rightDir;
             }
-            // Coba cari jalan ke KIRI (serong 45 derajat)
             else {
                 Vector2 leftDir = new Vector2(direction).rotateDeg(45);
                 if (!isTileBlocked(centerX + leftDir.x * checkDist, centerY + leftDir.y * checkDist)) {
@@ -177,7 +170,6 @@ public abstract class Monster {
         velocity.set(direction).scl(speed);
     }
 
-    // Method Helper untuk membaca Map (Mendeteksi Tembok)
     public boolean isTileBlocked(float x, float y) {
         com.badlogic.gdx.maps.tiled.TiledMap map = GameAssetManager.getInstance().getMap();
 

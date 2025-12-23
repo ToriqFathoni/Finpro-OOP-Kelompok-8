@@ -14,34 +14,25 @@ import com.fernanda.finpro.singleton.GameAssetManager;
 
 public class Orc extends Monster {
 
-    // --- CONFIG KHUSUS ORC ---
     private static final float ORC_SPEED = 80f;
     private static final int   ORC_HP = 50;
     private static final int   ORC_DMG = 10;
 
-    // Dimensi Hitbox Orc
     private static final float WIDTH = 20f;
     private static final float HEIGHT = 25f;
 
-    // AI Range
-    private static final float DETECT_RANGE = 100f; // Diperkecil agar tidak terlalu agresif
+    private static final float DETECT_RANGE = 100f;
     private static final float ATTACK_RANGE = 35f;
 
-    // --- BATAS WILAYAH ORC (HUTAN) ---
-    private static final float HABITAT_MIN = 2000f; // Batas Ice
-    private static final float HABITAT_MAX = 3500f; // Batas Laut
+    private static final float HABITAT_MIN = 2000f;
+    private static final float HABITAT_MAX = 3500f;
 
-    // Attack Timing (Detik)
     private static final float WINDUP_TIME = 0.1f;
-    private static final float ACTIVE_TIME = 0.6f; // Disesuaikan dengan durasi animasi (6 frame * 0.1s)
+    private static final float ACTIVE_TIME = 0.6f;
     private static final float RECOVERY_TIME = 0.5f;
 
-    // Hitbox baru muncul di detik ke-0.3 (Frame ke-3)
     private static final float HIT_START_TIME = 0.3f;
-    // Hitbox menghilang di detik ke-0.5
     private static final float HIT_END_TIME = 0.5f;
-
-    // --- ANIMATIONS ---
     private Animation<TextureRegion> idleAnim;
     private Animation<TextureRegion> walkAnim;
     private Animation<TextureRegion> attackAnim;
@@ -59,16 +50,15 @@ public class Orc extends Monster {
         this.detectionRadius = DETECT_RANGE;
         this.attackRadius = ATTACK_RANGE;
         this.knockbackDistance = 20f;
-        this.wanderTarget.set(x, y); // Init target ke posisi awal
+        this.wanderTarget.set(x, y);
 
-        // Init Animations
         idleAnim = createAnimation(GameAssetManager.ORC_IDLE, 6, 0.1f, Animation.PlayMode.LOOP);
         walkAnim = createAnimation(GameAssetManager.ORC_WALK, 8, 0.1f, Animation.PlayMode.LOOP);
         attackAnim = createAnimation(GameAssetManager.ORC_ATTACK, 6, 0.1f, Animation.PlayMode.NORMAL);
         hurtAnim = createAnimation(GameAssetManager.ORC_HURT, 4, 0.1f, Animation.PlayMode.NORMAL);
         deathAnim = createAnimation(GameAssetManager.ORC_DEATH, 4, 0.1f, Animation.PlayMode.NORMAL);
 
-        this.deathDuration = 1.5f; // Body lingers for a while
+        this.deathDuration = 1.5f;
     }
 
     private Rectangle getPredictedAttackHitbox() {
@@ -87,7 +77,6 @@ public class Orc extends Monster {
 
         float atkY = position.y + (HEIGHT / 2) - (atkHeight / 2) - offsetDown;
 
-        // Return rectangle baru (hanya untuk pengecekan)
         return new Rectangle(atkX, atkY, atkWidth, atkHeight);
     }
 
@@ -95,7 +84,6 @@ public class Orc extends Monster {
     public void aiBehavior(float dt, Player player) {
         if (isDead) return;
 
-        // float distToPlayer = position.dst(player.position);
         float orcCenterX = position.x + (WIDTH / 2);
         float orcCenterY = position.y + (HEIGHT / 2);
 
@@ -114,7 +102,6 @@ public class Orc extends Monster {
 
             case WANDER:
                 handleWander(dt);
-                // Hanya kejar jika player dekat DAN player masuk area patroli
                 if (distToPlayer < detectionRadius && player.position.dst(spawnPosition) < wanderRadius * 1.5f) {
                     currentState = State.CHASE;
                 }
@@ -128,9 +115,8 @@ public class Orc extends Monster {
                     stateTimer = 0;
                     velocity.set(0, 0);
                 } else if (player.position.dst(spawnPosition) > wanderRadius * 2.0f) {
-                    // Stop chasing if player runs too far from spawn point
                     currentState = State.WANDER;
-                    wanderTarget.set(spawnPosition); // Kembali ke spawn
+                    wanderTarget.set(spawnPosition);
                 }
                 break;
 
@@ -142,14 +128,12 @@ public class Orc extends Monster {
                 break;
 
             case ATTACKING:
-                // --- LOGIKA TIMING HITBOX ---
                 if (stateTimer >= HIT_START_TIME && stateTimer <= HIT_END_TIME) {
                     createAttackHitbox();
                 } else {
                     attackRect.set(0, 0, 0, 0);
                 }
 
-                // Cooldown
                 if (stateTimer >= ACTIVE_TIME) {
                     currentState = State.COOLDOWN;
                     stateTimer = 0;
@@ -188,14 +172,12 @@ public class Orc extends Monster {
                 float checkY = centerY + dir.y * checkDist;
 
                 if (isTileBlocked(checkX, checkY)) {
-                     // Nabrak Tembok!
                      velocity.set(0, 0);
                      isWanderWalking = false;
-                     wanderWaitTimer = MathUtils.random(0.5f, 1.0f); // Idle sebentar sebelum balik arah
-                     forceReverse = true; // Tandai untuk balik arah setelah tunggu
+                     wanderWaitTimer = MathUtils.random(0.5f, 1.0f);
+                     forceReverse = true;
                 }
 
-                // Timeout jika kelamaan gak nyampe-nyampe (5 detik)
                 if (stateTimer > 5.0f) {
                      isWanderWalking = false;
                      wanderWaitTimer = MathUtils.random(1.0f, 3.0f);
@@ -203,45 +185,35 @@ public class Orc extends Monster {
                 }
 
             } else {
-                // Sampai di target
                 isWanderWalking = false;
-                wanderWaitTimer = MathUtils.random(2.0f, 5.0f); // Tunggu lama
+                wanderWaitTimer = MathUtils.random(2.0f, 5.0f);
                 velocity.set(0, 0);
             }
         } else {
-            // Sedang diam (Idle)
             wanderWaitTimer -= dt;
-            velocity.set(0, 0); // Pastikan diam
+            velocity.set(0, 0);
 
             if (wanderWaitTimer <= 0) {
                 if (forceReverse) {
-                    // Balik arah (Opposite direction)
-                    // Jika facingRight (kanan), berarti nabrak tembok di kanan -> jalan ke kiri (180 derajat)
-                    // Jika !facingRight (kiri), berarti nabrak tembok di kiri -> jalan ke kanan (0 derajat)
                     float baseAngle = facingRight ? 180f : 0f;
-                    float randomOffset = MathUtils.random(-45f, 45f); // Variasi sedikit
+                    float randomOffset = MathUtils.random(-45f, 45f);
                     float angle = baseAngle + randomOffset;
 
-                    float dist = MathUtils.random(30f, wanderRadius); // Jalan agak jauh
+                    float dist = MathUtils.random(30f, wanderRadius);
                     wanderTarget.set(position).add(new Vector2(dist, 0).rotateDeg(angle));
 
-                    forceReverse = false; // Reset flag
+                    forceReverse = false;
                 } else {
-                    // Cari target baru (Random)
                     float angle = MathUtils.random(0f, 360f);
                     float dist = MathUtils.random(10f, wanderRadius);
                     wanderTarget.set(spawnPosition).add(new Vector2(dist, 0).rotateDeg(angle));
                 }
 
                 isWanderWalking = true;
-                stateTimer = 0; // Reset timer untuk timeout jalan
+                stateTimer = 0;
             }
         }
     }
-
-    // private void moveTowards(Vector2 target) {
-    //    velocity.set(target).sub(position).nor().scl(speed);
-    //}
 
     private void createAttackHitbox() {
         float atkWidth = 20f;
@@ -256,7 +228,6 @@ public class Orc extends Monster {
             atkX = (position.x - atkWidth) + offsetIn;
         }
 
-        // Mengurangi Y dengan offsetDown agar posisi turun
         float atkY = position.y + (HEIGHT / 2) - (atkHeight / 2) - offsetDown;
 
         attackRect.set(atkX, atkY, atkWidth, atkHeight);
