@@ -71,7 +71,6 @@ public class Yeti extends Monster {
         float distToPlayer = Vector2.dst(myCenterX, myCenterY, playerCenterX, playerCenterY);
 
         if (currentState != State.WANDER && currentState != State.DEAD) {
-            // Hapus logika dx manual
         }
 
         if (Math.abs(velocity.x) > 3.0f) {
@@ -110,7 +109,7 @@ public class Yeti extends Monster {
                 if (stateTimer >= WINDUP_TIME) {
                     currentState = State.ATTACKING;
                     stateTimer = 0;
-                    
+
                     com.badlogic.gdx.audio.Sound attackSound = com.fernanda.finpro.singleton.GameAssetManager.getInstance().getYetiHitSound();
                     if (attackSound != null) {
                         attackSound.play(0.5f);
@@ -219,7 +218,6 @@ public class Yeti extends Monster {
 
             case CHASE:
             case WANDER:
-                // Cek apakah benar-benar bergerak
                 if (velocity.len2() > 0.1f) {
                     currentAnim = walkAnim;
                 } else {

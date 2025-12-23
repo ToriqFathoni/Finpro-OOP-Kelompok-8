@@ -17,27 +17,21 @@ public class Werewolf extends Monster {
     private static final int   WW_HP = 90;
     private static final int   WW_DMG = 25;
 
-    // Dimensi Fisik
     private static final float WIDTH = 25f;
     private static final float HEIGHT = 35f;
 
-    // AI Range
     private static final float DETECT_RANGE = 120f;
     private static final float ATTACK_RANGE = 28f;
 
-    // Habitat
     private static final float HABITAT_MIN = 2000f;
     private static final float HABITAT_MAX = 3500f;
 
-    // Attack Timing
     private static final float WINDUP_TIME = 0.5f;
     private static final float ACTIVE_TIME = 0.6f;
     private static final float RECOVERY_TIME = 0.5f;
 
     private static final float HIT_START_TIME = 0.3f;
     private static final float HIT_END_TIME = 0.5f;
-
-    // --- ANIMASI ---
     private Animation<TextureRegion> idleAnim;
     private Animation<TextureRegion> attackAnim;
     private Animation<TextureRegion> walkAnim;
@@ -75,12 +69,8 @@ public class Werewolf extends Monster {
 
         float distToPlayer = Vector2.dst(myCenterX, myCenterY, playerCenterX, playerCenterY);
 
-        // Update facing direction berdasarkan posisi player (kecuali saat wander)
         if (currentState != State.WANDER && currentState != State.DEAD) {
-            // Hapus logika dx manual
         }
-
-        // Logic Facing saat bergerak
         if (Math.abs(velocity.x) > 0.1f) {
             facingRight = velocity.x > 0;
         }
@@ -117,7 +107,7 @@ public class Werewolf extends Monster {
                 if (stateTimer >= WINDUP_TIME) {
                     currentState = State.ATTACKING;
                     stateTimer = 0;
-                    
+
                     com.badlogic.gdx.audio.Sound attackSound = com.fernanda.finpro.singleton.GameAssetManager.getInstance().getWerewolfScratchSound();
                     if (attackSound != null) {
                         attackSound.play(0.5f);
@@ -154,11 +144,9 @@ public class Werewolf extends Monster {
     private void handleWander(float dt) {
         if (isWanderWalking) {
             if (position.dst(wanderTarget) > 5f) {
-                // Gerak lurus manual (bypass moveTowards parent yang ada avoidance)
                 velocity.set(wanderTarget).sub(position).nor().scl(speed);
 
-                // Cek collision di depan (Center + Direction * Offset)
-                float checkDist = 16f; // Cek 16 pixel ke depan
+                float checkDist = 16f;
                 float centerX = position.x + (WIDTH / 2);
                 float centerY = position.y + (HEIGHT / 2);
                 Vector2 dir = new Vector2(velocity).nor();
@@ -167,11 +155,10 @@ public class Werewolf extends Monster {
                 float checkY = centerY + dir.y * checkDist;
 
                 if (isTileBlocked(checkX, checkY)) {
-                    // Nabrak Tembok!
                     velocity.set(0, 0);
                     isWanderWalking = false;
-                    wanderWaitTimer = MathUtils.random(0.5f, 1.0f); // Idle sebentar sebelum balik arah
-                    forceReverse = true; // Tandai untuk balik arah setelah tunggu
+                    wanderWaitTimer = MathUtils.random(0.5f, 1.0f);
+                    forceReverse = true;
                 }
 
                 if (stateTimer > 5.0f) {
@@ -190,7 +177,6 @@ public class Werewolf extends Monster {
 
             if (wanderWaitTimer <= 0) {
                 if (forceReverse) {
-                    // Balik arah (Opposite direction)
                     float baseAngle = facingRight ? 180f : 0f;
                     float randomOffset = MathUtils.random(-45f, 45f);
                     float angle = baseAngle + randomOffset;
@@ -274,7 +260,6 @@ public class Werewolf extends Monster {
                 batch.setColor(Color.WHITE);
             }
 
-            // Draw Logic
             float width = currentFrame.getRegionWidth();
             float height = currentFrame.getRegionHeight();
             float drawX = position.x + (WIDTH - width) / 2f;
